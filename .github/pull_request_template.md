@@ -1,35 +1,35 @@
 <!--
-  Preencha as seções abaixo. Apague o que não se aplicar.
-  Título do PR: use o mesmo padrão dos commits, por exemplo:
-  feat: adiciona página de produto
-  fix: corrige foco do teclado no modal
+  Fill in the sections below. Delete anything that does not apply.
+  PR title: follow the same convention as the commits, for example:
+  feat: add product page
+  fix: correct keyboard focus in modal
 -->
 
-## O que este PR faz
+## What this PR does
 
-<!-- Uma ou duas frases explicando a mudança, em linguagem simples. -->
+<!-- One or two sentences explaining the change, in plain language. -->
 
-## Tipo de mudança
+## Type of change
 
-- [ ] `feat` nova funcionalidade
-- [ ] `fix` correção de bug
-- [ ] `refactor` mudança interna, sem alterar comportamento
-- [ ] `docs` documentação
+- [ ] `feat` new feature
+- [ ] `fix` bug fix
+- [ ] `refactor` internal change, no behavior difference
+- [ ] `docs` documentation
 
-## Evidência
+## Evidence
 
-<!-- Print, gravação de tela ou link do ambiente publicado.
-     Obrigatório quando a mudança altera algo visível. -->
+<!-- Screenshot, screen recording, or link to the deployed environment.
+     Required whenever the change affects something visible. -->
 
-## Checklist do autor
+## Author checklist
 
-- [ ] O título segue o padrão de commits convencionais
-- [ ] Testei manualmente o que mudou e descrevi como reproduzir acima
-- [ ] Não deixei `console.log` nem código comentado
-- [ ] Não versionei chave, senha ou URL privada
-- [ ] Atualizei a documentação, se necessário
+- [ ] The title follows the conventional commits convention
+- [ ] I manually tested what changed and described how to reproduce it above
+- [ ] I left no `console.log` or commented-out code
+- [ ] I did not commit any key, password, or private URL
+- [ ] I updated the documentation, if needed
 
-## Observações para quem revisar
+## Notes for the reviewer
 
-<!-- Algo que merece atenção especial, dúvida em aberto,
-     ou decisão que você quer discutir. -->
+<!-- Anything that deserves special attention, an open question,
+     or a decision you would like to discuss. -->
