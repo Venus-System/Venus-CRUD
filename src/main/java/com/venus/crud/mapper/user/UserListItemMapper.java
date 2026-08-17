@@ -1,17 +1,16 @@
 package com.venus.crud.mapper.user;
 
 import com.venus.crud.config.VenusMapperConfig;
+import com.venus.crud.dto.request.user.UserListItemPatchRequest;
 import com.venus.crud.dto.request.user.UserListItemRequest;
 import com.venus.crud.dto.response.user.UserListItemResponse;
 import com.venus.crud.entity.product.Product;
 import com.venus.crud.entity.user.UserList;
 import com.venus.crud.entity.user.UserListItem;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface UserListItemMapper {
@@ -27,8 +26,13 @@ public interface UserListItemMapper {
     UserListItemResponse toResponse(UserListItem entity);
 
     @InheritConfiguration(name = "toEntity")
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(UserListItemRequest request, @MappingTarget UserListItem entity);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "userList", source = "userListId")
+    @Mapping(target = "product", source = "productId")
+    void patchEntity(UserListItemPatchRequest request, @MappingTarget UserListItem entity);
 
     default UserList mapUserList(Long userListId) {
         if (userListId == null) {

@@ -1,17 +1,16 @@
 package com.venus.crud.mapper.product;
 
 import com.venus.crud.config.VenusMapperConfig;
+import com.venus.crud.dto.request.product.ProductPatchRequest;
 import com.venus.crud.dto.request.product.ProductRequest;
 import com.venus.crud.dto.response.product.ProductResponse;
 import com.venus.crud.entity.product.Brand;
 import com.venus.crud.entity.product.Product;
 import com.venus.crud.entity.product.ProductCategory;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface ProductMapper {
@@ -28,8 +27,14 @@ public interface ProductMapper {
     ProductResponse toResponse(Product entity);
 
     @InheritConfiguration(name = "toEntity")
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(ProductRequest request, @MappingTarget Product entity);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "brand", source = "brandId")
+    @Mapping(target = "productCategory", source = "productCategoryId")
+    void patchEntity(ProductPatchRequest request, @MappingTarget Product entity);
 
     default Brand mapBrand(Long brandId) {
         if (brandId == null) {

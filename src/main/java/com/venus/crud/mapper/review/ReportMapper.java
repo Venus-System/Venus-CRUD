@@ -1,17 +1,16 @@
 package com.venus.crud.mapper.review;
 
 import com.venus.crud.config.VenusMapperConfig;
+import com.venus.crud.dto.request.review.ReportPatchRequest;
 import com.venus.crud.dto.request.review.ReportRequest;
 import com.venus.crud.dto.response.review.ReportResponse;
 import com.venus.crud.entity.admin.AdminUser;
 import com.venus.crud.entity.review.Report;
 import com.venus.crud.entity.user.User;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface ReportMapper {
@@ -28,8 +27,14 @@ public interface ReportMapper {
     ReportResponse toResponse(Report entity);
 
     @InheritConfiguration(name = "toEntity")
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(ReportRequest request, @MappingTarget Report entity);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "user", source = "userId")
+    @Mapping(target = "adminUser", source = "adminUserId")
+    void patchEntity(ReportPatchRequest request, @MappingTarget Report entity);
 
     default User mapUser(Long userId) {
         if (userId == null) {

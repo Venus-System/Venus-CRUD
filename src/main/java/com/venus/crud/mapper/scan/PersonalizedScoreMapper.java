@@ -1,6 +1,7 @@
 package com.venus.crud.mapper.scan;
 
 import com.venus.crud.config.VenusMapperConfig;
+import com.venus.crud.dto.request.scan.PersonalizedScorePatchRequest;
 import com.venus.crud.dto.request.scan.PersonalizedScoreRequest;
 import com.venus.crud.dto.response.scan.PersonalizedScoreResponse;
 import com.venus.crud.entity.product.ProductVersion;
@@ -8,12 +9,10 @@ import com.venus.crud.entity.scan.AnalysisResult;
 import com.venus.crud.entity.scan.PersonalizedScore;
 import com.venus.crud.entity.scoring.ScoringModel;
 import com.venus.crud.entity.user.User;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface PersonalizedScoreMapper {
@@ -34,8 +33,16 @@ public interface PersonalizedScoreMapper {
     PersonalizedScoreResponse toResponse(PersonalizedScore entity);
 
     @InheritConfiguration(name = "toEntity")
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(PersonalizedScoreRequest request, @MappingTarget PersonalizedScore entity);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "user", source = "userId")
+    @Mapping(target = "productVersion", source = "productVersionId")
+    @Mapping(target = "analysisResult", source = "analysisResultId")
+    @Mapping(target = "scoringModel", source = "scoringModelId")
+    void patchEntity(PersonalizedScorePatchRequest request, @MappingTarget PersonalizedScore entity);
 
     default User mapUser(Long userId) {
         if (userId == null) {
