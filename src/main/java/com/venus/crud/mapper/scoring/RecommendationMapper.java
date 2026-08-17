@@ -1,6 +1,7 @@
 package com.venus.crud.mapper.scoring;
 
 import com.venus.crud.config.VenusMapperConfig;
+import com.venus.crud.dto.request.scoring.RecommendationPatchRequest;
 import com.venus.crud.dto.request.scoring.RecommendationRequest;
 import com.venus.crud.dto.response.scoring.RecommendationResponse;
 import com.venus.crud.entity.product.ProductVersion;
@@ -8,12 +9,10 @@ import com.venus.crud.entity.scan.AnalysisResult;
 import com.venus.crud.entity.scoring.Recommendation;
 import com.venus.crud.entity.shared.ProfileTag;
 import com.venus.crud.entity.user.User;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface RecommendationMapper {
@@ -34,8 +33,16 @@ public interface RecommendationMapper {
     RecommendationResponse toResponse(Recommendation entity);
 
     @InheritConfiguration(name = "toEntity")
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(RecommendationRequest request, @MappingTarget Recommendation entity);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "user", source = "userId")
+    @Mapping(target = "profileTag", source = "profileTagId")
+    @Mapping(target = "productVersion", source = "productVersionId")
+    @Mapping(target = "analysisResult", source = "analysisResultId")
+    void patchEntity(RecommendationPatchRequest request, @MappingTarget Recommendation entity);
 
     default User mapUser(Long userId) {
         if (userId == null) {
