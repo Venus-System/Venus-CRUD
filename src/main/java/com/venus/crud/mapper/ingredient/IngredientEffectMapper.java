@@ -1,17 +1,16 @@
 package com.venus.crud.mapper.ingredient;
 
 import com.venus.crud.config.VenusMapperConfig;
+import com.venus.crud.dto.request.ingredient.IngredientEffectPatchRequest;
 import com.venus.crud.dto.request.ingredient.IngredientEffectRequest;
 import com.venus.crud.dto.response.ingredient.IngredientEffectResponse;
 import com.venus.crud.entity.ingredient.Ingredient;
 import com.venus.crud.entity.ingredient.IngredientEffect;
 import com.venus.crud.entity.shared.ProfileTag;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface IngredientEffectMapper {
@@ -28,8 +27,14 @@ public interface IngredientEffectMapper {
     IngredientEffectResponse toResponse(IngredientEffect entity);
 
     @InheritConfiguration(name = "toEntity")
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(IngredientEffectRequest request, @MappingTarget IngredientEffect entity);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "ingredient", source = "ingredientId")
+    @Mapping(target = "profileTag", source = "profileTagId")
+    void patchEntity(IngredientEffectPatchRequest request, @MappingTarget IngredientEffect entity);
 
     default Ingredient mapIngredient(Long ingredientId) {
         if (ingredientId == null) {
