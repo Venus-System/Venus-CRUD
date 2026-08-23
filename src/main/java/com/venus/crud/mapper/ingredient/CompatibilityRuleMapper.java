@@ -7,10 +7,12 @@ import com.venus.crud.dto.response.ingredient.CompatibilityRuleResponse;
 import com.venus.crud.entity.ingredient.CompatibilityRule;
 import com.venus.crud.entity.ingredient.IngredientEffect;
 import com.venus.crud.entity.scoring.ScoringModel;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface CompatibilityRuleMapper {
@@ -34,6 +36,7 @@ public interface CompatibilityRuleMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "ingredientEffect", source = "ingredientEffectId")
     @Mapping(target = "scoringModel", source = "scoringModelId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(CompatibilityRulePatchRequest request, @MappingTarget CompatibilityRule entity);
 
     default IngredientEffect mapIngredientEffect(Long ingredientEffectId) {

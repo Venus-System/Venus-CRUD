@@ -6,10 +6,12 @@ import com.venus.crud.dto.request.ingredient.IngredientPropertyRequest;
 import com.venus.crud.dto.response.ingredient.IngredientPropertyResponse;
 import com.venus.crud.entity.ingredient.Ingredient;
 import com.venus.crud.entity.ingredient.IngredientProperty;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface IngredientPropertyMapper {
@@ -30,6 +32,7 @@ public interface IngredientPropertyMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "ingredient", source = "ingredientId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(IngredientPropertyPatchRequest request, @MappingTarget IngredientProperty entity);
 
     default Ingredient mapIngredient(Long ingredientId) {
