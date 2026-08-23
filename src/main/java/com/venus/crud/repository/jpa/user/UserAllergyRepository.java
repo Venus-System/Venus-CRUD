@@ -14,7 +14,7 @@ import java.util.List;
 public interface UserAllergyRepository extends JpaRepository<UserAllergy, Long> {
 
     @EntityGraph(attributePaths = "allergy")
-    Page<UserAllergy> findByUserId(Long userId, Pageable pageable);
+    List<UserAllergy> findByUserId(Long userId);
     Page<UserAllergy> findByAllergyId(Long allergyId, Pageable pageable);
     boolean existsByUserIdAndAllergyId(Long userId, Long allergyId);
     void deleteByUserIdAndAllergyId(Long userId, Long allergyId);
