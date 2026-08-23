@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record AnalysisResultRequest(
-        @NotNull Long scanSessionId,
         @NotNull Long userId,
         @NotNull Long productVersionId,
         @NotNull Long scoringModelId,

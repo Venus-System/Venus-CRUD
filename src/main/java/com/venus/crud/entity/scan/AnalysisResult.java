@@ -27,10 +27,6 @@ import lombok.ToString;
 public class AnalysisResult extends AuditableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fk_scan_session_id", nullable = false, unique = true)
-    private ScanSession scanSession;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_user_id", nullable = false)
     private User user;
 
