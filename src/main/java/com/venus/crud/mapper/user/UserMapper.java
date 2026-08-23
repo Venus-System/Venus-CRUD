@@ -5,10 +5,12 @@ import com.venus.crud.dto.request.user.UserPatchRequest;
 import com.venus.crud.dto.request.user.UserRequest;
 import com.venus.crud.dto.response.user.UserResponse;
 import com.venus.crud.entity.user.User;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface UserMapper {
@@ -29,5 +31,6 @@ public interface UserMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "firebaseUid", ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(UserPatchRequest request, @MappingTarget User entity);
 }
