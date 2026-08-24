@@ -7,10 +7,12 @@ import com.venus.crud.dto.response.user.FavoriteResponse;
 import com.venus.crud.entity.product.Product;
 import com.venus.crud.entity.user.Favorite;
 import com.venus.crud.entity.user.User;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface FavoriteMapper {
@@ -32,6 +34,7 @@ public interface FavoriteMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "user", source = "userId")
     @Mapping(target = "product", source = "productId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(FavoritePatchRequest request, @MappingTarget Favorite entity);
 
     default User mapUser(Long userId) {

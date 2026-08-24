@@ -5,10 +5,12 @@ import com.venus.crud.dto.request.ingredient.RegulationPatchRequest;
 import com.venus.crud.dto.request.ingredient.RegulationRequest;
 import com.venus.crud.dto.response.ingredient.RegulationResponse;
 import com.venus.crud.entity.ingredient.Regulation;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface RegulationMapper {
@@ -26,5 +28,6 @@ public interface RegulationMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(RegulationPatchRequest request, @MappingTarget Regulation entity);
 }
