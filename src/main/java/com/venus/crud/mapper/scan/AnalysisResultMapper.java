@@ -6,13 +6,14 @@ import com.venus.crud.dto.request.scan.AnalysisResultRequest;
 import com.venus.crud.dto.response.scan.AnalysisResultResponse;
 import com.venus.crud.entity.product.ProductVersion;
 import com.venus.crud.entity.scan.AnalysisResult;
-import com.venus.crud.entity.scan.ScanSession;
 import com.venus.crud.entity.scoring.ScoringModel;
 import com.venus.crud.entity.user.User;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface AnalysisResultMapper {
@@ -20,13 +21,11 @@ public interface AnalysisResultMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "scanSession", source = "scanSessionId")
     @Mapping(target = "user", source = "userId")
     @Mapping(target = "productVersion", source = "productVersionId")
     @Mapping(target = "scoringModel", source = "scoringModelId")
     AnalysisResult toEntity(AnalysisResultRequest request);
 
-    @Mapping(target = "scanSessionId", source = "scanSession.id")
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "productVersionId", source = "productVersion.id")
     @Mapping(target = "scoringModelId", source = "scoringModel.id")
@@ -38,20 +37,11 @@ public interface AnalysisResultMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "scanSession", source = "scanSessionId")
     @Mapping(target = "user", source = "userId")
     @Mapping(target = "productVersion", source = "productVersionId")
     @Mapping(target = "scoringModel", source = "scoringModelId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(AnalysisResultPatchRequest request, @MappingTarget AnalysisResult entity);
-
-    default ScanSession mapScanSession(Long scanSessionId) {
-        if (scanSessionId == null) {
-            return null;
-        }
-        ScanSession scanSession = new ScanSession();
-        scanSession.setId(scanSessionId);
-        return scanSession;
-    }
 
     default User mapUser(Long userId) {
         if (userId == null) {

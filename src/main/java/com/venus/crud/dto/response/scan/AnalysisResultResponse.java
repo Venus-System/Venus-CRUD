@@ -5,7 +5,6 @@ import java.time.OffsetDateTime;
 
 public record AnalysisResultResponse(
         Long id,
-        Long scanSessionId,
         Long userId,
         Long productVersionId,
         Long scoringModelId,
