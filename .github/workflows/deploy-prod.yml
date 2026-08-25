@@ -46,7 +46,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ github.repository }}
           tags: |
             type=raw,value=latest
-            type=sha,prefix=main-,format=long
+            type=sha,prefix=main-,format=short
 
       - name: Build e push da imagem
         uses: docker/build-push-action@v6
