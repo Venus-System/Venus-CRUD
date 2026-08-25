@@ -6,7 +6,7 @@ spring:
     name: venus-crud
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=venus
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=venus&sslmode=require
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
