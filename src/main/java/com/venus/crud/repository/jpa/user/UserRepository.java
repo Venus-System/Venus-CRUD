@@ -2,8 +2,8 @@ package com.venus.crud.repository.jpa.user;
 
 import com.venus.crud.entity.enums.UserStatus;
 import com.venus.crud.entity.user.User;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,6 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByFirebaseUid(String firebaseUid);
     Optional<User> findByEmailIgnoreCase(String email);
     boolean existsByEmailIgnoreCase(String email);
-    Page<User> findByStatus(UserStatus status, Pageable pageable);
-    Page<User> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    Slice<User> findByStatus(UserStatus status, Pageable pageable);
+    Slice<User> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    Slice<User> findByStatusAndNameContainingIgnoreCase(UserStatus status, String name, Pageable pageable);
+    Slice<User> findAllBy(Pageable pageable);
 }
