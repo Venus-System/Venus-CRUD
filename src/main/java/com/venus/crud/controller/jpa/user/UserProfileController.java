@@ -1,14 +1,14 @@
-package com.venus.crud.controller.user;
+package com.venus.crud.controller.jpa.user;
 
-import com.venus.crud.dto.request.user.UserProfilePatchRequest;
-import com.venus.crud.dto.request.user.UserProfileRequest;
-import com.venus.crud.dto.response.user.UserProfileResponse;
+import com.venus.crud.dto.jpa.patch.user.UserProfilePatchRequest;
+import com.venus.crud.dto.jpa.request.user.UserProfileRequest;
+import com.venus.crud.dto.jpa.response.user.UserProfileResponse;
 import com.venus.crud.entity.enums.AgeRange;
 import com.venus.crud.entity.enums.Gender;
 import com.venus.crud.entity.enums.HairType;
 import com.venus.crud.entity.enums.SensitivityLevel;
 import com.venus.crud.entity.enums.SkinType;
-import com.venus.crud.service.user.UserProfileService;
+import com.venus.crud.service.jpa.user.UserProfileService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;

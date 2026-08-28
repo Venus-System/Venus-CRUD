@@ -1,9 +1,9 @@
-package com.venus.crud.controller.user;
+package com.venus.crud.controller.jpa.user;
 
-import com.venus.crud.dto.request.user.UserPreferencePatchRequest;
-import com.venus.crud.dto.request.user.UserPreferenceRequest;
-import com.venus.crud.dto.response.user.UserPreferenceResponse;
-import com.venus.crud.service.user.UserPreferenceService;
+import com.venus.crud.dto.jpa.patch.user.UserPreferencePatchRequest;
+import com.venus.crud.dto.jpa.request.user.UserPreferenceRequest;
+import com.venus.crud.dto.jpa.response.user.UserPreferenceResponse;
+import com.venus.crud.service.jpa.user.UserPreferenceService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;

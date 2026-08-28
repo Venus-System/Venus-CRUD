@@ -1,7 +1,7 @@
-package com.venus.crud.controller.fullstage;
+package com.venus.crud.controller.jpa.fullstage;
 
-import com.venus.crud.dto.response.fullstage.UserFullProfileResponse;
-import com.venus.crud.service.fullstage.UserFullProfileService;
+import com.venus.crud.dto.jpa.response.fullstage.UserFullProfileResponse;
+import com.venus.crud.service.jpa.fullstage.UserFullProfileService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

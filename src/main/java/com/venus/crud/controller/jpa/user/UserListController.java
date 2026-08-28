@@ -1,10 +1,10 @@
-package com.venus.crud.controller.user;
+package com.venus.crud.controller.jpa.user;
 
-import com.venus.crud.dto.request.user.UserListPatchRequest;
-import com.venus.crud.dto.request.user.UserListRequest;
-import com.venus.crud.dto.response.user.UserListResponse;
+import com.venus.crud.dto.jpa.patch.user.UserListPatchRequest;
+import com.venus.crud.dto.jpa.request.user.UserListRequest;
+import com.venus.crud.dto.jpa.response.user.UserListResponse;
 import com.venus.crud.entity.enums.ListType;
-import com.venus.crud.service.user.UserListService;
+import com.venus.crud.service.jpa.user.UserListService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;

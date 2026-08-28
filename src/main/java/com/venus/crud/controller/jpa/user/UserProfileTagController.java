@@ -1,8 +1,8 @@
-package com.venus.crud.controller.user;
+package com.venus.crud.controller.jpa.user;
 
-import com.venus.crud.dto.request.user.UserProfileTagRequest;
-import com.venus.crud.dto.response.user.UserProfileTagResponse;
-import com.venus.crud.service.user.UserProfileTagService;
+import com.venus.crud.dto.jpa.request.user.UserProfileTagRequest;
+import com.venus.crud.dto.jpa.response.user.UserProfileTagResponse;
+import com.venus.crud.service.jpa.user.UserProfileTagService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;

@@ -1,10 +1,10 @@
-package com.venus.crud.controller.user;
+package com.venus.crud.controller.jpa.user;
 
-import com.venus.crud.dto.request.user.AllergyPatchRequest;
-import com.venus.crud.dto.request.user.AllergyRequest;
-import com.venus.crud.dto.response.user.AllergyResponse;
-import com.venus.crud.entity.enums.AllergyType;
-import com.venus.crud.service.user.AllergyService;
+import com.venus.crud.dto.jpa.patch.user.UserPatchRequest;
+import com.venus.crud.dto.jpa.request.user.UserRequest;
+import com.venus.crud.dto.jpa.response.user.UserResponse;
+import com.venus.crud.entity.enums.UserStatus;
+import com.venus.crud.service.jpa.user.UserService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -25,35 +25,36 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
-@RequestMapping("/api/allergies")
-public class AllergyController {
+@RequestMapping("/api/users")
+public class UserController {
 
-    private final AllergyService allergyService;
+    private final UserService userService;
 
-    public AllergyController(AllergyService allergyService) {
-        this.allergyService = allergyService;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping
-    public ResponseEntity<List<AllergyResponse>> findAll() {
-        return ResponseEntity.ok(allergyService.findAll());
+    public ResponseEntity<List<UserResponse>> findAll() {
+        return ResponseEntity.ok(userService.findAll());
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Slice<AllergyResponse>> search(
-            @RequestParam(required = false) AllergyType allergyType,
+    public ResponseEntity<Slice<UserResponse>> search(
+            @RequestParam(required = false) UserStatus status,
+            @RequestParam(required = false) String name,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(allergyService.search(allergyType, pageable));
+        return ResponseEntity.ok(userService.search(status, name, pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AllergyResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(allergyService.findById(id));
+    public ResponseEntity<UserResponse> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<AllergyResponse> create(@Valid @RequestBody AllergyRequest request) {
-        AllergyResponse created = allergyService.create(request);
+    public ResponseEntity<UserResponse> create(@Valid @RequestBody UserRequest request) {
+        UserResponse created = userService.create(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(created.id())
@@ -62,18 +63,18 @@ public class AllergyController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AllergyResponse> update(@PathVariable Long id, @Valid @RequestBody AllergyRequest request) {
-        return ResponseEntity.ok(allergyService.update(id, request));
+    public ResponseEntity<UserResponse> update(@PathVariable Long id, @Valid @RequestBody UserRequest request) {
+        return ResponseEntity.ok(userService.update(id, request));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<AllergyResponse> patch(@PathVariable Long id, @Valid @RequestBody AllergyPatchRequest request) {
-        return ResponseEntity.ok(allergyService.patch(id, request));
+    public ResponseEntity<UserResponse> patch(@PathVariable Long id, @Valid @RequestBody UserPatchRequest request) {
+        return ResponseEntity.ok(userService.patch(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        allergyService.delete(id);
+        userService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -1,9 +1,9 @@
-package com.venus.crud.controller.user;
+package com.venus.crud.controller.jpa.user;
 
-import com.venus.crud.dto.request.user.UserAllergyPatchRequest;
-import com.venus.crud.dto.request.user.UserAllergyRequest;
-import com.venus.crud.dto.response.user.UserAllergyResponse;
-import com.venus.crud.service.user.UserAllergyService;
+import com.venus.crud.dto.jpa.patch.user.UserAllergyPatchRequest;
+import com.venus.crud.dto.jpa.request.user.UserAllergyRequest;
+import com.venus.crud.dto.jpa.response.user.UserAllergyResponse;
+import com.venus.crud.service.jpa.user.UserAllergyService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;

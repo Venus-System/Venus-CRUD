@@ -1,8 +1,8 @@
-package com.venus.crud.controller.user;
+package com.venus.crud.controller.jpa.user;
 
-import com.venus.crud.dto.request.user.FavoriteRequest;
-import com.venus.crud.dto.response.user.FavoriteResponse;
-import com.venus.crud.service.user.FavoriteService;
+import com.venus.crud.dto.jpa.request.user.FavoriteRequest;
+import com.venus.crud.dto.jpa.response.user.FavoriteResponse;
+import com.venus.crud.service.jpa.user.FavoriteService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
