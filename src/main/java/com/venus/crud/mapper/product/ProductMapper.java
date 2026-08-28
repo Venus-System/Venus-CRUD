@@ -7,10 +7,12 @@ import com.venus.crud.dto.response.product.ProductResponse;
 import com.venus.crud.entity.product.Brand;
 import com.venus.crud.entity.product.Product;
 import com.venus.crud.entity.product.ProductCategory;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface ProductMapper {
@@ -34,6 +36,7 @@ public interface ProductMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "brand", source = "brandId")
     @Mapping(target = "productCategory", source = "productCategoryId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(ProductPatchRequest request, @MappingTarget Product entity);
 
     default Brand mapBrand(Long brandId) {

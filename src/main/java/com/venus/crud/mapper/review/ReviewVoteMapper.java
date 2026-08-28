@@ -7,10 +7,12 @@ import com.venus.crud.dto.response.review.ReviewVoteResponse;
 import com.venus.crud.entity.review.Review;
 import com.venus.crud.entity.review.ReviewVote;
 import com.venus.crud.entity.user.User;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface ReviewVoteMapper {
@@ -32,6 +34,7 @@ public interface ReviewVoteMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "review", source = "reviewId")
     @Mapping(target = "user", source = "userId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(ReviewVotePatchRequest request, @MappingTarget ReviewVote entity);
 
     default Review mapReview(Long reviewId) {

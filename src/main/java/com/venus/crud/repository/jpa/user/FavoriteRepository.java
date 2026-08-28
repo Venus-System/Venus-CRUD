@@ -5,7 +5,12 @@ import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.Collection;
+import java.util.Set;
 
 @Repository
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
@@ -16,4 +21,8 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     boolean existsByUserIdAndProductId(Long userId, Long productId);
     void deleteByUserIdAndProductId(Long userId, Long productId);
     long countByProductId(Long productId);
+    long countByUserId(Long userId);
+
+    @Query("SELECT f.product.id FROM Favorite f WHERE f.user.id = :userId AND f.product.id IN :productIds")
+    Set<Long> findFavoritedProductIds(@Param("userId") Long userId, @Param("productIds") Collection<Long> productIds);
 }
