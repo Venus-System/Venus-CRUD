@@ -1,12 +1,12 @@
-package com.venus.crud.service.user;
+package com.venus.crud.service.jpa.user;
 
-import com.venus.crud.dto.request.user.FavoriteRequest;
-import com.venus.crud.dto.response.user.FavoriteResponse;
+import com.venus.crud.dto.jpa.request.user.FavoriteRequest;
+import com.venus.crud.dto.jpa.response.user.FavoriteResponse;
 import com.venus.crud.entity.user.Favorite;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.exception.ServiceUnavailableException;
-import com.venus.crud.mapper.user.FavoriteMapper;
+import com.venus.crud.mapper.jpa.user.FavoriteMapper;
 import com.venus.crud.repository.jpa.user.FavoriteRepository;
 import java.util.List;
 import java.util.function.Supplier;

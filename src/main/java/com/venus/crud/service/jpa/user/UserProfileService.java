@@ -1,8 +1,8 @@
-package com.venus.crud.service.user;
+package com.venus.crud.service.jpa.user;
 
-import com.venus.crud.dto.request.user.UserProfilePatchRequest;
-import com.venus.crud.dto.request.user.UserProfileRequest;
-import com.venus.crud.dto.response.user.UserProfileResponse;
+import com.venus.crud.dto.jpa.patch.user.UserProfilePatchRequest;
+import com.venus.crud.dto.jpa.request.user.UserProfileRequest;
+import com.venus.crud.dto.jpa.response.user.UserProfileResponse;
 import com.venus.crud.entity.enums.AgeRange;
 import com.venus.crud.entity.enums.Gender;
 import com.venus.crud.entity.enums.HairType;
@@ -12,7 +12,7 @@ import com.venus.crud.entity.user.UserProfile;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.exception.ServiceUnavailableException;
-import com.venus.crud.mapper.user.UserProfileMapper;
+import com.venus.crud.mapper.jpa.user.UserProfileMapper;
 import com.venus.crud.repository.jpa.user.UserProfileRepository;
 import java.util.List;
 import java.util.function.Supplier;

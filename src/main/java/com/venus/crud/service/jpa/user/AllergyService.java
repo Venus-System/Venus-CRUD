@@ -1,14 +1,14 @@
-package com.venus.crud.service.user;
+package com.venus.crud.service.jpa.user;
 
-import com.venus.crud.dto.request.user.AllergyPatchRequest;
-import com.venus.crud.dto.request.user.AllergyRequest;
-import com.venus.crud.dto.response.user.AllergyResponse;
+import com.venus.crud.dto.jpa.patch.user.AllergyPatchRequest;
+import com.venus.crud.dto.jpa.request.user.AllergyRequest;
+import com.venus.crud.dto.jpa.response.user.AllergyResponse;
 import com.venus.crud.entity.enums.AllergyType;
 import com.venus.crud.entity.user.Allergy;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.exception.ServiceUnavailableException;
-import com.venus.crud.mapper.user.AllergyMapper;
+import com.venus.crud.mapper.jpa.user.AllergyMapper;
 import com.venus.crud.repository.jpa.user.AllergyRepository;
 import java.util.List;
 import java.util.Optional;

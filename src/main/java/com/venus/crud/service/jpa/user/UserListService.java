@@ -1,14 +1,14 @@
-package com.venus.crud.service.user;
+package com.venus.crud.service.jpa.user;
 
-import com.venus.crud.dto.request.user.UserListPatchRequest;
-import com.venus.crud.dto.request.user.UserListRequest;
-import com.venus.crud.dto.response.user.UserListResponse;
+import com.venus.crud.dto.jpa.patch.user.UserListPatchRequest;
+import com.venus.crud.dto.jpa.request.user.UserListRequest;
+import com.venus.crud.dto.jpa.response.user.UserListResponse;
 import com.venus.crud.entity.enums.ListType;
 import com.venus.crud.entity.user.UserList;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.exception.ServiceUnavailableException;
-import com.venus.crud.mapper.user.UserListMapper;
+import com.venus.crud.mapper.jpa.user.UserListMapper;
 import com.venus.crud.repository.jpa.user.UserListRepository;
 import java.util.List;
 import java.util.Optional;

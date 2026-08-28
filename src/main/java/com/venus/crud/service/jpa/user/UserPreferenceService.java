@@ -1,13 +1,13 @@
-package com.venus.crud.service.user;
+package com.venus.crud.service.jpa.user;
 
-import com.venus.crud.dto.request.user.UserPreferencePatchRequest;
-import com.venus.crud.dto.request.user.UserPreferenceRequest;
-import com.venus.crud.dto.response.user.UserPreferenceResponse;
+import com.venus.crud.dto.jpa.patch.user.UserPreferencePatchRequest;
+import com.venus.crud.dto.jpa.request.user.UserPreferenceRequest;
+import com.venus.crud.dto.jpa.response.user.UserPreferenceResponse;
 import com.venus.crud.entity.user.UserPreference;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.exception.ServiceUnavailableException;
-import com.venus.crud.mapper.user.UserPreferenceMapper;
+import com.venus.crud.mapper.jpa.user.UserPreferenceMapper;
 import com.venus.crud.repository.jpa.user.UserPreferenceRepository;
 import java.util.List;
 import java.util.function.Supplier;

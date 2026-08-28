@@ -1,12 +1,12 @@
-package com.venus.crud.service.user;
+package com.venus.crud.service.jpa.user;
 
-import com.venus.crud.dto.request.user.UserProfileTagRequest;
-import com.venus.crud.dto.response.user.UserProfileTagResponse;
+import com.venus.crud.dto.jpa.request.user.UserProfileTagRequest;
+import com.venus.crud.dto.jpa.response.user.UserProfileTagResponse;
 import com.venus.crud.entity.user.UserProfileTag;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.exception.ServiceUnavailableException;
-import com.venus.crud.mapper.user.UserProfileTagMapper;
+import com.venus.crud.mapper.jpa.user.UserProfileTagMapper;
 import com.venus.crud.repository.jpa.user.UserProfileTagRepository;
 import java.util.List;
 import java.util.function.Supplier;
