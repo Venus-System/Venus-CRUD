@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface UserListItemRepository extends JpaRepository<UserListItem, Long> {
 
     List<UserListItem> findByUserListIdOrderByPositionOrder(Long userListId);
+    List<UserListItem> findByUserListIdInOrderByPositionOrder(List<Long> userListIds);
     Slice<UserListItem> findByProductId(Long productId, Pageable pageable);
     Optional<UserListItem> findByUserListIdAndProductId(Long userListId, Long productId);
     boolean existsByUserListIdAndProductId(Long userListId, Long productId);
