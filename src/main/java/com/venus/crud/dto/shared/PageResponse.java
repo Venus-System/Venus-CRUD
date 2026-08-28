@@ -1,4 +1,4 @@
-package com.venus.crud.dto.response;
+package com.venus.crud.dto.shared;
 
 import java.util.List;
 import org.springframework.data.domain.Page;
