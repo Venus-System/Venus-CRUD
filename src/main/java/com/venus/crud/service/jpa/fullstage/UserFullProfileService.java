@@ -2,6 +2,7 @@ package com.venus.crud.service.jpa.fullstage;
 
 import com.venus.crud.dto.jpa.response.fullstage.UserAllergyDetailResponse;
 import com.venus.crud.dto.jpa.response.fullstage.UserFullProfileResponse;
+import com.venus.crud.dto.jpa.response.fullstage.UserListItemDetailResponse;
 import com.venus.crud.dto.jpa.response.fullstage.UserListWithItemsResponse;
 import com.venus.crud.dto.jpa.response.user.UserPreferenceResponse;
 import com.venus.crud.dto.jpa.response.user.UserProfileResponse;
@@ -11,10 +12,9 @@ import com.venus.crud.entity.user.UserListItem;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.exception.ServiceUnavailableException;
+import com.venus.crud.mapper.jpa.product.ProductMapper;
 import com.venus.crud.mapper.jpa.shared.ProfileTagMapper;
 import com.venus.crud.mapper.jpa.user.AllergyMapper;
-import com.venus.crud.mapper.jpa.user.FavoriteMapper;
-import com.venus.crud.mapper.jpa.user.UserListItemMapper;
 import com.venus.crud.mapper.jpa.user.UserListMapper;
 import com.venus.crud.mapper.jpa.user.UserMapper;
 import com.venus.crud.mapper.jpa.user.UserPreferenceMapper;
@@ -56,17 +56,16 @@ public class UserFullProfileService {
     private final ProfileTagMapper profileTagMapper;
     private final UserPreferenceMapper userPreferenceMapper;
     private final AllergyMapper allergyMapper;
-    private final FavoriteMapper favoriteMapper;
+    private final ProductMapper productMapper;
     private final UserListMapper userListMapper;
-    private final UserListItemMapper userListItemMapper;
 
     public UserFullProfileService(UserRepository userRepository, UserProfileRepository userProfileRepository,
             UserProfileTagRepository userProfileTagRepository, UserPreferenceRepository userPreferenceRepository,
             UserAllergyRepository userAllergyRepository, FavoriteRepository favoriteRepository,
             UserListRepository userListRepository, UserListItemRepository userListItemRepository,
             UserMapper userMapper, UserProfileMapper userProfileMapper, ProfileTagMapper profileTagMapper,
-            UserPreferenceMapper userPreferenceMapper, AllergyMapper allergyMapper, FavoriteMapper favoriteMapper,
-            UserListMapper userListMapper, UserListItemMapper userListItemMapper) {
+            UserPreferenceMapper userPreferenceMapper, AllergyMapper allergyMapper, ProductMapper productMapper,
+            UserListMapper userListMapper) {
         this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
         this.userProfileTagRepository = userProfileTagRepository;
@@ -80,9 +79,8 @@ public class UserFullProfileService {
         this.profileTagMapper = profileTagMapper;
         this.userPreferenceMapper = userPreferenceMapper;
         this.allergyMapper = allergyMapper;
-        this.favoriteMapper = favoriteMapper;
+        this.productMapper = productMapper;
         this.userListMapper = userListMapper;
-        this.userListItemMapper = userListItemMapper;
     }
 
     @Transactional(readOnly = true)
@@ -110,7 +108,7 @@ public class UserFullProfileService {
 
         var favorites = executeOrFail(() -> favoriteRepository.findByUserId(userId), "Falha ao consultar favoritos do usuario")
                 .stream()
-                .map(favoriteMapper::toResponse)
+                .map(favorite -> productMapper.toResponse(favorite.getProduct()))
                 .toList();
 
         var lists = buildLists(userId);
@@ -131,7 +129,9 @@ public class UserFullProfileService {
         return userLists.stream()
                 .map(userList -> new UserListWithItemsResponse(
                         userListMapper.toResponse(userList),
-                        itemsByListId.getOrDefault(userList.getId(), List.of()).stream().map(userListItemMapper::toResponse).toList()))
+                        itemsByListId.getOrDefault(userList.getId(), List.of()).stream()
+                                .map(item -> new UserListItemDetailResponse(productMapper.toResponse(item.getProduct()), item.getPositionOrder()))
+                                .toList()))
                 .toList();
     }
 
