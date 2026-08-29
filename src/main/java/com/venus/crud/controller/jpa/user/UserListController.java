@@ -40,11 +40,11 @@ public class UserListController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<Slice<UserListResponse>> findByUser(
+    public ResponseEntity<Slice<UserListResponse>> findByUserId(
             @PathVariable Long userId,
             @RequestParam(required = false) ListType listType,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(userListService.findByUser(userId, listType, pageable));
+        return ResponseEntity.ok(userListService.findByUserId(userId, listType, pageable));
     }
 
     @GetMapping("/{id}")
