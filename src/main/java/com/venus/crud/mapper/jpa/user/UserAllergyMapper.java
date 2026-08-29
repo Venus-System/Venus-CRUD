@@ -7,10 +7,12 @@ import com.venus.crud.dto.jpa.response.user.UserAllergyResponse;
 import com.venus.crud.entity.user.Allergy;
 import com.venus.crud.entity.user.User;
 import com.venus.crud.entity.user.UserAllergy;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface UserAllergyMapper {
@@ -34,6 +36,7 @@ public interface UserAllergyMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "user", source = "userId")
     @Mapping(target = "allergy", source = "allergyId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(UserAllergyPatchRequest request, @MappingTarget UserAllergy entity);
 
     default User mapUser(Long userId) {

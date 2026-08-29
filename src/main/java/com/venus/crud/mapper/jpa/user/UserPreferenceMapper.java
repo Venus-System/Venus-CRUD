@@ -6,10 +6,12 @@ import com.venus.crud.dto.jpa.request.user.UserPreferenceRequest;
 import com.venus.crud.dto.jpa.response.user.UserPreferenceResponse;
 import com.venus.crud.entity.user.User;
 import com.venus.crud.entity.user.UserPreference;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface UserPreferenceMapper {
@@ -30,6 +32,7 @@ public interface UserPreferenceMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "user", source = "userId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(UserPreferencePatchRequest request, @MappingTarget UserPreference entity);
 
     default User mapUser(Long userId) {

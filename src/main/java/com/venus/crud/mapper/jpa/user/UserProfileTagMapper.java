@@ -7,10 +7,12 @@ import com.venus.crud.dto.jpa.response.user.UserProfileTagResponse;
 import com.venus.crud.entity.shared.ProfileTag;
 import com.venus.crud.entity.user.User;
 import com.venus.crud.entity.user.UserProfileTag;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface UserProfileTagMapper {
@@ -32,6 +34,7 @@ public interface UserProfileTagMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "user", source = "userId")
     @Mapping(target = "profileTag", source = "profileTagId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(UserProfileTagPatchRequest request, @MappingTarget UserProfileTag entity);
 
     default User mapUser(Long userId) {

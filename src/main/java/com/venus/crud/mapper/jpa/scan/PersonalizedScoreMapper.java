@@ -9,10 +9,12 @@ import com.venus.crud.entity.scan.AnalysisResult;
 import com.venus.crud.entity.scan.PersonalizedScore;
 import com.venus.crud.entity.scoring.ScoringModel;
 import com.venus.crud.entity.user.User;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface PersonalizedScoreMapper {
@@ -42,6 +44,7 @@ public interface PersonalizedScoreMapper {
     @Mapping(target = "productVersion", source = "productVersionId")
     @Mapping(target = "analysisResult", source = "analysisResultId")
     @Mapping(target = "scoringModel", source = "scoringModelId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(PersonalizedScorePatchRequest request, @MappingTarget PersonalizedScore entity);
 
     default User mapUser(Long userId) {

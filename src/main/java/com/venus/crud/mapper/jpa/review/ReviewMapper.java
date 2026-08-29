@@ -7,10 +7,12 @@ import com.venus.crud.dto.jpa.response.review.ReviewResponse;
 import com.venus.crud.entity.product.ProductVersion;
 import com.venus.crud.entity.review.Review;
 import com.venus.crud.entity.user.User;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface ReviewMapper {
@@ -34,6 +36,7 @@ public interface ReviewMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "user", source = "userId")
     @Mapping(target = "productVersion", source = "productVersionId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(ReviewPatchRequest request, @MappingTarget Review entity);
 
     default User mapUser(Long userId) {

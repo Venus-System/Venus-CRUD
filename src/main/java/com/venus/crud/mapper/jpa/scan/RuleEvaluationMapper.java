@@ -9,10 +9,12 @@ import com.venus.crud.entity.ingredient.Ingredient;
 import com.venus.crud.entity.scan.AnalysisResult;
 import com.venus.crud.entity.scan.RuleEvaluation;
 import com.venus.crud.entity.shared.ProfileTag;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface RuleEvaluationMapper {
@@ -40,6 +42,7 @@ public interface RuleEvaluationMapper {
     @Mapping(target = "compatibilityRule", source = "compatibilityRuleId")
     @Mapping(target = "ingredient", source = "ingredientId")
     @Mapping(target = "profileTag", source = "profileTagId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(RuleEvaluationPatchRequest request, @MappingTarget RuleEvaluation entity);
 
     default AnalysisResult mapAnalysisResult(Long analysisResultId) {

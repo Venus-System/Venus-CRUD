@@ -9,10 +9,12 @@ import com.venus.crud.entity.scan.AnalysisResult;
 import com.venus.crud.entity.scoring.Recommendation;
 import com.venus.crud.entity.shared.ProfileTag;
 import com.venus.crud.entity.user.User;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface RecommendationMapper {
@@ -42,6 +44,7 @@ public interface RecommendationMapper {
     @Mapping(target = "profileTag", source = "profileTagId")
     @Mapping(target = "productVersion", source = "productVersionId")
     @Mapping(target = "analysisResult", source = "analysisResultId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(RecommendationPatchRequest request, @MappingTarget Recommendation entity);
 
     default User mapUser(Long userId) {

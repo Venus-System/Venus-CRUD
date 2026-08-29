@@ -6,10 +6,12 @@ import com.venus.crud.dto.jpa.request.product.ProductVersionRequest;
 import com.venus.crud.dto.jpa.response.product.ProductVersionResponse;
 import com.venus.crud.entity.product.Product;
 import com.venus.crud.entity.product.ProductVersion;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface ProductVersionMapper {
@@ -30,6 +32,7 @@ public interface ProductVersionMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "product", source = "productId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(ProductVersionPatchRequest request, @MappingTarget ProductVersion entity);
 
     default Product mapProduct(Long productId) {

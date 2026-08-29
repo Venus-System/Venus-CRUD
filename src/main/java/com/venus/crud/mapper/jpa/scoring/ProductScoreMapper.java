@@ -7,10 +7,12 @@ import com.venus.crud.dto.jpa.response.scoring.ProductScoreResponse;
 import com.venus.crud.entity.product.ProductVersion;
 import com.venus.crud.entity.scoring.ProductScore;
 import com.venus.crud.entity.scoring.ScoringModel;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = VenusMapperConfig.class)
 public interface ProductScoreMapper {
@@ -34,6 +36,7 @@ public interface ProductScoreMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "productVersion", source = "productVersionId")
     @Mapping(target = "scoringModel", source = "scoringModelId")
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(ProductScorePatchRequest request, @MappingTarget ProductScore entity);
 
     default ProductVersion mapProductVersion(Long productVersionId) {
