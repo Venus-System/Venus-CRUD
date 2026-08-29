@@ -1,7 +1,7 @@
 package com.venus.crud.dto.jpa.response.fullstage;
 
+import com.venus.crud.dto.jpa.response.product.ProductResponse;
 import com.venus.crud.dto.jpa.response.shared.ProfileTagResponse;
-import com.venus.crud.dto.jpa.response.user.FavoriteResponse;
 import com.venus.crud.dto.jpa.response.user.UserPreferenceResponse;
 import com.venus.crud.dto.jpa.response.user.UserProfileResponse;
 import com.venus.crud.dto.jpa.response.user.UserResponse;
@@ -13,7 +13,7 @@ public record UserFullProfileResponse(
         List<ProfileTagResponse> tags,
         UserPreferenceResponse preferences,
         List<UserAllergyDetailResponse> allergies,
-        List<FavoriteResponse> favorites,
+        List<ProductResponse> favorites,
         List<UserListWithItemsResponse> lists
 ) {
 }
