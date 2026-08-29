@@ -3,6 +3,7 @@ package com.venus.crud.service.jpa.user;
 import com.venus.crud.dto.jpa.patch.user.UserAllergyPatchRequest;
 import com.venus.crud.dto.jpa.request.user.UserAllergyRequest;
 import com.venus.crud.dto.jpa.response.user.UserAllergyResponse;
+import com.venus.crud.entity.enums.RiskLevel;
 import com.venus.crud.entity.user.UserAllergy;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
@@ -41,9 +42,12 @@ public class UserAllergyService {
     }
 
     @Transactional(readOnly = true)
-    public Slice<UserAllergyResponse> findByUserId(Long userId, Pageable pageable) {
-        return executeOrFail(() -> userAllergyRepository.findByUserId(userId, pageable), "Falha ao consultar alergias do usuario")
-                .map(userAllergyMapper::toResponse);
+    public Slice<UserAllergyResponse> findByUserId(Long userId, RiskLevel severity, Pageable pageable) {
+        Slice<UserAllergy> result = severity != null
+                ? executeOrFail(() -> userAllergyRepository.findByUserIdAndSeverity(userId, severity, pageable), "Falha ao consultar alergias do usuario por gravidade")
+                : executeOrFail(() -> userAllergyRepository.findByUserId(userId, pageable), "Falha ao consultar alergias do usuario");
+
+        return result.map(userAllergyMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
