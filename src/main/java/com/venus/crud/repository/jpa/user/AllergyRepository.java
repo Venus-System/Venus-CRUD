@@ -13,7 +13,6 @@ import java.util.Optional;
 public interface AllergyRepository extends JpaRepository<Allergy, Long> {
 
     Optional<Allergy> findByAllergyName(String allergyName);
-    boolean existsByAllergyName(String allergyName);
     Slice<Allergy> findByAllergyType(AllergyType allergyType, Pageable pageable);
     Slice<Allergy> findAllBy(Pageable pageable);
 }
