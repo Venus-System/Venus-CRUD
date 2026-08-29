@@ -51,6 +51,11 @@ public class FavoriteController {
         return ResponseEntity.ok(favoriteService.countByProductId(productId));
     }
 
+    @GetMapping("/user/{userId}/count")
+    public ResponseEntity<Long> countByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(favoriteService.countByUserId(userId));
+    }
+
     @PostMapping
     public ResponseEntity<FavoriteResponse> create(@Valid @RequestBody FavoriteRequest request) {
         FavoriteResponse created = favoriteService.create(request);
