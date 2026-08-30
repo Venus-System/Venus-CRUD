@@ -48,7 +48,7 @@ public class UserListService {
     }
 
     @Transactional(readOnly = true)
-    public Slice<UserListResponse> findByUser(Long userId, ListType listType, Pageable pageable) {
+    public Slice<UserListResponse> findByUserId(Long userId, ListType listType, Pageable pageable) {
         Slice<UserList> result = listType != null
                 ? executeOrFail(() -> userListRepository.findByUserIdAndListType(userId, listType, pageable), "Falha ao consultar listas do usuario por tipo")
                 : executeOrFail(() -> userListRepository.findByUserId(userId, pageable), "Falha ao consultar listas do usuario");

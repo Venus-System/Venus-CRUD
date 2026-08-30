@@ -56,6 +56,11 @@ public class FavoriteService {
         return executeOrFail(() -> favoriteRepository.countByProductId(productId), "Falha ao contar favoritos do produto");
     }
 
+    @Transactional(readOnly = true)
+    public long countByUserId(Long userId) {
+        return executeOrFail(() -> favoriteRepository.countByUserId(userId), "Falha ao contar favoritos do usuario");
+    }
+
     @Transactional
     public FavoriteResponse create(FavoriteRequest request) {
         ensureProductNotFavorited(request.userId(), request.productId());

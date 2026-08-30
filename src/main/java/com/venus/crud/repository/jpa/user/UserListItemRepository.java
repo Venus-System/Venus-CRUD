@@ -3,6 +3,7 @@ package com.venus.crud.repository.jpa.user;
 import com.venus.crud.entity.user.UserListItem;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +14,7 @@ import java.util.Optional;
 public interface UserListItemRepository extends JpaRepository<UserListItem, Long> {
 
     List<UserListItem> findByUserListIdOrderByPositionOrder(Long userListId);
+    @EntityGraph(attributePaths = "product")
     List<UserListItem> findByUserListIdInOrderByPositionOrder(List<Long> userListIds);
     Slice<UserListItem> findByProductId(Long productId, Pageable pageable);
     Optional<UserListItem> findByUserListIdAndProductId(Long userListId, Long productId);

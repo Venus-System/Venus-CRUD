@@ -21,5 +21,5 @@ public interface UserAllergyRepository extends JpaRepository<UserAllergy, Long> 
     Optional<UserAllergy> findByUserIdAndAllergyId(Long userId, Long allergyId);
     boolean existsByUserIdAndAllergyId(Long userId, Long allergyId);
     void deleteByUserIdAndAllergyId(Long userId, Long allergyId);
-    List<UserAllergy> findByUserIdAndSeverity(Long userId, RiskLevel severity);
+    Slice<UserAllergy> findByUserIdAndSeverity(Long userId, RiskLevel severity, Pageable pageable);
 }

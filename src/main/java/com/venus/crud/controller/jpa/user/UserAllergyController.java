@@ -3,6 +3,7 @@ package com.venus.crud.controller.jpa.user;
 import com.venus.crud.dto.jpa.patch.user.UserAllergyPatchRequest;
 import com.venus.crud.dto.jpa.request.user.UserAllergyRequest;
 import com.venus.crud.dto.jpa.response.user.UserAllergyResponse;
+import com.venus.crud.entity.enums.RiskLevel;
 import com.venus.crud.service.jpa.user.UserAllergyService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -38,8 +40,10 @@ public class UserAllergyController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<Slice<UserAllergyResponse>> findByUserId(
-            @PathVariable Long userId, @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(userAllergyService.findByUserId(userId, pageable));
+            @PathVariable Long userId,
+            @RequestParam(required = false) RiskLevel severity,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(userAllergyService.findByUserId(userId, severity, pageable));
     }
 
     @GetMapping("/allergy/{allergyId}")

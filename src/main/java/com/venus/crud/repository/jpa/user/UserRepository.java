@@ -13,9 +13,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByFirebaseUid(String firebaseUid);
-    boolean existsByFirebaseUid(String firebaseUid);
     Optional<User> findByEmailIgnoreCase(String email);
-    boolean existsByEmailIgnoreCase(String email);
     Slice<User> findByStatus(UserStatus status, Pageable pageable);
     Slice<User> findByNameContainingIgnoreCase(String name, Pageable pageable);
     Slice<User> findByStatusAndNameContainingIgnoreCase(UserStatus status, String name, Pageable pageable);
