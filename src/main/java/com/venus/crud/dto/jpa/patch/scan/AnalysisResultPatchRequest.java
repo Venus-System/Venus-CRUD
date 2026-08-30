@@ -1,0 +1,20 @@
+package com.venus.crud.dto.jpa.patch.scan;
+
+import com.venus.crud.entity.enums.AnalysisStatus;
+
+public record AnalysisResultPatchRequest(
+        Long userId,
+        Long productVersionId,
+        Long scoringModelId,
+        Integer overallScore,
+        Integer healthScore,
+        Integer environmentalScore,
+        Integer ethicalScore,
+        Integer performanceScore,
+        Integer transparencyScore,
+        Short confidenceScore,
+        Integer processingTimeMs,
+        AnalysisStatus status,
+        String summary
+) {
+}
