@@ -2,7 +2,6 @@ package com.venus.crud.repository.jpa.scan;
 
 import com.venus.crud.entity.enums.AnalysisStatus;
 import com.venus.crud.entity.scan.AnalysisResult;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -14,7 +13,8 @@ public interface AnalysisResultRepository extends JpaRepository<AnalysisResult, 
 
     @EntityGraph(attributePaths = "productVersion")
     Slice<AnalysisResult> findByUserId(Long userId, Pageable pageable);
-    Page<AnalysisResult> findByUserIdAndProductVersionId(Long userId, Long productVersionId, Pageable pageable);
-    Page<AnalysisResult> findByStatus(AnalysisStatus status, Pageable pageable);
-    Page<AnalysisResult> findByOverallScoreGreaterThanEqual(Integer overallScore, Pageable pageable);
+    Slice<AnalysisResult> findByUserIdAndProductVersionId(Long userId, Long productVersionId, Pageable pageable);
+    Slice<AnalysisResult> findByStatus(AnalysisStatus status, Pageable pageable);
+    Slice<AnalysisResult> findByOverallScoreGreaterThanEqual(Integer overallScore, Pageable pageable);
+    Slice<AnalysisResult> findAllBy(Pageable pageable);
 }
