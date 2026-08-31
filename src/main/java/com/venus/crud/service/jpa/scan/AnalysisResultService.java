@@ -120,9 +120,9 @@ public class AnalysisResultService {
         try {
             return action.get();
         } catch (DataAccessException ex) {
-            String invalidTransitionMessage = extractInvalidStateTransitionMessage(ex);
-            if (invalidTransitionMessage != null) {
-                throw new InvalidStateTransitionException(invalidTransitionMessage);
+            if (isInvalidStateTransition(ex)) {
+                throw new InvalidStateTransitionException(
+                        "Transicao de status invalida. Analises concluidas ou com falha nao mudam de status.");
             }
             if (ex instanceof DataIntegrityViolationException) {
                 log.warn("Violacao de integridade de dados: {}", ex.getMessage());
@@ -133,13 +133,14 @@ public class AnalysisResultService {
         }
     }
 
-    private String extractInvalidStateTransitionMessage(DataAccessException ex) {
+    private boolean isInvalidStateTransition(DataAccessException ex) {
         for (Throwable cause = ex; cause != null; cause = cause.getCause()) {
             if (cause instanceof SQLException sqlException
                     && INVALID_STATE_TRANSITION_SQL_STATE.equals(sqlException.getSQLState())) {
-                return sqlException.getMessage();
+                log.warn("Transicao de status rejeitada pelo banco: {}", sqlException.getMessage());
+                return true;
             }
         }
-        return null;
+        return false;
     }
 }
