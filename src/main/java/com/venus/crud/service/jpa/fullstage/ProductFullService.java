@@ -7,6 +7,7 @@ import com.venus.crud.dto.jpa.response.product.PackagingResponse;
 import com.venus.crud.dto.jpa.response.product.ProductCategoryResponse;
 import com.venus.crud.dto.jpa.response.product.ProductLabelResponse;
 import com.venus.crud.dto.jpa.response.product.ProductVersionResponse;
+import com.venus.crud.dto.jpa.response.scoring.ProductScoreResponse;
 import com.venus.crud.entity.product.Product;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
@@ -18,6 +19,7 @@ import com.venus.crud.mapper.jpa.product.ProductCategoryMapper;
 import com.venus.crud.mapper.jpa.product.ProductLabelMapper;
 import com.venus.crud.mapper.jpa.product.ProductMapper;
 import com.venus.crud.mapper.jpa.product.ProductVersionMapper;
+import com.venus.crud.mapper.jpa.scoring.ProductScoreMapper;
 import com.venus.crud.repository.jpa.product.BrandRepository;
 import com.venus.crud.repository.jpa.product.PackagingRepository;
 import com.venus.crud.repository.jpa.product.ProductCategoryRepository;
@@ -25,6 +27,8 @@ import com.venus.crud.repository.jpa.product.ProductClaimRepository;
 import com.venus.crud.repository.jpa.product.ProductLabelRepository;
 import com.venus.crud.repository.jpa.product.ProductRepository;
 import com.venus.crud.repository.jpa.product.ProductVersionRepository;
+import com.venus.crud.repository.jpa.scoring.ProductScoreRepository;
+import com.venus.crud.repository.jpa.scoring.ScoringModelRepository;
 import java.util.List;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
@@ -46,6 +50,9 @@ public class ProductFullService {
     private final PackagingRepository packagingRepository;
     private final ProductLabelRepository productLabelRepository;
     private final ProductClaimRepository productClaimRepository;
+    private final ProductScoreRepository productScoreRepository;
+    private final ScoringModelRepository scoringModelRepository;
+    private final ProductScoreMapper productScoreMapper;
     private final ProductMapper productMapper;
     private final BrandMapper brandMapper;
     private final ProductCategoryMapper productCategoryMapper;
@@ -57,7 +64,9 @@ public class ProductFullService {
     public ProductFullService(ProductRepository productRepository, BrandRepository brandRepository,
             ProductCategoryRepository productCategoryRepository, ProductVersionRepository productVersionRepository,
             PackagingRepository packagingRepository, ProductLabelRepository productLabelRepository,
-            ProductClaimRepository productClaimRepository, ProductMapper productMapper, BrandMapper brandMapper,
+            ProductClaimRepository productClaimRepository, ProductScoreRepository productScoreRepository,
+            ScoringModelRepository scoringModelRepository, ProductScoreMapper productScoreMapper,
+            ProductMapper productMapper, BrandMapper brandMapper,
             ProductCategoryMapper productCategoryMapper, ProductVersionMapper productVersionMapper,
             PackagingMapper packagingMapper, ProductLabelMapper productLabelMapper, ClaimMapper claimMapper) {
         this.productRepository = productRepository;
@@ -67,6 +76,9 @@ public class ProductFullService {
         this.packagingRepository = packagingRepository;
         this.productLabelRepository = productLabelRepository;
         this.productClaimRepository = productClaimRepository;
+        this.productScoreRepository = productScoreRepository;
+        this.scoringModelRepository = scoringModelRepository;
+        this.productScoreMapper = productScoreMapper;
         this.productMapper = productMapper;
         this.brandMapper = brandMapper;
         this.productCategoryMapper = productCategoryMapper;
@@ -98,6 +110,7 @@ public class ProductFullService {
         PackagingResponse packaging = null;
         ProductLabelResponse label = null;
         List<ProductClaimDetailResponse> claims = List.of();
+        ProductScoreResponse score = null;
 
         if (currentVersion != null) {
             Long versionId = currentVersion.id();
@@ -120,9 +133,23 @@ public class ProductFullService {
                             productClaim.getSourceType(),
                             productClaim.getSourceReference()))
                     .toList();
+
+            score = findCurrentScore(versionId);
         }
 
-        return new ProductFullResponse(productMapper.toResponse(product), brand, category, currentVersion, packaging, label, claims);
+        return new ProductFullResponse(productMapper.toResponse(product), brand, category, currentVersion, packaging, label, claims, score);
+    }
+
+    private ProductScoreResponse findCurrentScore(Long productVersionId) {
+        try {
+            return scoringModelRepository.findByIsActiveTrue()
+                    .flatMap(activeModel -> productScoreRepository.findByProductVersionIdAndScoringModelId(productVersionId, activeModel.getId()))
+                    .map(productScoreMapper::toResponse)
+                    .orElse(null);
+        } catch (DataAccessException ex) {
+            log.error("Falha ao consultar score da versao de produto {}; a ficha sera devolvida sem score", productVersionId, ex);
+            return null;
+        }
     }
 
     private <T> T executeOrFail(Supplier<T> action, String errorMessage) {

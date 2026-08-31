@@ -6,6 +6,7 @@ import com.venus.crud.dto.jpa.response.product.ProductCategoryResponse;
 import com.venus.crud.dto.jpa.response.product.ProductLabelResponse;
 import com.venus.crud.dto.jpa.response.product.ProductResponse;
 import com.venus.crud.dto.jpa.response.product.ProductVersionResponse;
+import com.venus.crud.dto.jpa.response.scoring.ProductScoreResponse;
 import java.util.List;
 
 public record ProductFullResponse(
@@ -15,6 +16,7 @@ public record ProductFullResponse(
         ProductVersionResponse currentVersion,
         PackagingResponse packaging,
         ProductLabelResponse label,
-        List<ProductClaimDetailResponse> claims
+        List<ProductClaimDetailResponse> claims,
+        ProductScoreResponse score
 ) {
 }
