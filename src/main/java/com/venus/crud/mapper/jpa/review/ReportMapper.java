@@ -20,6 +20,7 @@ public interface ReportMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "handledAt", ignore = true)
     @Mapping(target = "user", source = "userId")
     @Mapping(target = "adminUser", source = "adminUserId")
     Report toEntity(ReportRequest request);
@@ -34,6 +35,7 @@ public interface ReportMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "handledAt", ignore = true)
     @Mapping(target = "user", source = "userId")
     @Mapping(target = "adminUser", source = "adminUserId")
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
