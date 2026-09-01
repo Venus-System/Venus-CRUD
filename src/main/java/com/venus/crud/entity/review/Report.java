@@ -13,10 +13,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 @Getter
 @Setter
@@ -47,6 +50,8 @@ public class Report extends AuditableEntity {
     @Column(name = "status", nullable = false)
     private ReportStatus status;
 
-    @Column(name = "handled_at")
+    @Setter(AccessLevel.NONE)
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
+    @Column(name = "handled_at", insertable = false, updatable = false)
     private OffsetDateTime handledAt;
 }
