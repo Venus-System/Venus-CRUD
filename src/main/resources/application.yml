@@ -27,8 +27,38 @@ spring:
     mongodb:
       uri: ${MONGO_URI}
 
+  servlet:
+    multipart:
+      max-file-size: 12MB
+      max-request-size: 12MB
+
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  users:
+    api-key: ${CLOUDINARY_USERS_API_KEY}
+    api-secret: ${CLOUDINARY_USERS_API_SECRET}
+    upload-preset: ${CLOUDINARY_USERS_UPLOAD_PRESET}
+  products:
+    api-key: ${CLOUDINARY_PRODUCTS_API_KEY}
+    api-secret: ${CLOUDINARY_PRODUCTS_API_SECRET}
+    upload-preset: ${CLOUDINARY_PRODUCTS_UPLOAD_PRESET}
+
+venus:
+  media:
+    allowed-image-types: ${MEDIA_ALLOWED_IMAGE_TYPES}
+    default-delivery-type: ${MEDIA_DEFAULT_DELIVERY_TYPE}
+    default-resource-type: ${MEDIA_DEFAULT_RESOURCE_TYPE}
+    avatar:
+      max-bytes: ${MEDIA_AVATAR_MAX_BYTES}
+      max-width: ${MEDIA_AVATAR_MAX_WIDTH}
+      max-height: ${MEDIA_AVATAR_MAX_HEIGHT}
+    product:
+      max-bytes: ${MEDIA_PRODUCT_MAX_BYTES}
+      max-width: ${MEDIA_PRODUCT_MAX_WIDTH}
+      max-height: ${MEDIA_PRODUCT_MAX_HEIGHT}
