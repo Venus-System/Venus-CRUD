@@ -4,14 +4,17 @@ import com.venus.crud.dto.jpa.response.fullstage.UserAllergyDetailResponse;
 import com.venus.crud.dto.jpa.response.fullstage.UserFullProfileResponse;
 import com.venus.crud.dto.jpa.response.fullstage.UserListItemDetailResponse;
 import com.venus.crud.dto.jpa.response.fullstage.UserListWithItemsResponse;
+import com.venus.crud.dto.jpa.response.media.MediaAssetResponse;
 import com.venus.crud.dto.jpa.response.user.UserPreferenceResponse;
 import com.venus.crud.dto.jpa.response.user.UserProfileResponse;
+import com.venus.crud.entity.enums.MediaPurpose;
 import com.venus.crud.entity.user.User;
 import com.venus.crud.entity.user.UserList;
 import com.venus.crud.entity.user.UserListItem;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.exception.ServiceUnavailableException;
+import com.venus.crud.mapper.jpa.media.MediaAssetMapper;
 import com.venus.crud.mapper.jpa.product.ProductMapper;
 import com.venus.crud.mapper.jpa.shared.ProfileTagMapper;
 import com.venus.crud.mapper.jpa.user.AllergyMapper;
@@ -19,6 +22,7 @@ import com.venus.crud.mapper.jpa.user.UserListMapper;
 import com.venus.crud.mapper.jpa.user.UserMapper;
 import com.venus.crud.mapper.jpa.user.UserPreferenceMapper;
 import com.venus.crud.mapper.jpa.user.UserProfileMapper;
+import com.venus.crud.repository.jpa.media.MediaAssetRepository;
 import com.venus.crud.repository.jpa.user.FavoriteRepository;
 import com.venus.crud.repository.jpa.user.UserAllergyRepository;
 import com.venus.crud.repository.jpa.user.UserListItemRepository;
@@ -44,6 +48,7 @@ public class UserFullProfileService {
     private static final Logger log = LoggerFactory.getLogger(UserFullProfileService.class);
 
     private final UserRepository userRepository;
+    private final MediaAssetRepository mediaAssetRepository;
     private final UserProfileRepository userProfileRepository;
     private final UserProfileTagRepository userProfileTagRepository;
     private final UserPreferenceRepository userPreferenceRepository;
@@ -52,6 +57,7 @@ public class UserFullProfileService {
     private final UserListRepository userListRepository;
     private final UserListItemRepository userListItemRepository;
     private final UserMapper userMapper;
+    private final MediaAssetMapper mediaAssetMapper;
     private final UserProfileMapper userProfileMapper;
     private final ProfileTagMapper profileTagMapper;
     private final UserPreferenceMapper userPreferenceMapper;
@@ -59,14 +65,16 @@ public class UserFullProfileService {
     private final ProductMapper productMapper;
     private final UserListMapper userListMapper;
 
-    public UserFullProfileService(UserRepository userRepository, UserProfileRepository userProfileRepository,
-            UserProfileTagRepository userProfileTagRepository, UserPreferenceRepository userPreferenceRepository,
-            UserAllergyRepository userAllergyRepository, FavoriteRepository favoriteRepository,
-            UserListRepository userListRepository, UserListItemRepository userListItemRepository,
-            UserMapper userMapper, UserProfileMapper userProfileMapper, ProfileTagMapper profileTagMapper,
+    public UserFullProfileService(UserRepository userRepository, MediaAssetRepository mediaAssetRepository,
+            UserProfileRepository userProfileRepository, UserProfileTagRepository userProfileTagRepository,
+            UserPreferenceRepository userPreferenceRepository, UserAllergyRepository userAllergyRepository,
+            FavoriteRepository favoriteRepository, UserListRepository userListRepository,
+            UserListItemRepository userListItemRepository, UserMapper userMapper, MediaAssetMapper mediaAssetMapper,
+            UserProfileMapper userProfileMapper, ProfileTagMapper profileTagMapper,
             UserPreferenceMapper userPreferenceMapper, AllergyMapper allergyMapper, ProductMapper productMapper,
             UserListMapper userListMapper) {
         this.userRepository = userRepository;
+        this.mediaAssetRepository = mediaAssetRepository;
         this.userProfileRepository = userProfileRepository;
         this.userProfileTagRepository = userProfileTagRepository;
         this.userPreferenceRepository = userPreferenceRepository;
@@ -75,6 +83,7 @@ public class UserFullProfileService {
         this.userListRepository = userListRepository;
         this.userListItemRepository = userListItemRepository;
         this.userMapper = userMapper;
+        this.mediaAssetMapper = mediaAssetMapper;
         this.userProfileMapper = userProfileMapper;
         this.profileTagMapper = profileTagMapper;
         this.userPreferenceMapper = userPreferenceMapper;
@@ -87,6 +96,12 @@ public class UserFullProfileService {
     public UserFullProfileResponse findByUserId(Long userId) {
         User user = executeOrFail(() -> userRepository.findById(userId), "Falha ao consultar usuario no banco de dados")
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario nao encontrado com id " + userId));
+
+        MediaAssetResponse avatar = executeOrFail(() -> mediaAssetRepository.findByUserIdAndPurposeAndStatusIn(
+                        userId, MediaPurpose.AVATAR, MediaAssetRepository.LIVE_STATUSES),
+                "Falha ao consultar o avatar do usuario")
+                .map(mediaAssetMapper::toResponse)
+                .orElse(null);
 
         UserProfileResponse profile = executeOrFail(() -> userProfileRepository.findByUserId(userId), "Falha ao consultar perfil de usuario no banco de dados")
                 .map(userProfileMapper::toResponse)
@@ -113,7 +128,7 @@ public class UserFullProfileService {
 
         var lists = buildLists(userId);
 
-        return new UserFullProfileResponse(userMapper.toResponse(user), profile, tags, preferences, allergies, favorites, lists);
+        return new UserFullProfileResponse(userMapper.toResponse(user), avatar, profile, tags, preferences, allergies, favorites, lists);
     }
 
     private List<UserListWithItemsResponse> buildLists(Long userId) {
