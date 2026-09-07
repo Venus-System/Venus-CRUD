@@ -1,35 +1,37 @@
 <!--
-  Fill in the sections below. Delete anything that does not apply.
-  PR title: follow the same convention as the commits, for example:
-  feat: add product page
-  fix: correct keyboard focus in modal
+  Preencha as seções abaixo. Apague o que não se aplicar.
+  Título do PR: siga a mesma convenção dos commits, por exemplo:
+  feat: adiciona página de produto
+  fix: corrige foco do teclado no modal
 -->
 
-## What this PR does
+## O que este PR faz
 
-<!-- One or two sentences explaining the change, in plain language. -->
+<!-- Uma ou duas frases explicando a mudança, em linguagem simples. -->
 
-## Type of change
+## Tipo de mudança
 
-- [ ] `feat` new feature
-- [ ] `fix` bug fix
-- [ ] `refactor` internal change, no behavior difference
-- [ ] `docs` documentation
+- [ ] `feat` funcionalidade nova
+- [ ] `fix` correção de defeito
+- [ ] `refactor` mudança interna, sem diferença de comportamento
+- [ ] `docs` documentação
 
-## Evidence
+## Evidência
 
-<!-- Screenshot, screen recording, or link to the deployed environment.
-     Required whenever the change affects something visible. -->
+<!-- Captura de tela, gravação de tela ou link do ambiente publicado.
+     Obrigatório sempre que a mudança afetar algo visível. -->
 
-## Author checklist
+## Checklist do autor
 
-- [ ] The title follows the conventional commits convention
-- [ ] I manually tested what changed and described how to reproduce it above
-- [ ] I left no `console.log` or commented-out code
-- [ ] I did not commit any key, password, or private URL
-- [ ] I updated the documentation, if needed
+- [ ] O título segue a convenção de commits convencionais
+- [ ] Rodei `./mvnw clean verify` (ou `test`) localmente e passou sem erros
+- [ ] Testei manualmente o que mudou e descrevi acima como reproduzir
+- [ ] Não deixei nenhum `System.out.println` nem código comentado; usei logger (`Logger`/`Slf4j`) onde fazia sentido
+- [ ] Não commitei nenhuma chave, senha ou URL privada (`application.yml`, variáveis de ambiente, credenciais de serviços como Cloudinary/datasource)
+- [ ] Migrações ou alterações de schema (colunas, GRANTs, triggers/procedures) estão documentadas, se houver
+- [ ] Atualizei a documentação, se foi necessário
 
-## Notes for the reviewer
+## Observações para quem revisa
 
-<!-- Anything that deserves special attention, an open question,
-     or a decision you would like to discuss. -->
+<!-- Algo que mereça atenção especial, uma dúvida em aberto
+     ou uma decisão que você queira discutir. -->
