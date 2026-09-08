@@ -1,5 +1,6 @@
 package com.venus.crud.dto.jpa.response.fullstage;
 
+import com.venus.crud.dto.jpa.response.media.MediaAssetResponse;
 import com.venus.crud.dto.jpa.response.product.ProductResponse;
 import com.venus.crud.dto.jpa.response.shared.ProfileTagResponse;
 import com.venus.crud.dto.jpa.response.user.UserPreferenceResponse;
@@ -9,6 +10,7 @@ import java.util.List;
 
 public record UserFullProfileResponse(
         UserResponse user,
+        MediaAssetResponse avatar,
         UserProfileResponse profile,
         List<ProfileTagResponse> tags,
         UserPreferenceResponse preferences,

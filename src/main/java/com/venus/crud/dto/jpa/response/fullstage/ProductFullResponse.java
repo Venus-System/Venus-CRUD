@@ -1,5 +1,6 @@
 package com.venus.crud.dto.jpa.response.fullstage;
 
+import com.venus.crud.dto.jpa.response.media.MediaAssetResponse;
 import com.venus.crud.dto.jpa.response.product.BrandResponse;
 import com.venus.crud.dto.jpa.response.product.PackagingResponse;
 import com.venus.crud.dto.jpa.response.product.ProductCategoryResponse;
@@ -14,6 +15,7 @@ public record ProductFullResponse(
         BrandResponse brand,
         ProductCategoryResponse category,
         ProductVersionResponse currentVersion,
+        List<MediaAssetResponse> photos,
         PackagingResponse packaging,
         ProductLabelResponse label,
         List<ProductClaimDetailResponse> claims,

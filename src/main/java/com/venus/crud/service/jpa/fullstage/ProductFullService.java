@@ -2,16 +2,19 @@ package com.venus.crud.service.jpa.fullstage;
 
 import com.venus.crud.dto.jpa.response.fullstage.ProductClaimDetailResponse;
 import com.venus.crud.dto.jpa.response.fullstage.ProductFullResponse;
+import com.venus.crud.dto.jpa.response.media.MediaAssetResponse;
 import com.venus.crud.dto.jpa.response.product.BrandResponse;
 import com.venus.crud.dto.jpa.response.product.PackagingResponse;
 import com.venus.crud.dto.jpa.response.product.ProductCategoryResponse;
 import com.venus.crud.dto.jpa.response.product.ProductLabelResponse;
 import com.venus.crud.dto.jpa.response.product.ProductVersionResponse;
 import com.venus.crud.dto.jpa.response.scoring.ProductScoreResponse;
+import com.venus.crud.entity.enums.MediaPurpose;
 import com.venus.crud.entity.product.Product;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.exception.ServiceUnavailableException;
+import com.venus.crud.mapper.jpa.media.MediaAssetMapper;
 import com.venus.crud.mapper.jpa.product.BrandMapper;
 import com.venus.crud.mapper.jpa.product.ClaimMapper;
 import com.venus.crud.mapper.jpa.product.PackagingMapper;
@@ -20,6 +23,7 @@ import com.venus.crud.mapper.jpa.product.ProductLabelMapper;
 import com.venus.crud.mapper.jpa.product.ProductMapper;
 import com.venus.crud.mapper.jpa.product.ProductVersionMapper;
 import com.venus.crud.mapper.jpa.scoring.ProductScoreMapper;
+import com.venus.crud.repository.jpa.media.MediaAssetRepository;
 import com.venus.crud.repository.jpa.product.BrandRepository;
 import com.venus.crud.repository.jpa.product.PackagingRepository;
 import com.venus.crud.repository.jpa.product.ProductCategoryRepository;
@@ -44,6 +48,7 @@ public class ProductFullService {
     private static final Logger log = LoggerFactory.getLogger(ProductFullService.class);
 
     private final ProductRepository productRepository;
+    private final MediaAssetRepository mediaAssetRepository;
     private final BrandRepository brandRepository;
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductVersionRepository productVersionRepository;
@@ -53,6 +58,7 @@ public class ProductFullService {
     private final ProductScoreRepository productScoreRepository;
     private final ScoringModelRepository scoringModelRepository;
     private final ProductScoreMapper productScoreMapper;
+    private final MediaAssetMapper mediaAssetMapper;
     private final ProductMapper productMapper;
     private final BrandMapper brandMapper;
     private final ProductCategoryMapper productCategoryMapper;
@@ -61,15 +67,17 @@ public class ProductFullService {
     private final ProductLabelMapper productLabelMapper;
     private final ClaimMapper claimMapper;
 
-    public ProductFullService(ProductRepository productRepository, BrandRepository brandRepository,
-            ProductCategoryRepository productCategoryRepository, ProductVersionRepository productVersionRepository,
-            PackagingRepository packagingRepository, ProductLabelRepository productLabelRepository,
-            ProductClaimRepository productClaimRepository, ProductScoreRepository productScoreRepository,
-            ScoringModelRepository scoringModelRepository, ProductScoreMapper productScoreMapper,
-            ProductMapper productMapper, BrandMapper brandMapper,
-            ProductCategoryMapper productCategoryMapper, ProductVersionMapper productVersionMapper,
-            PackagingMapper packagingMapper, ProductLabelMapper productLabelMapper, ClaimMapper claimMapper) {
+    public ProductFullService(ProductRepository productRepository, MediaAssetRepository mediaAssetRepository,
+            BrandRepository brandRepository, ProductCategoryRepository productCategoryRepository,
+            ProductVersionRepository productVersionRepository, PackagingRepository packagingRepository,
+            ProductLabelRepository productLabelRepository, ProductClaimRepository productClaimRepository,
+            ProductScoreRepository productScoreRepository, ScoringModelRepository scoringModelRepository,
+            ProductScoreMapper productScoreMapper, MediaAssetMapper mediaAssetMapper, ProductMapper productMapper,
+            BrandMapper brandMapper, ProductCategoryMapper productCategoryMapper,
+            ProductVersionMapper productVersionMapper, PackagingMapper packagingMapper,
+            ProductLabelMapper productLabelMapper, ClaimMapper claimMapper) {
         this.productRepository = productRepository;
+        this.mediaAssetRepository = mediaAssetRepository;
         this.brandRepository = brandRepository;
         this.productCategoryRepository = productCategoryRepository;
         this.productVersionRepository = productVersionRepository;
@@ -79,6 +87,7 @@ public class ProductFullService {
         this.productScoreRepository = productScoreRepository;
         this.scoringModelRepository = scoringModelRepository;
         this.productScoreMapper = productScoreMapper;
+        this.mediaAssetMapper = mediaAssetMapper;
         this.productMapper = productMapper;
         this.brandMapper = brandMapper;
         this.productCategoryMapper = productCategoryMapper;
@@ -107,6 +116,7 @@ public class ProductFullService {
                 .map(productVersionMapper::toResponse)
                 .orElse(null);
 
+        List<MediaAssetResponse> photos = List.of();
         PackagingResponse packaging = null;
         ProductLabelResponse label = null;
         List<ProductClaimDetailResponse> claims = List.of();
@@ -114,6 +124,12 @@ public class ProductFullService {
 
         if (currentVersion != null) {
             Long versionId = currentVersion.id();
+
+            photos = executeOrFail(() -> mediaAssetRepository.findByProductVersionIdAndPurposeAndStatusInOrderBySortOrderAscIdAsc(
+                            versionId, MediaPurpose.PRODUCT_PHOTO, MediaAssetRepository.LIVE_STATUSES),
+                    "Falha ao consultar as fotos da versao atual").stream()
+                    .map(mediaAssetMapper::toResponse)
+                    .toList();
 
             packaging = executeOrFail(() -> packagingRepository.findByProductVersionId(versionId), "Falha ao consultar embalagem da versao atual")
                     .map(packagingMapper::toResponse)
@@ -137,7 +153,7 @@ public class ProductFullService {
             score = findCurrentScore(versionId);
         }
 
-        return new ProductFullResponse(productMapper.toResponse(product), brand, category, currentVersion, packaging, label, claims, score);
+        return new ProductFullResponse(productMapper.toResponse(product), brand, category, currentVersion, photos, packaging, label, claims, score);
     }
 
     private ProductScoreResponse findCurrentScore(Long productVersionId) {
