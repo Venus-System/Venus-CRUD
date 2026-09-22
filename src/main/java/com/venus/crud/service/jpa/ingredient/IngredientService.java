@@ -4,11 +4,14 @@ import com.venus.crud.dto.jpa.patch.ingredient.IngredientPatchRequest;
 import com.venus.crud.dto.jpa.request.ingredient.IngredientRequest;
 import com.venus.crud.dto.jpa.response.ingredient.IngredientResponse;
 import com.venus.crud.entity.ingredient.Ingredient;
+import com.venus.crud.entity.ingredient.IngredientCategory;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.ingredient.IngredientMapper;
+import com.venus.crud.repository.jpa.ingredient.IngredientCategoryRepository;
 import com.venus.crud.repository.jpa.ingredient.IngredientRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -28,10 +31,13 @@ public class IngredientService {
     private static final Logger log = LoggerFactory.getLogger(IngredientService.class);
 
     private final IngredientRepository ingredientRepository;
+    private final IngredientCategoryRepository ingredientCategoryRepository;
     private final IngredientMapper ingredientMapper;
 
-    public IngredientService(IngredientRepository ingredientRepository, IngredientMapper ingredientMapper) {
+    public IngredientService(IngredientRepository ingredientRepository,
+            IngredientCategoryRepository ingredientCategoryRepository, IngredientMapper ingredientMapper) {
         this.ingredientRepository = ingredientRepository;
+        this.ingredientCategoryRepository = ingredientCategoryRepository;
         this.ingredientMapper = ingredientMapper;
     }
 
@@ -62,7 +68,8 @@ public class IngredientService {
     }
 
     @Transactional(readOnly = true)
-    public Slice<IngredientResponse> search(String commonName, Long ingredientCategoryId, Short minIrritationRiskLevel, Pageable pageable) {
+    public Slice<IngredientResponse> search(String commonName, Long ingredientCategoryId, String categoryName,
+            Short minIrritationRiskLevel, Pageable pageable) {
         Slice<Ingredient> result;
         if (StringUtils.hasText(commonName)) {
             result = executeOrFail(() -> ingredientRepository.findByCommonNameContainingIgnoreCase(commonName, pageable),
@@ -70,6 +77,10 @@ public class IngredientService {
         } else if (ingredientCategoryId != null) {
             result = executeOrFail(() -> ingredientRepository.findByIngredientCategoryId(ingredientCategoryId, pageable),
                     "Falha ao consultar ingredientes por categoria");
+        } else if (StringUtils.hasText(categoryName)) {
+            List<Long> categoryIds = resolveCategoryIdsByName(categoryName);
+            result = executeOrFail(() -> ingredientRepository.findByIngredientCategoryIdIn(categoryIds, pageable),
+                    "Falha ao consultar ingredientes por nome de categoria");
         } else if (minIrritationRiskLevel != null) {
             result = executeOrFail(() -> ingredientRepository.findByIrritationRiskLevelGreaterThanEqual(minIrritationRiskLevel, pageable),
                     "Falha ao consultar ingredientes por nivel de irritacao");
@@ -118,6 +129,21 @@ public class IngredientService {
             ingredientRepository.delete(ingredient);
             return null;
         }, "Falha ao remover ingrediente no banco de dados");
+    }
+
+    private List<Long> resolveCategoryIdsByName(String categoryName) {
+        IngredientCategory category = executeOrFail(
+                () -> ingredientCategoryRepository.findByNameIgnoreCase(categoryName),
+                "Falha ao consultar categoria de ingrediente por nome")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Categoria de ingrediente nao encontrada com o nome " + categoryName));
+
+        List<Long> categoryIds = new ArrayList<>();
+        categoryIds.add(category.getId());
+        executeOrFail(() -> ingredientCategoryRepository.findByParentCategoryId(category.getId()),
+                "Falha ao consultar subcategorias de ingrediente")
+                .forEach(child -> categoryIds.add(child.getId()));
+        return categoryIds;
     }
 
     private Ingredient getOrThrow(Long id) {

@@ -45,6 +45,11 @@ public class IngredientCategoryController {
         return ResponseEntity.ok(ingredientCategoryService.search(name, pageable));
     }
 
+    @GetMapping("/name/{name}")
+    public ResponseEntity<IngredientCategoryResponse> findByName(@PathVariable String name) {
+        return ResponseEntity.ok(ingredientCategoryService.findByName(name));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<IngredientCategoryResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(ingredientCategoryService.findById(id));

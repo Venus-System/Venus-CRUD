@@ -42,9 +42,11 @@ public class IngredientController {
     public ResponseEntity<Slice<IngredientResponse>> search(
             @RequestParam(required = false) String commonName,
             @RequestParam(required = false) Long ingredientCategoryId,
+            @RequestParam(required = false) String categoryName,
             @RequestParam(required = false) Short minIrritationRiskLevel,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(ingredientService.search(commonName, ingredientCategoryId, minIrritationRiskLevel, pageable));
+        return ResponseEntity.ok(ingredientService.search(commonName, ingredientCategoryId, categoryName,
+                minIrritationRiskLevel, pageable));
     }
 
     @GetMapping("/inci-name/{inciName}")
