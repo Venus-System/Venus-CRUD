@@ -52,7 +52,7 @@ public class ScanSessionService {
 
     @Transactional(readOnly = true)
     public Slice<ScanSessionResponse> findByDeviceId(String deviceId, Pageable pageable) {
-        return executeOrFail(() -> scanSessionRepository.findByDeviceDeviceId(deviceId, pageable),
+        return executeOrFail(() -> scanSessionRepository.findByDevice_DeviceId(deviceId, pageable),
                 "Falha ao consultar sessoes de scan por dispositivo")
                 .map(scanSessionMapper::toResponse);
     }
