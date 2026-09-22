@@ -1,11 +1,13 @@
 package com.venus.crud.service.jpa.admin;
 
 import com.venus.crud.dto.jpa.patch.admin.AdminUserPatchRequest;
+import com.venus.crud.dto.jpa.request.admin.AdminUserPasswordChangeRequest;
 import com.venus.crud.dto.jpa.request.admin.AdminUserRequest;
 import com.venus.crud.dto.jpa.response.admin.AdminUserResponse;
 import com.venus.crud.entity.admin.AdminUser;
 import com.venus.crud.entity.enums.AdminRole;
 import com.venus.crud.exception.DuplicateResourceException;
+import com.venus.crud.exception.InvalidCredentialsException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.admin.AdminUserMapper;
@@ -19,6 +21,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -30,10 +33,12 @@ public class AdminUserService {
 
     private final AdminUserRepository adminUserRepository;
     private final AdminUserMapper adminUserMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public AdminUserService(AdminUserRepository adminUserRepository, AdminUserMapper adminUserMapper) {
+    public AdminUserService(AdminUserRepository adminUserRepository, AdminUserMapper adminUserMapper, PasswordEncoder passwordEncoder) {
         this.adminUserRepository = adminUserRepository;
         this.adminUserMapper = adminUserMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -77,8 +82,20 @@ public class AdminUserService {
         ensureEmailAvailable(request.email(), null);
 
         AdminUser adminUser = adminUserMapper.toEntity(request);
+        adminUser.setPasswordHash(passwordEncoder.encode(request.password()));
         AdminUser saved = executeOrFail(() -> adminUserRepository.save(adminUser), "Falha ao criar administrador no banco de dados");
         return adminUserMapper.toResponse(saved);
+    }
+
+    @Transactional
+    public void changePassword(Long id, AdminUserPasswordChangeRequest request) {
+        AdminUser adminUser = getOrThrow(id);
+        if (adminUser.getPasswordHash() == null || !passwordEncoder.matches(request.currentPassword(), adminUser.getPasswordHash())) {
+            throw new InvalidCredentialsException("Senha atual incorreta.");
+        }
+
+        adminUser.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        executeOrFail(() -> adminUserRepository.save(adminUser), "Falha ao atualizar senha do administrador no banco de dados");
     }
 
     @Transactional

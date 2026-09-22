@@ -9,6 +9,7 @@ public record AdminUserRequest(
         @NotBlank String name,
         @NotBlank @Email String email,
         @NotNull AdminRole role,
-        @NotNull Boolean isActive
+        @NotNull Boolean isActive,
+        @NotBlank String password
 ) {
 }

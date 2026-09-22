@@ -18,8 +18,10 @@ public interface AdminUserMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "passwordHash", ignore = true)
     AdminUser toEntity(AdminUserRequest request);
 
+    @Mapping(target = "hasPassword", expression = "java(entity.getPasswordHash() != null)")
     AdminUserResponse toResponse(AdminUser entity);
 
     @InheritConfiguration(name = "toEntity")

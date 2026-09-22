@@ -9,6 +9,7 @@ public record AdminUserResponse(
         String email,
         AdminRole role,
         Boolean isActive,
+        Boolean hasPassword,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {
