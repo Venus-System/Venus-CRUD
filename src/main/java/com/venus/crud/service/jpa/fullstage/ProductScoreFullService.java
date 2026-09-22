@@ -7,10 +7,10 @@ import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.scoring.ProductScoreMapper;
-import com.venus.crud.mapper.jpa.scoring.ScoreCategoryMapper;
+import com.venus.crud.mapper.jpa.scoring.ScoringModelCategoryMapper;
 import com.venus.crud.mapper.jpa.scoring.ScoringModelMapper;
 import com.venus.crud.repository.jpa.scoring.ProductScoreRepository;
-import com.venus.crud.repository.jpa.scoring.ScoreCategoryRepository;
+import com.venus.crud.repository.jpa.scoring.ScoringModelCategoryRepository;
 import com.venus.crud.repository.jpa.scoring.ScoringModelRepository;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
@@ -27,20 +27,20 @@ public class ProductScoreFullService {
 
     private final ProductScoreRepository productScoreRepository;
     private final ScoringModelRepository scoringModelRepository;
-    private final ScoreCategoryRepository scoreCategoryRepository;
+    private final ScoringModelCategoryRepository scoringModelCategoryRepository;
     private final ProductScoreMapper productScoreMapper;
     private final ScoringModelMapper scoringModelMapper;
-    private final ScoreCategoryMapper scoreCategoryMapper;
+    private final ScoringModelCategoryMapper scoringModelCategoryMapper;
 
     public ProductScoreFullService(ProductScoreRepository productScoreRepository, ScoringModelRepository scoringModelRepository,
-            ScoreCategoryRepository scoreCategoryRepository, ProductScoreMapper productScoreMapper,
-            ScoringModelMapper scoringModelMapper, ScoreCategoryMapper scoreCategoryMapper) {
+            ScoringModelCategoryRepository scoringModelCategoryRepository, ProductScoreMapper productScoreMapper,
+            ScoringModelMapper scoringModelMapper, ScoringModelCategoryMapper scoringModelCategoryMapper) {
         this.productScoreRepository = productScoreRepository;
         this.scoringModelRepository = scoringModelRepository;
-        this.scoreCategoryRepository = scoreCategoryRepository;
+        this.scoringModelCategoryRepository = scoringModelCategoryRepository;
         this.productScoreMapper = productScoreMapper;
         this.scoringModelMapper = scoringModelMapper;
-        this.scoreCategoryMapper = scoreCategoryMapper;
+        this.scoringModelCategoryMapper = scoringModelCategoryMapper;
     }
 
     @Transactional(readOnly = true)
@@ -56,8 +56,9 @@ public class ProductScoreFullService {
                 .map(scoringModelMapper::toResponse)
                 .orElse(null);
 
-        var categories = executeOrFail(scoreCategoryRepository::findAll, "Falha ao consultar categorias de score").stream()
-                .map(scoreCategoryMapper::toResponse)
+        var categories = executeOrFail(() -> scoringModelCategoryRepository.findByScoringModelId(scoringModelId),
+                "Falha ao consultar categorias do modelo de scoring").stream()
+                .map(scoringModelCategoryMapper::toResponse)
                 .toList();
 
         return new ProductScoreFullResponse(productScoreMapper.toResponse(productScore), scoringModel, categories);

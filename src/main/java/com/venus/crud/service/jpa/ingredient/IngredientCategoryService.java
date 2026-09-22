@@ -49,6 +49,15 @@ public class IngredientCategoryService {
     }
 
     @Transactional(readOnly = true)
+    public IngredientCategoryResponse findByName(String name) {
+        return executeOrFail(() -> ingredientCategoryRepository.findByNameIgnoreCase(name),
+                "Falha ao consultar categoria de ingrediente por nome")
+                .map(ingredientCategoryMapper::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Categoria de ingrediente nao encontrada com o nome " + name));
+    }
+
+    @Transactional(readOnly = true)
     public Slice<IngredientCategoryResponse> search(String name, Pageable pageable) {
         Slice<IngredientCategory> result = StringUtils.hasText(name)
                 ? executeOrFail(() -> ingredientCategoryRepository.findByNameContainingIgnoreCase(name, pageable),

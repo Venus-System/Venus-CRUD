@@ -5,7 +5,7 @@ import com.venus.crud.dto.jpa.request.user.UserProfileRequest;
 import com.venus.crud.dto.jpa.response.user.UserProfileResponse;
 import com.venus.crud.entity.enums.AgeRange;
 import com.venus.crud.entity.enums.Gender;
-import com.venus.crud.entity.enums.HairType;
+import com.venus.crud.entity.enums.HairPattern;
 import com.venus.crud.entity.enums.SensitivityLevel;
 import com.venus.crud.entity.enums.SkinType;
 import com.venus.crud.entity.user.UserProfile;
@@ -78,13 +78,14 @@ public class UserProfileService {
     }
 
     @Transactional(readOnly = true)
-    public Slice<UserProfileResponse> search(SkinType skinType, HairType hairType, SensitivityLevel skinSensitivity,
-            Boolean acneProne, Boolean isPregnant, AgeRange ageRange, Gender gender, Pageable pageable) {
+    public Slice<UserProfileResponse> search(SkinType skinType, HairPattern hairPattern, SensitivityLevel skinSensitivity,
+                                             Boolean acneProne, Boolean isPregnant, Boolean isBreastfeeding, AgeRange ageRange, Gender gender, Pageable pageable) {
         boolean hasSkinType = skinType != null;
-        boolean hasHairType = hairType != null;
+        boolean hasHairPattern = hairPattern != null;
         boolean hasSkinSensitivity = skinSensitivity != null;
         boolean hasAcneProne = Boolean.TRUE.equals(acneProne);
         boolean hasPregnant = Boolean.TRUE.equals(isPregnant);
+        boolean hasBreastfeeding = Boolean.TRUE.equals(isBreastfeeding);
         boolean hasAgeRange = ageRange != null;
         boolean hasGender = gender != null;
 
@@ -94,8 +95,8 @@ public class UserProfileService {
                     "Falha ao consultar perfis por faixa etaria e genero");
         } else if (hasSkinType) {
             result = executeOrFail(() -> userProfileRepository.findBySkinType(skinType, pageable), "Falha ao consultar perfis por tipo de pele");
-        } else if (hasHairType) {
-            result = executeOrFail(() -> userProfileRepository.findByHairType(hairType, pageable), "Falha ao consultar perfis por tipo de cabelo");
+        } else if (hasHairPattern) {
+            result = executeOrFail(() -> userProfileRepository.findByHairPattern(hairPattern, pageable), "Falha ao consultar perfis por tipo de cabelo");
         } else if (hasSkinSensitivity) {
             result = executeOrFail(() -> userProfileRepository.findBySkinSensitivity(skinSensitivity, pageable),
                     "Falha ao consultar perfis por sensibilidade de pele");
@@ -103,6 +104,8 @@ public class UserProfileService {
             result = executeOrFail(() -> userProfileRepository.findByAcneProneTrue(pageable), "Falha ao consultar perfis com propensao a acne");
         } else if (hasPregnant) {
             result = executeOrFail(() -> userProfileRepository.findByIsPregnantTrue(pageable), "Falha ao consultar perfis de usuarias gravidas");
+        } else if (hasBreastfeeding) {
+            result = executeOrFail(() -> userProfileRepository.findByIsBreastfeedingTrue(pageable), "Falha ao consultar perfis de usuarias amamentando");
         } else {
             result = executeOrFail(() -> userProfileRepository.findAllBy(pageable), "Falha ao consultar perfis");
         }

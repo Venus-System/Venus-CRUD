@@ -2,9 +2,6 @@ package com.venus.crud.entity.converter;
 
 import jakarta.persistence.AttributeConverter;
 
-/**
- * Base converter that maps a Java enum to the lowercase snake_case value used by Postgres enums.
- */
 public abstract class LowercaseEnumConverter<E extends Enum<E>> implements AttributeConverter<E, String> {
 
     private final Class<E> enumClass;

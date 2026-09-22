@@ -43,8 +43,9 @@ public class UserController {
     public ResponseEntity<Slice<UserResponse>> search(
             @RequestParam(required = false) UserStatus status,
             @RequestParam(required = false) String name,
+            @RequestParam(required = false) String firebaseUid,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(userService.search(status, name, pageable));
+        return ResponseEntity.ok(userService.search(status, name, firebaseUid, pageable));
     }
 
     @GetMapping("/{id}")

@@ -1,12 +1,8 @@
 package com.venus.crud.dto.jpa.response.user;
 
-import com.venus.crud.entity.enums.AgeRange;
-import com.venus.crud.entity.enums.Gender;
-import com.venus.crud.entity.enums.HairType;
-import com.venus.crud.entity.enums.ScalpType;
-import com.venus.crud.entity.enums.SensitivityLevel;
-import com.venus.crud.entity.enums.SkinPhototype;
-import com.venus.crud.entity.enums.SkinType;
+import com.venus.crud.entity.enums.*;
+import com.venus.crud.entity.enums.HairPattern;
+
 import java.time.OffsetDateTime;
 
 public record UserProfileResponse(
@@ -18,13 +14,14 @@ public record UserProfileResponse(
         Boolean hasMelasma,
         Boolean hasRosacea,
         Boolean hasEczema,
-        HairType hairType,
+        HairPattern hairPattern,
         ScalpType scalpType,
         SensitivityLevel skinSensitivity,
         Boolean acneProne,
         AgeRange ageRange,
         Gender gender,
         Boolean isPregnant,
+        Boolean isBreastfeeding,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {

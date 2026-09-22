@@ -2,6 +2,7 @@ package com.venus.crud.controller.jpa.shared;
 
 import com.venus.crud.dto.jpa.patch.shared.ProfileTagPatchRequest;
 import com.venus.crud.dto.jpa.request.shared.ProfileTagRequest;
+import com.venus.crud.dto.jpa.response.shared.PreferenceCatalogResponse;
 import com.venus.crud.dto.jpa.response.shared.ProfileTagResponse;
 import com.venus.crud.entity.enums.ProfileTagCategory;
 import com.venus.crud.service.jpa.shared.ProfileTagService;
@@ -44,6 +45,11 @@ public class ProfileTagController {
             @RequestParam(required = false) ProfileTagCategory category,
             @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(profileTagService.search(category, pageable));
+    }
+
+    @GetMapping("/preferences")
+    public ResponseEntity<List<PreferenceCatalogResponse>> findPreferenceCatalog() {
+        return ResponseEntity.ok(profileTagService.findPreferenceCatalog());
     }
 
     @GetMapping("/{id}")

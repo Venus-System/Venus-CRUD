@@ -2,6 +2,7 @@ package com.venus.crud.service.jpa.shared;
 
 import com.venus.crud.dto.jpa.patch.shared.ProfileTagPatchRequest;
 import com.venus.crud.dto.jpa.request.shared.ProfileTagRequest;
+import com.venus.crud.dto.jpa.response.shared.PreferenceCatalogResponse;
 import com.venus.crud.dto.jpa.response.shared.ProfileTagResponse;
 import com.venus.crud.entity.enums.ProfileTagCategory;
 import com.venus.crud.entity.shared.ProfileTag;
@@ -11,6 +12,7 @@ import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.shared.ProfileTagMapper;
 import com.venus.crud.repository.jpa.shared.ProfileTagRepository;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
@@ -28,6 +30,16 @@ public class ProfileTagService {
 
     private static final Logger log = LoggerFactory.getLogger(ProfileTagService.class);
 
+    private static final List<ProfileTagCategory> PREFERENCE_CATEGORIES =
+            List.of(ProfileTagCategory.VALUES, ProfileTagCategory.SUSTAINABILITY);
+    private static final Map<String, String> USER_PREFERENCE_FIELD_BY_SLUG = Map.of(
+            "vegano", "preferVegan",
+            "cruelty-free", "preferCrueltyFree",
+            "sem-fragrancia", "preferFragranceFree",
+            "sem-parabenos", "preferParabenFree",
+            "sem-sulfato", "preferSulfateFree",
+            "sem-silicone", "preferSiliconeFree");
+
     private final ProfileTagRepository profileTagRepository;
     private final ProfileTagMapper profileTagMapper;
 
@@ -40,6 +52,16 @@ public class ProfileTagService {
     public List<ProfileTagResponse> findAll() {
         return executeOrFail(profileTagRepository::findAll, "Falha ao consultar tags de perfil no banco de dados").stream()
                 .map(profileTagMapper::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PreferenceCatalogResponse> findPreferenceCatalog() {
+        return executeOrFail(() -> profileTagRepository.findByCategoryInOrderByNameAsc(PREFERENCE_CATEGORIES),
+                "Falha ao consultar catalogo de preferencias no banco de dados").stream()
+                .map(tag -> new PreferenceCatalogResponse(tag.getId(), tag.getSlug(), tag.getName(),
+                        tag.getDescription(), tag.getCategory(),
+                        USER_PREFERENCE_FIELD_BY_SLUG.get(tag.getSlug())))
                 .toList();
     }
 

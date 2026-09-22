@@ -16,16 +16,20 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 public interface IngredientCategoryMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "parentCategory", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     IngredientCategory toEntity(IngredientCategoryRequest request);
 
+    @Mapping(target = "parentId", source = "parentCategory.id")
+    @Mapping(target = "parentName", source = "parentCategory.name")
     IngredientCategoryResponse toResponse(IngredientCategory entity);
 
     @InheritConfiguration(name = "toEntity")
     void updateEntity(IngredientCategoryRequest request, @MappingTarget IngredientCategory entity);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "parentCategory", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
