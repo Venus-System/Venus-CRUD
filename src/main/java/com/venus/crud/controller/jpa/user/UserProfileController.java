@@ -5,7 +5,7 @@ import com.venus.crud.dto.jpa.request.user.UserProfileRequest;
 import com.venus.crud.dto.jpa.response.user.UserProfileResponse;
 import com.venus.crud.entity.enums.AgeRange;
 import com.venus.crud.entity.enums.Gender;
-import com.venus.crud.entity.enums.HairType;
+import com.venus.crud.entity.enums.HairPattern;
 import com.venus.crud.entity.enums.SensitivityLevel;
 import com.venus.crud.entity.enums.SkinType;
 import com.venus.crud.service.jpa.user.UserProfileService;
@@ -46,14 +46,15 @@ public class UserProfileController {
     @GetMapping("/search")
     public ResponseEntity<Slice<UserProfileResponse>> search(
             @RequestParam(required = false) SkinType skinType,
-            @RequestParam(required = false) HairType hairType,
+            @RequestParam(required = false) HairPattern hairPattern,
             @RequestParam(required = false) SensitivityLevel skinSensitivity,
             @RequestParam(required = false) Boolean acneProne,
             @RequestParam(required = false) Boolean isPregnant,
+            @RequestParam(required = false) Boolean isBreastfeeding,
             @RequestParam(required = false) AgeRange ageRange,
             @RequestParam(required = false) Gender gender,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(userProfileService.search(skinType, hairType, skinSensitivity, acneProne, isPregnant, ageRange, gender, pageable));
+        return ResponseEntity.ok(userProfileService.search(skinType, hairPattern, skinSensitivity, acneProne, isPregnant, isBreastfeeding, ageRange, gender, pageable));
     }
 
     @GetMapping("/count/skin-type")

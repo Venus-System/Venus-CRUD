@@ -2,7 +2,7 @@ package com.venus.crud.dto.jpa.request.user;
 
 import com.venus.crud.entity.enums.AgeRange;
 import com.venus.crud.entity.enums.Gender;
-import com.venus.crud.entity.enums.HairType;
+import com.venus.crud.entity.enums.HairPattern;
 import com.venus.crud.entity.enums.ScalpType;
 import com.venus.crud.entity.enums.SensitivityLevel;
 import com.venus.crud.entity.enums.SkinPhototype;
@@ -17,12 +17,13 @@ public record UserProfileRequest(
         @NotNull Boolean hasMelasma,
         @NotNull Boolean hasRosacea,
         @NotNull Boolean hasEczema,
-        @NotNull HairType hairType,
+        @NotNull HairPattern hairPattern,
         @NotNull ScalpType scalpType,
         @NotNull SensitivityLevel skinSensitivity,
         @NotNull Boolean acneProne,
         @NotNull AgeRange ageRange,
         @NotNull Gender gender,
-        @NotNull Boolean isPregnant
+        @NotNull Boolean isPregnant,
+        @NotNull Boolean isBreastfeeding
 ) {
 }

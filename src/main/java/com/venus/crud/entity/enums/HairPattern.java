@@ -1,7 +1,9 @@
 package com.venus.crud.entity.enums;
 
-public enum HairType {
-    TYPE_1,
+public enum HairPattern {
+    TYPE_1A,
+    TYPE_1B,
+    TYPE_1C,
     TYPE_2A,
     TYPE_2B,
     TYPE_2C,

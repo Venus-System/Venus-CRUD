@@ -2,7 +2,7 @@ package com.venus.crud.entity.user;
 
 import com.venus.crud.entity.enums.AgeRange;
 import com.venus.crud.entity.enums.Gender;
-import com.venus.crud.entity.enums.HairType;
+import com.venus.crud.entity.enums.HairPattern;
 import com.venus.crud.entity.enums.ScalpType;
 import com.venus.crud.entity.enums.SensitivityLevel;
 import com.venus.crud.entity.enums.SkinPhototype;
@@ -51,8 +51,8 @@ public class UserProfile extends AuditableEntity {
     @Column(name = "has_eczema", nullable = false)
     private Boolean hasEczema;
 
-    @Column(name = "hair_type", nullable = false)
-    private HairType hairType;
+    @Column(name = "hair_pattern", nullable = false)
+    private HairPattern hairPattern;
 
     @Column(name = "scalp_type", nullable = false)
     private ScalpType scalpType;
@@ -71,4 +71,7 @@ public class UserProfile extends AuditableEntity {
 
     @Column(name = "is_pregnant", nullable = false)
     private Boolean isPregnant;
+
+    @Column(name = "is_breastfeeding", nullable = false)
+    private Boolean isBreastfeeding;
 }
