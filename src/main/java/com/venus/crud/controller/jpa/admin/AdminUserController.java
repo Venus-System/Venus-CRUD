@@ -1,6 +1,7 @@
 package com.venus.crud.controller.jpa.admin;
 
 import com.venus.crud.dto.jpa.patch.admin.AdminUserPatchRequest;
+import com.venus.crud.dto.jpa.request.admin.AdminUserPasswordChangeRequest;
 import com.venus.crud.dto.jpa.request.admin.AdminUserRequest;
 import com.venus.crud.dto.jpa.response.admin.AdminUserResponse;
 import com.venus.crud.entity.enums.AdminRole;
@@ -81,6 +82,12 @@ public class AdminUserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         adminUserService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<Void> changePassword(@PathVariable Long id, @Valid @RequestBody AdminUserPasswordChangeRequest request) {
+        adminUserService.changePassword(id, request);
         return ResponseEntity.noContent().build();
     }
 }
