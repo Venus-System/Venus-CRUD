@@ -19,6 +19,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,9 +53,17 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public Slice<UserResponse> search(UserStatus status, String name, Pageable pageable) {
+    public Slice<UserResponse> search(UserStatus status, String name, String firebaseUid, Pageable pageable) {
         boolean hasStatus = status != null;
         boolean hasName = StringUtils.hasText(name);
+        boolean hasFirebaseUid = StringUtils.hasText(firebaseUid);
+
+        if (hasFirebaseUid) {
+            List<User> found = executeOrFail(() -> userRepository.findByFirebaseUid(firebaseUid), "Falha ao consultar usuario por firebaseUid")
+                    .map(List::of)
+                    .orElseGet(List::of);
+            return new SliceImpl<>(found, pageable, false).map(userMapper::toResponse);
+        }
 
         Slice<User> result;
         if (hasStatus && hasName) {
