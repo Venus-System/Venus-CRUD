@@ -9,6 +9,8 @@ import com.venus.crud.entity.enums.HairPattern;
 import com.venus.crud.entity.enums.SensitivityLevel;
 import com.venus.crud.entity.enums.SkinType;
 import com.venus.crud.service.jpa.user.UserProfileService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -30,6 +32,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/user-profiles")
+@Tag(name = "Perfis de Usuário", description = "Dados físicos, de pele e de cabelo que personalizam a análise.")
 public class UserProfileController {
 
     private final UserProfileService userProfileService;
@@ -38,11 +41,13 @@ public class UserProfileController {
         this.userProfileService = userProfileService;
     }
 
+    @Operation(operationId = "userProfileFindAll", summary = "Lista os perfis de usuário")
     @GetMapping
     public ResponseEntity<List<UserProfileResponse>> findAll() {
         return ResponseEntity.ok(userProfileService.findAll());
     }
 
+    @Operation(operationId = "userProfileSearch", summary = "Busca os perfis de usuário com filtros e paginação")
     @GetMapping("/search")
     public ResponseEntity<Slice<UserProfileResponse>> search(
             @RequestParam(required = false) SkinType skinType,
@@ -57,21 +62,25 @@ public class UserProfileController {
         return ResponseEntity.ok(userProfileService.search(skinType, hairPattern, skinSensitivity, acneProne, isPregnant, isBreastfeeding, ageRange, gender, pageable));
     }
 
+    @Operation(operationId = "userProfileCountBySkinType", summary = "Conta os perfis por tipo de pele")
     @GetMapping("/count/skin-type")
     public ResponseEntity<Long> countBySkinType(@RequestParam SkinType skinType) {
         return ResponseEntity.ok(userProfileService.countBySkinType(skinType));
     }
 
+    @Operation(operationId = "userProfileCountByAcneProne", summary = "Conta os perfis com tendência a acne")
     @GetMapping("/count/acne-prone")
     public ResponseEntity<Long> countByAcneProne() {
         return ResponseEntity.ok(userProfileService.countByAcneProne());
     }
 
+    @Operation(operationId = "userProfileFindByUserId", summary = "Busca o perfil de um usuário")
     @GetMapping("/{userId}")
     public ResponseEntity<UserProfileResponse> findByUserId(@PathVariable Long userId) {
         return ResponseEntity.ok(userProfileService.findByUserId(userId));
     }
 
+    @Operation(operationId = "userProfileCreate", summary = "Cadastra um perfil de usuário")
     @PostMapping
     public ResponseEntity<UserProfileResponse> create(@Valid @RequestBody UserProfileRequest request) {
         UserProfileResponse created = userProfileService.create(request);
@@ -82,16 +91,19 @@ public class UserProfileController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "userProfileUpdate", summary = "Substitui os dados do perfil de usuário")
     @PutMapping("/{userId}")
     public ResponseEntity<UserProfileResponse> update(@PathVariable Long userId, @Valid @RequestBody UserProfileRequest request) {
         return ResponseEntity.ok(userProfileService.update(userId, request));
     }
 
+    @Operation(operationId = "userProfilePatch", summary = "Atualiza parcialmente o perfil de usuário")
     @PatchMapping("/{userId}")
     public ResponseEntity<UserProfileResponse> patch(@PathVariable Long userId, @Valid @RequestBody UserProfilePatchRequest request) {
         return ResponseEntity.ok(userProfileService.patch(userId, request));
     }
 
+    @Operation(operationId = "userProfileDelete", summary = "Remove o perfil de usuário")
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> delete(@PathVariable Long userId) {
         userProfileService.delete(userId);

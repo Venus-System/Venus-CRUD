@@ -4,6 +4,9 @@ import com.venus.crud.dto.jpa.patch.ingredient.IngredientCategoryPatchRequest;
 import com.venus.crud.dto.jpa.request.ingredient.IngredientCategoryRequest;
 import com.venus.crud.dto.jpa.response.ingredient.IngredientCategoryResponse;
 import com.venus.crud.service.jpa.ingredient.IngredientCategoryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -25,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/ingredient-categories")
+@Tag(name = "Categorias de Ingrediente", description = "Árvore de categorias funcionais dos ingredientes.")
 public class IngredientCategoryController {
 
     private final IngredientCategoryService ingredientCategoryService;
@@ -33,11 +37,15 @@ public class IngredientCategoryController {
         this.ingredientCategoryService = ingredientCategoryService;
     }
 
+    @Operation(operationId = "ingredientCategoryFindAll", summary = "Lista as categorias de ingrediente")
     @GetMapping
     public ResponseEntity<List<IngredientCategoryResponse>> findAll() {
         return ResponseEntity.ok(ingredientCategoryService.findAll());
     }
 
+    @Operation(
+            operationId = "ingredientCategorySearch",
+            summary = "Busca as categorias de ingrediente com filtros e paginação")
     @GetMapping("/search")
     public ResponseEntity<Slice<IngredientCategoryResponse>> search(
             @RequestParam(required = false) String name,
@@ -45,16 +53,26 @@ public class IngredientCategoryController {
         return ResponseEntity.ok(ingredientCategoryService.search(name, pageable));
     }
 
+    @Operation(
+            operationId = "ingredientCategoryFindByName",
+            summary = "Busca a categoria de ingrediente pelo nome",
+            description = "Busca exata pelo nome, sem diferenciar maiúsculas de minúsculas. Devolve 404 se não existir "
+                    + "categoria com esse nome. Para trazer os ingredientes da categoria e das subcategorias, usar "
+                    + "`GET /api/ingredients?categoryName=`.")
     @GetMapping("/name/{name}")
-    public ResponseEntity<IngredientCategoryResponse> findByName(@PathVariable String name) {
+    public ResponseEntity<IngredientCategoryResponse> findByName(
+            @Parameter(description = "Nome da categoria. A busca não diferencia maiúsculas de minúsculas.")
+            @PathVariable String name) {
         return ResponseEntity.ok(ingredientCategoryService.findByName(name));
     }
 
+    @Operation(operationId = "ingredientCategoryFindById", summary = "Busca a categoria de ingrediente por id")
     @GetMapping("/{id}")
     public ResponseEntity<IngredientCategoryResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(ingredientCategoryService.findById(id));
     }
 
+    @Operation(operationId = "ingredientCategoryCreate", summary = "Cadastra uma categoria de ingrediente")
     @PostMapping
     public ResponseEntity<IngredientCategoryResponse> create(@Valid @RequestBody IngredientCategoryRequest request) {
         IngredientCategoryResponse created = ingredientCategoryService.create(request);
@@ -65,16 +83,19 @@ public class IngredientCategoryController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "ingredientCategoryUpdate", summary = "Substitui os dados da categoria de ingrediente")
     @PutMapping("/{id}")
     public ResponseEntity<IngredientCategoryResponse> update(@PathVariable Long id, @Valid @RequestBody IngredientCategoryRequest request) {
         return ResponseEntity.ok(ingredientCategoryService.update(id, request));
     }
 
+    @Operation(operationId = "ingredientCategoryPatch", summary = "Atualiza parcialmente a categoria de ingrediente")
     @PatchMapping("/{id}")
     public ResponseEntity<IngredientCategoryResponse> patch(@PathVariable Long id, @Valid @RequestBody IngredientCategoryPatchRequest request) {
         return ResponseEntity.ok(ingredientCategoryService.patch(id, request));
     }
 
+    @Operation(operationId = "ingredientCategoryDelete", summary = "Remove a categoria de ingrediente")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         ingredientCategoryService.delete(id);

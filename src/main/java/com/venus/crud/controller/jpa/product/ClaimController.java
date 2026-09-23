@@ -5,6 +5,8 @@ import com.venus.crud.dto.jpa.request.product.ClaimRequest;
 import com.venus.crud.dto.jpa.response.product.ClaimResponse;
 import com.venus.crud.entity.enums.ClaimType;
 import com.venus.crud.service.jpa.product.ClaimService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -26,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/claims")
+@Tag(name = "Claims", description = "Alegações de marketing e as alegações declaradas por cada produto.")
 public class ClaimController {
 
     private final ClaimService claimService;
@@ -34,11 +37,13 @@ public class ClaimController {
         this.claimService = claimService;
     }
 
+    @Operation(operationId = "claimFindAll", summary = "Lista as alegações")
     @GetMapping
     public ResponseEntity<List<ClaimResponse>> findAll() {
         return ResponseEntity.ok(claimService.findAll());
     }
 
+    @Operation(operationId = "claimSearch", summary = "Busca as alegações com filtros e paginação")
     @GetMapping("/search")
     public ResponseEntity<Slice<ClaimResponse>> search(
             @RequestParam(required = false) ClaimType claimType,
@@ -46,11 +51,13 @@ public class ClaimController {
         return ResponseEntity.ok(claimService.search(claimType, pageable));
     }
 
+    @Operation(operationId = "claimFindById", summary = "Busca a alegação por id")
     @GetMapping("/{id}")
     public ResponseEntity<ClaimResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(claimService.findById(id));
     }
 
+    @Operation(operationId = "claimCreate", summary = "Cadastra uma alegação")
     @PostMapping
     public ResponseEntity<ClaimResponse> create(@Valid @RequestBody ClaimRequest request) {
         ClaimResponse created = claimService.create(request);
@@ -61,16 +68,19 @@ public class ClaimController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "claimUpdate", summary = "Substitui os dados da alegação")
     @PutMapping("/{id}")
     public ResponseEntity<ClaimResponse> update(@PathVariable Long id, @Valid @RequestBody ClaimRequest request) {
         return ResponseEntity.ok(claimService.update(id, request));
     }
 
+    @Operation(operationId = "claimPatch", summary = "Atualiza parcialmente a alegação")
     @PatchMapping("/{id}")
     public ResponseEntity<ClaimResponse> patch(@PathVariable Long id, @Valid @RequestBody ClaimPatchRequest request) {
         return ResponseEntity.ok(claimService.patch(id, request));
     }
 
+    @Operation(operationId = "claimDelete", summary = "Remove a alegação")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         claimService.delete(id);

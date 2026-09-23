@@ -4,6 +4,8 @@ import com.venus.crud.dto.jpa.patch.product.BrandPatchRequest;
 import com.venus.crud.dto.jpa.request.product.BrandRequest;
 import com.venus.crud.dto.jpa.response.product.BrandResponse;
 import com.venus.crud.service.jpa.product.BrandService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -25,6 +27,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/brands")
+@Tag(name = "Marcas", description = "Marcas dos produtos.")
 public class BrandController {
 
     private final BrandService brandService;
@@ -33,11 +36,13 @@ public class BrandController {
         this.brandService = brandService;
     }
 
+    @Operation(operationId = "brandFindAll", summary = "Lista as marcas")
     @GetMapping
     public ResponseEntity<List<BrandResponse>> findAll() {
         return ResponseEntity.ok(brandService.findAll());
     }
 
+    @Operation(operationId = "brandSearch", summary = "Busca as marcas com filtros e paginação")
     @GetMapping("/search")
     public ResponseEntity<Slice<BrandResponse>> search(
             @RequestParam(required = false) String name,
@@ -49,11 +54,13 @@ public class BrandController {
         return ResponseEntity.ok(brandService.search(name, country, hasCrueltyFreeClaim, hasVeganClaim, isBrazilian, pageable));
     }
 
+    @Operation(operationId = "brandFindById", summary = "Busca a marca por id")
     @GetMapping("/{id}")
     public ResponseEntity<BrandResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(brandService.findById(id));
     }
 
+    @Operation(operationId = "brandCreate", summary = "Cadastra uma marca")
     @PostMapping
     public ResponseEntity<BrandResponse> create(@Valid @RequestBody BrandRequest request) {
         BrandResponse created = brandService.create(request);
@@ -64,16 +71,19 @@ public class BrandController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "brandUpdate", summary = "Substitui os dados da marca")
     @PutMapping("/{id}")
     public ResponseEntity<BrandResponse> update(@PathVariable Long id, @Valid @RequestBody BrandRequest request) {
         return ResponseEntity.ok(brandService.update(id, request));
     }
 
+    @Operation(operationId = "brandPatch", summary = "Atualiza parcialmente a marca")
     @PatchMapping("/{id}")
     public ResponseEntity<BrandResponse> patch(@PathVariable Long id, @Valid @RequestBody BrandPatchRequest request) {
         return ResponseEntity.ok(brandService.patch(id, request));
     }
 
+    @Operation(operationId = "brandDelete", summary = "Remove a marca")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         brandService.delete(id);

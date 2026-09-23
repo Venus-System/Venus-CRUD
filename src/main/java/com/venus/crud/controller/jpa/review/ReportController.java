@@ -6,6 +6,8 @@ import com.venus.crud.dto.jpa.response.review.ReportResponse;
 import com.venus.crud.entity.enums.ReportStatus;
 import com.venus.crud.entity.enums.ReportTargetType;
 import com.venus.crud.service.jpa.review.ReportService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -27,6 +29,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/reports")
+@Tag(name = "Denúncias", description = "Denúncias de conteúdo impróprio em avaliações.")
 public class ReportController {
 
     private final ReportService reportService;
@@ -35,11 +38,13 @@ public class ReportController {
         this.reportService = reportService;
     }
 
+    @Operation(operationId = "reportFindAll", summary = "Lista as denúncias")
     @GetMapping
     public ResponseEntity<List<ReportResponse>> findAll() {
         return ResponseEntity.ok(reportService.findAll());
     }
 
+    @Operation(operationId = "reportSearch", summary = "Busca as denúncias com filtros e paginação")
     @GetMapping("/search")
     public ResponseEntity<Slice<ReportResponse>> search(
             @RequestParam(required = false) Long userId,
@@ -51,11 +56,13 @@ public class ReportController {
         return ResponseEntity.ok(reportService.search(userId, status, targetType, targetId, adminUserId, pageable));
     }
 
+    @Operation(operationId = "reportFindById", summary = "Busca a denúncia por id")
     @GetMapping("/{id}")
     public ResponseEntity<ReportResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(reportService.findById(id));
     }
 
+    @Operation(operationId = "reportCreate", summary = "Cadastra uma denúncia")
     @PostMapping
     public ResponseEntity<ReportResponse> create(@Valid @RequestBody ReportRequest request) {
         ReportResponse created = reportService.create(request);
@@ -66,16 +73,19 @@ public class ReportController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "reportUpdate", summary = "Substitui os dados da denúncia")
     @PutMapping("/{id}")
     public ResponseEntity<ReportResponse> update(@PathVariable Long id, @Valid @RequestBody ReportRequest request) {
         return ResponseEntity.ok(reportService.update(id, request));
     }
 
+    @Operation(operationId = "reportPatch", summary = "Atualiza parcialmente a denúncia")
     @PatchMapping("/{id}")
     public ResponseEntity<ReportResponse> patch(@PathVariable Long id, @Valid @RequestBody ReportPatchRequest request) {
         return ResponseEntity.ok(reportService.patch(id, request));
     }
 
+    @Operation(operationId = "reportDelete", summary = "Remove a denúncia")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         reportService.delete(id);

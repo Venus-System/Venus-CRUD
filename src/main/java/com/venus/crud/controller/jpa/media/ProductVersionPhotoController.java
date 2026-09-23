@@ -2,6 +2,8 @@ package com.venus.crud.controller.jpa.media;
 
 import com.venus.crud.dto.jpa.response.media.MediaAssetResponse;
 import com.venus.crud.service.jpa.media.MediaAssetService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.util.List;
 import org.springframework.http.MediaType;
@@ -17,6 +19,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/product-versions")
+@Tag(name = "Versões de Produto", description = "Versões de formulação de um produto e suas fotos.")
 public class ProductVersionPhotoController {
 
     private final MediaAssetService mediaAssetService;
@@ -25,11 +28,18 @@ public class ProductVersionPhotoController {
         this.mediaAssetService = mediaAssetService;
     }
 
+    @Operation(operationId = "productVersionPhotoFindPhotos", summary = "Lista as fotos de uma versão de produto")
     @GetMapping("/{productVersionId}/photos")
     public ResponseEntity<List<MediaAssetResponse>> findPhotos(@PathVariable Long productVersionId) {
         return ResponseEntity.ok(mediaAssetService.findProductPhotos(productVersionId));
     }
 
+    @Operation(
+            operationId = "productVersionPhotoUploadPhoto",
+            summary = "Envia uma foto para a versão de produto",
+            description = "Envio `multipart/form-data` no campo `file`. Os tipos aceitos, o tamanho máximo e as dimensões "
+                    + "máximas são configurados por ambiente; quando o arquivo é recusado, a mensagem do erro 400 "
+                    + "informa qual limite não foi respeitado.")
     @PostMapping(value = "/{productVersionId}/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MediaAssetResponse> uploadPhoto(
             @PathVariable Long productVersionId,

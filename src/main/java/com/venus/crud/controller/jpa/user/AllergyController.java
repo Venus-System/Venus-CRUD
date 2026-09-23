@@ -5,6 +5,8 @@ import com.venus.crud.dto.jpa.request.user.AllergyRequest;
 import com.venus.crud.dto.jpa.response.user.AllergyResponse;
 import com.venus.crud.entity.enums.AllergyType;
 import com.venus.crud.service.jpa.user.AllergyService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -26,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/allergies")
+@Tag(name = "Alergias", description = "Catálogo de alergias, alergias do usuário e os ingredientes que as disparam.")
 public class AllergyController {
 
     private final AllergyService allergyService;
@@ -34,11 +37,13 @@ public class AllergyController {
         this.allergyService = allergyService;
     }
 
+    @Operation(operationId = "allergyFindAll", summary = "Lista as alergias")
     @GetMapping
     public ResponseEntity<List<AllergyResponse>> findAll() {
         return ResponseEntity.ok(allergyService.findAll());
     }
 
+    @Operation(operationId = "allergySearch", summary = "Busca as alergias com filtros e paginação")
     @GetMapping("/search")
     public ResponseEntity<Slice<AllergyResponse>> search(
             @RequestParam(required = false) AllergyType allergyType,
@@ -46,11 +51,13 @@ public class AllergyController {
         return ResponseEntity.ok(allergyService.search(allergyType, pageable));
     }
 
+    @Operation(operationId = "allergyFindById", summary = "Busca a alergia por id")
     @GetMapping("/{id}")
     public ResponseEntity<AllergyResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(allergyService.findById(id));
     }
 
+    @Operation(operationId = "allergyCreate", summary = "Cadastra uma alergia")
     @PostMapping
     public ResponseEntity<AllergyResponse> create(@Valid @RequestBody AllergyRequest request) {
         AllergyResponse created = allergyService.create(request);
@@ -61,16 +68,19 @@ public class AllergyController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "allergyUpdate", summary = "Substitui os dados da alergia")
     @PutMapping("/{id}")
     public ResponseEntity<AllergyResponse> update(@PathVariable Long id, @Valid @RequestBody AllergyRequest request) {
         return ResponseEntity.ok(allergyService.update(id, request));
     }
 
+    @Operation(operationId = "allergyPatch", summary = "Atualiza parcialmente a alergia")
     @PatchMapping("/{id}")
     public ResponseEntity<AllergyResponse> patch(@PathVariable Long id, @Valid @RequestBody AllergyPatchRequest request) {
         return ResponseEntity.ok(allergyService.patch(id, request));
     }
 
+    @Operation(operationId = "allergyDelete", summary = "Remove a alergia")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         allergyService.delete(id);

@@ -7,6 +7,8 @@ import com.venus.crud.entity.enums.EffectCategory;
 import com.venus.crud.entity.enums.ReviewStatus;
 import com.venus.crud.entity.enums.SourceType;
 import com.venus.crud.service.jpa.ingredient.IngredientEffectService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -28,6 +30,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/ingredient-effects")
+@Tag(name = "Efeitos de Ingrediente", description = "Efeitos atribuídos a um ingrediente.")
 public class IngredientEffectController {
 
     private final IngredientEffectService ingredientEffectService;
@@ -36,11 +39,13 @@ public class IngredientEffectController {
         this.ingredientEffectService = ingredientEffectService;
     }
 
+    @Operation(operationId = "ingredientEffectFindAll", summary = "Lista os efeitos de ingrediente")
     @GetMapping
     public ResponseEntity<List<IngredientEffectResponse>> findAll() {
         return ResponseEntity.ok(ingredientEffectService.findAll());
     }
 
+    @Operation(operationId = "ingredientEffectSearch", summary = "Busca os efeitos de ingrediente com filtros e paginação")
     @GetMapping("/search")
     public ResponseEntity<Slice<IngredientEffectResponse>> search(
             @RequestParam(required = false) Long profileTagId,
@@ -51,17 +56,20 @@ public class IngredientEffectController {
         return ResponseEntity.ok(ingredientEffectService.search(profileTagId, effectCategory, reviewStatus, sourceType, pageable));
     }
 
+    @Operation(operationId = "ingredientEffectFindByIngredientId", summary = "Lista os efeitos de um ingrediente")
     @GetMapping("/ingredient/{ingredientId}")
     public ResponseEntity<List<IngredientEffectResponse>> findByIngredientId(
             @PathVariable Long ingredientId, @RequestParam(required = false) Long profileTagId) {
         return ResponseEntity.ok(ingredientEffectService.findByIngredientId(ingredientId, profileTagId));
     }
 
+    @Operation(operationId = "ingredientEffectFindById", summary = "Busca o efeito de ingrediente por id")
     @GetMapping("/{id}")
     public ResponseEntity<IngredientEffectResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(ingredientEffectService.findById(id));
     }
 
+    @Operation(operationId = "ingredientEffectCreate", summary = "Cadastra um efeito de ingrediente")
     @PostMapping
     public ResponseEntity<IngredientEffectResponse> create(@Valid @RequestBody IngredientEffectRequest request) {
         IngredientEffectResponse created = ingredientEffectService.create(request);
@@ -72,16 +80,19 @@ public class IngredientEffectController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "ingredientEffectUpdate", summary = "Substitui os dados do efeito de ingrediente")
     @PutMapping("/{id}")
     public ResponseEntity<IngredientEffectResponse> update(@PathVariable Long id, @Valid @RequestBody IngredientEffectRequest request) {
         return ResponseEntity.ok(ingredientEffectService.update(id, request));
     }
 
+    @Operation(operationId = "ingredientEffectPatch", summary = "Atualiza parcialmente o efeito de ingrediente")
     @PatchMapping("/{id}")
     public ResponseEntity<IngredientEffectResponse> patch(@PathVariable Long id, @Valid @RequestBody IngredientEffectPatchRequest request) {
         return ResponseEntity.ok(ingredientEffectService.patch(id, request));
     }
 
+    @Operation(operationId = "ingredientEffectDelete", summary = "Remove o efeito de ingrediente")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         ingredientEffectService.delete(id);
