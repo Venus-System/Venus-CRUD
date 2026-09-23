@@ -5,6 +5,8 @@ import com.venus.crud.dto.jpa.request.product.ProductVersionRequest;
 import com.venus.crud.dto.jpa.response.product.ProductVersionResponse;
 import com.venus.crud.entity.enums.VersionStatus;
 import com.venus.crud.service.jpa.product.ProductVersionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -26,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/product-versions")
+@Tag(name = "Versões de Produto", description = "Versões de formulação de um produto e suas fotos.")
 public class ProductVersionController {
 
     private final ProductVersionService productVersionService;
@@ -34,11 +37,13 @@ public class ProductVersionController {
         this.productVersionService = productVersionService;
     }
 
+    @Operation(operationId = "productVersionFindAll", summary = "Lista as versões de produto")
     @GetMapping
     public ResponseEntity<List<ProductVersionResponse>> findAll() {
         return ResponseEntity.ok(productVersionService.findAll());
     }
 
+    @Operation(operationId = "productVersionSearch", summary = "Busca as versões de produto com filtros e paginação")
     @GetMapping("/search")
     public ResponseEntity<Slice<ProductVersionResponse>> search(
             @RequestParam(required = false) VersionStatus status,
@@ -47,21 +52,29 @@ public class ProductVersionController {
         return ResponseEntity.ok(productVersionService.search(status, formulaSignature, pageable));
     }
 
+    @Operation(operationId = "productVersionFindByProductId", summary = "Lista as versões de um produto")
     @GetMapping("/product/{productId}")
     public ResponseEntity<List<ProductVersionResponse>> findByProductId(@PathVariable Long productId) {
         return ResponseEntity.ok(productVersionService.findByProductId(productId));
     }
 
+    @Operation(
+            operationId = "productVersionFindCurrentByProductId",
+            summary = "Busca a versão vigente de um produto",
+            description = "Devolve a versão marcada como vigente (`isCurrent`). Devolve 404 se nenhuma versão do produto "
+                    + "estiver marcada — um produto pode existir sem versão vigente.")
     @GetMapping("/product/{productId}/current")
     public ResponseEntity<ProductVersionResponse> findCurrentByProductId(@PathVariable Long productId) {
         return ResponseEntity.ok(productVersionService.findCurrentByProductId(productId));
     }
 
+    @Operation(operationId = "productVersionFindById", summary = "Busca a versão de produto por id")
     @GetMapping("/{id}")
     public ResponseEntity<ProductVersionResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(productVersionService.findById(id));
     }
 
+    @Operation(operationId = "productVersionCreate", summary = "Cadastra uma versão de produto")
     @PostMapping
     public ResponseEntity<ProductVersionResponse> create(@Valid @RequestBody ProductVersionRequest request) {
         ProductVersionResponse created = productVersionService.create(request);
@@ -72,16 +85,19 @@ public class ProductVersionController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "productVersionUpdate", summary = "Substitui os dados da versão de produto")
     @PutMapping("/{id}")
     public ResponseEntity<ProductVersionResponse> update(@PathVariable Long id, @Valid @RequestBody ProductVersionRequest request) {
         return ResponseEntity.ok(productVersionService.update(id, request));
     }
 
+    @Operation(operationId = "productVersionPatch", summary = "Atualiza parcialmente a versão de produto")
     @PatchMapping("/{id}")
     public ResponseEntity<ProductVersionResponse> patch(@PathVariable Long id, @Valid @RequestBody ProductVersionPatchRequest request) {
         return ResponseEntity.ok(productVersionService.patch(id, request));
     }
 
+    @Operation(operationId = "productVersionDelete", summary = "Remove a versão de produto")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productVersionService.delete(id);

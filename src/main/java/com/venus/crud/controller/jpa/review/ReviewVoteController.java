@@ -5,6 +5,9 @@ import com.venus.crud.dto.jpa.request.review.ReviewVoteRequest;
 import com.venus.crud.dto.jpa.response.review.ReviewVoteResponse;
 import com.venus.crud.entity.enums.VoteType;
 import com.venus.crud.service.jpa.review.ReviewVoteService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -25,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/review-votes")
+@Tag(name = "Votos em Avaliações", description = "Votos de útil ou não útil nas avaliações.")
 public class ReviewVoteController {
 
     private final ReviewVoteService reviewVoteService;
@@ -33,11 +37,13 @@ public class ReviewVoteController {
         this.reviewVoteService = reviewVoteService;
     }
 
+    @Operation(operationId = "reviewVoteFindAll", summary = "Lista os votos")
     @GetMapping
     public ResponseEntity<List<ReviewVoteResponse>> findAll() {
         return ResponseEntity.ok(reviewVoteService.findAll());
     }
 
+    @Operation(operationId = "reviewVoteSearch", summary = "Busca os votos com filtros e paginação")
     @GetMapping("/search")
     public ResponseEntity<Slice<ReviewVoteResponse>> search(
             @RequestParam(required = false) VoteType voteType,
@@ -45,22 +51,32 @@ public class ReviewVoteController {
         return ResponseEntity.ok(reviewVoteService.search(voteType, pageable));
     }
 
+    @Operation(operationId = "reviewVoteFindByReviewId", summary = "Lista os votos de uma avaliação")
     @GetMapping("/review/{reviewId}")
     public ResponseEntity<Slice<ReviewVoteResponse>> findByReviewId(
             @PathVariable Long reviewId, @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(reviewVoteService.findByReviewId(reviewId, pageable));
     }
 
+    @Operation(
+            operationId = "reviewVoteCountByReviewIdAndVoteType",
+            summary = "Conta os votos de uma avaliação por tipo",
+            description = "O parâmetro `voteType` é obrigatório: a contagem é sempre por tipo de voto, nunca o total da "
+                    + "avaliação.")
     @GetMapping("/review/{reviewId}/count")
-    public ResponseEntity<Long> countByReviewIdAndVoteType(@PathVariable Long reviewId, @RequestParam VoteType voteType) {
+    public ResponseEntity<Long> countByReviewIdAndVoteType(@PathVariable Long reviewId, 
+            @Parameter(description = "Tipo de voto a contar. Obrigatório.")
+            @RequestParam VoteType voteType) {
         return ResponseEntity.ok(reviewVoteService.countByReviewIdAndVoteType(reviewId, voteType));
     }
 
+    @Operation(operationId = "reviewVoteFindByReviewIdAndUserId", summary = "Busca o voto de um usuário numa avaliação")
     @GetMapping("/review/{reviewId}/user/{userId}")
     public ResponseEntity<ReviewVoteResponse> findByReviewIdAndUserId(@PathVariable Long reviewId, @PathVariable Long userId) {
         return ResponseEntity.ok(reviewVoteService.findByReviewIdAndUserId(reviewId, userId));
     }
 
+    @Operation(operationId = "reviewVoteCreate", summary = "Cadastra um voto")
     @PostMapping
     public ResponseEntity<ReviewVoteResponse> create(@Valid @RequestBody ReviewVoteRequest request) {
         ReviewVoteResponse created = reviewVoteService.create(request);
@@ -71,12 +87,14 @@ public class ReviewVoteController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "reviewVotePatch", summary = "Atualiza parcialmente o voto")
     @PatchMapping("/review/{reviewId}/user/{userId}")
     public ResponseEntity<ReviewVoteResponse> patch(
             @PathVariable Long reviewId, @PathVariable Long userId, @Valid @RequestBody ReviewVotePatchRequest request) {
         return ResponseEntity.ok(reviewVoteService.patch(reviewId, userId, request));
     }
 
+    @Operation(operationId = "reviewVoteDelete", summary = "Remove o voto")
     @DeleteMapping("/review/{reviewId}/user/{userId}")
     public ResponseEntity<Void> delete(@PathVariable Long reviewId, @PathVariable Long userId) {
         reviewVoteService.delete(reviewId, userId);

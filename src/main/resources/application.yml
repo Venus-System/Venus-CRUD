@@ -37,6 +37,10 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+    doc-expansion: none
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}

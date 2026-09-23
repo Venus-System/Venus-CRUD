@@ -5,6 +5,8 @@ import com.venus.crud.dto.jpa.request.product.PackagingRequest;
 import com.venus.crud.dto.jpa.response.product.PackagingResponse;
 import com.venus.crud.entity.enums.PackagingMaterial;
 import com.venus.crud.service.jpa.product.PackagingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -26,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/packagings")
+@Tag(name = "Embalagens", description = "Tipos de embalagem e material.")
 public class PackagingController {
 
     private final PackagingService packagingService;
@@ -34,11 +37,13 @@ public class PackagingController {
         this.packagingService = packagingService;
     }
 
+    @Operation(operationId = "packagingFindAll", summary = "Lista as embalagens")
     @GetMapping
     public ResponseEntity<List<PackagingResponse>> findAll() {
         return ResponseEntity.ok(packagingService.findAll());
     }
 
+    @Operation(operationId = "packagingSearch", summary = "Busca as embalagens com filtros e paginação")
     @GetMapping("/search")
     public ResponseEntity<Slice<PackagingResponse>> search(
             @RequestParam(required = false) PackagingMaterial material,
@@ -49,11 +54,13 @@ public class PackagingController {
         return ResponseEntity.ok(packagingService.search(material, isRecyclable, isRefillable, isBiodegradable, pageable));
     }
 
+    @Operation(operationId = "packagingFindByProductVersionId", summary = "Busca a embalagem de uma versão de produto")
     @GetMapping("/product-version/{productVersionId}")
     public ResponseEntity<PackagingResponse> findByProductVersionId(@PathVariable Long productVersionId) {
         return ResponseEntity.ok(packagingService.findByProductVersionId(productVersionId));
     }
 
+    @Operation(operationId = "packagingCreate", summary = "Cadastra uma embalagem")
     @PostMapping
     public ResponseEntity<PackagingResponse> create(@Valid @RequestBody PackagingRequest request) {
         PackagingResponse created = packagingService.create(request);
@@ -64,16 +71,19 @@ public class PackagingController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "packagingUpdate", summary = "Substitui os dados da embalagem")
     @PutMapping("/product-version/{productVersionId}")
     public ResponseEntity<PackagingResponse> update(@PathVariable Long productVersionId, @Valid @RequestBody PackagingRequest request) {
         return ResponseEntity.ok(packagingService.update(productVersionId, request));
     }
 
+    @Operation(operationId = "packagingPatch", summary = "Atualiza parcialmente a embalagem")
     @PatchMapping("/product-version/{productVersionId}")
     public ResponseEntity<PackagingResponse> patch(@PathVariable Long productVersionId, @Valid @RequestBody PackagingPatchRequest request) {
         return ResponseEntity.ok(packagingService.patch(productVersionId, request));
     }
 
+    @Operation(operationId = "packagingDelete", summary = "Remove a embalagem")
     @DeleteMapping("/product-version/{productVersionId}")
     public ResponseEntity<Void> delete(@PathVariable Long productVersionId) {
         packagingService.delete(productVersionId);

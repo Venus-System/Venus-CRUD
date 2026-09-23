@@ -3,6 +3,8 @@ package com.venus.crud.controller.jpa.media;
 import com.venus.crud.dto.jpa.patch.media.MediaAssetPatchRequest;
 import com.venus.crud.dto.jpa.response.media.MediaAssetResponse;
 import com.venus.crud.service.jpa.media.MediaAssetService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/media")
+@Tag(name = "Mídia", description = "Upload e consulta dos arquivos hospedados no Cloudinary.")
 public class MediaAssetController {
 
     private final MediaAssetService mediaAssetService;
@@ -22,12 +25,14 @@ public class MediaAssetController {
         this.mediaAssetService = mediaAssetService;
     }
 
+    @Operation(operationId = "mediaAssetPatch", summary = "Atualiza parcialmente o arquivo de mídia")
     @PatchMapping("/{mediaAssetId}")
     public ResponseEntity<MediaAssetResponse> patch(@PathVariable Long mediaAssetId,
             @Valid @RequestBody MediaAssetPatchRequest request) {
         return ResponseEntity.ok(mediaAssetService.patch(mediaAssetId, request));
     }
 
+    @Operation(operationId = "mediaAssetDelete", summary = "Remove o arquivo de mídia")
     @DeleteMapping("/{mediaAssetId}")
     public ResponseEntity<Void> delete(@PathVariable Long mediaAssetId) {
         mediaAssetService.delete(mediaAssetId);

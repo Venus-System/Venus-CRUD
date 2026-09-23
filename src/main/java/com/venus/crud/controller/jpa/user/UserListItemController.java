@@ -4,6 +4,8 @@ import com.venus.crud.dto.jpa.patch.user.UserListItemPatchRequest;
 import com.venus.crud.dto.jpa.request.user.UserListItemRequest;
 import com.venus.crud.dto.jpa.response.user.UserListItemResponse;
 import com.venus.crud.service.jpa.user.UserListItemService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -23,6 +25,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/user-list-items")
+@Tag(name = "Listas do Usuário", description = "Listas criadas pelo usuário e os produtos dentro delas.")
 public class UserListItemController {
 
     private final UserListItemService userListItemService;
@@ -31,22 +34,26 @@ public class UserListItemController {
         this.userListItemService = userListItemService;
     }
 
+    @Operation(operationId = "userListItemFindAll", summary = "Lista os itens da lista")
     @GetMapping
     public ResponseEntity<List<UserListItemResponse>> findAll() {
         return ResponseEntity.ok(userListItemService.findAll());
     }
 
+    @Operation(operationId = "userListItemFindByUserListId", summary = "Lista os itens de uma lista")
     @GetMapping("/user-list/{userListId}")
     public ResponseEntity<List<UserListItemResponse>> findByUserListId(@PathVariable Long userListId) {
         return ResponseEntity.ok(userListItemService.findByUserListId(userListId));
     }
 
+    @Operation(operationId = "userListItemFindByProductId", summary = "Lista as listas que contêm um produto")
     @GetMapping("/product/{productId}")
     public ResponseEntity<Slice<UserListItemResponse>> findByProductId(
             @PathVariable Long productId, @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(userListItemService.findByProductId(productId, pageable));
     }
 
+    @Operation(operationId = "userListItemCreate", summary = "Cadastra um item da lista")
     @PostMapping
     public ResponseEntity<UserListItemResponse> create(@Valid @RequestBody UserListItemRequest request) {
         UserListItemResponse created = userListItemService.create(request);
@@ -57,12 +64,14 @@ public class UserListItemController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "userListItemPatch", summary = "Atualiza parcialmente o item da lista")
     @PatchMapping("/user-list/{userListId}/product/{productId}")
     public ResponseEntity<UserListItemResponse> patch(
             @PathVariable Long userListId, @PathVariable Long productId, @Valid @RequestBody UserListItemPatchRequest request) {
         return ResponseEntity.ok(userListItemService.patch(userListId, productId, request));
     }
 
+    @Operation(operationId = "userListItemDelete", summary = "Remove o item da lista")
     @DeleteMapping("/user-list/{userListId}/product/{productId}")
     public ResponseEntity<Void> delete(@PathVariable Long userListId, @PathVariable Long productId) {
         userListItemService.delete(userListId, productId);

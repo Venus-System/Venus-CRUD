@@ -5,6 +5,8 @@ import com.venus.crud.dto.jpa.request.product.ProductClaimRequest;
 import com.venus.crud.dto.jpa.response.product.ProductClaimResponse;
 import com.venus.crud.entity.enums.SourceType;
 import com.venus.crud.service.jpa.product.ProductClaimService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -25,6 +27,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/product-claims")
+@Tag(name = "Claims", description = "Alegações de marketing e as alegações declaradas por cada produto.")
 public class ProductClaimController {
 
     private final ProductClaimService productClaimService;
@@ -33,11 +36,13 @@ public class ProductClaimController {
         this.productClaimService = productClaimService;
     }
 
+    @Operation(operationId = "productClaimFindAll", summary = "Lista as alegações do produto")
     @GetMapping
     public ResponseEntity<List<ProductClaimResponse>> findAll() {
         return ResponseEntity.ok(productClaimService.findAll());
     }
 
+    @Operation(operationId = "productClaimSearch", summary = "Busca as alegações do produto com filtros e paginação")
     @GetMapping("/search")
     public ResponseEntity<Slice<ProductClaimResponse>> search(
             @RequestParam(required = false) Long claimId,
@@ -46,12 +51,16 @@ public class ProductClaimController {
         return ResponseEntity.ok(productClaimService.search(claimId, sourceType, pageable));
     }
 
+    @Operation(
+            operationId = "productClaimFindByProductVersionId",
+            summary = "Lista as alegações declaradas por uma versão de produto")
     @GetMapping("/product-version/{productVersionId}")
     public ResponseEntity<List<ProductClaimResponse>> findByProductVersionId(
             @PathVariable Long productVersionId, @RequestParam(required = false) Boolean wasVerified) {
         return ResponseEntity.ok(productClaimService.findByProductVersionId(productVersionId, wasVerified));
     }
 
+    @Operation(operationId = "productClaimCreate", summary = "Cadastra uma alegação do produto")
     @PostMapping
     public ResponseEntity<ProductClaimResponse> create(@Valid @RequestBody ProductClaimRequest request) {
         ProductClaimResponse created = productClaimService.create(request);
@@ -62,12 +71,14 @@ public class ProductClaimController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "productClaimPatch", summary = "Atualiza parcialmente a alegação do produto")
     @PatchMapping("/product-version/{productVersionId}/claim/{claimId}")
     public ResponseEntity<ProductClaimResponse> patch(
             @PathVariable Long productVersionId, @PathVariable Long claimId, @Valid @RequestBody ProductClaimPatchRequest request) {
         return ResponseEntity.ok(productClaimService.patch(productVersionId, claimId, request));
     }
 
+    @Operation(operationId = "productClaimDelete", summary = "Remove a alegação do produto")
     @DeleteMapping("/product-version/{productVersionId}/claim/{claimId}")
     public ResponseEntity<Void> delete(@PathVariable Long productVersionId, @PathVariable Long claimId) {
         productClaimService.delete(productVersionId, claimId);

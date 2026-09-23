@@ -4,6 +4,8 @@ import com.venus.crud.dto.jpa.patch.ingredient.ProductIngredientPatchRequest;
 import com.venus.crud.dto.jpa.request.ingredient.ProductIngredientRequest;
 import com.venus.crud.dto.jpa.response.ingredient.ProductIngredientResponse;
 import com.venus.crud.service.jpa.ingredient.ProductIngredientService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -23,6 +25,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/product-ingredients")
+@Tag(name = "Ingredientes do Produto", description = "Composição: quais ingredientes compõem cada produto.")
 public class ProductIngredientController {
 
     private final ProductIngredientService productIngredientService;
@@ -31,22 +34,30 @@ public class ProductIngredientController {
         this.productIngredientService = productIngredientService;
     }
 
+    @Operation(operationId = "productIngredientFindAll", summary = "Lista os ingredientes do produto")
     @GetMapping
     public ResponseEntity<List<ProductIngredientResponse>> findAll() {
         return ResponseEntity.ok(productIngredientService.findAll());
     }
 
+    @Operation(
+            operationId = "productIngredientFindByProductVersionId",
+            summary = "Lista a composição de uma versão de produto")
     @GetMapping("/product-version/{productVersionId}")
     public ResponseEntity<List<ProductIngredientResponse>> findByProductVersionId(@PathVariable Long productVersionId) {
         return ResponseEntity.ok(productIngredientService.findByProductVersionId(productVersionId));
     }
 
+    @Operation(
+            operationId = "productIngredientFindByIngredientId",
+            summary = "Lista as versões de produto que contêm um ingrediente")
     @GetMapping("/ingredient/{ingredientId}")
     public ResponseEntity<Slice<ProductIngredientResponse>> findByIngredientId(
             @PathVariable Long ingredientId, @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(productIngredientService.findByIngredientId(ingredientId, pageable));
     }
 
+    @Operation(operationId = "productIngredientCreate", summary = "Cadastra um ingrediente do produto")
     @PostMapping
     public ResponseEntity<ProductIngredientResponse> create(@Valid @RequestBody ProductIngredientRequest request) {
         ProductIngredientResponse created = productIngredientService.create(request);
@@ -57,6 +68,7 @@ public class ProductIngredientController {
         return ResponseEntity.created(location).body(created);
     }
 
+    @Operation(operationId = "productIngredientPatch", summary = "Atualiza parcialmente o ingrediente do produto")
     @PatchMapping("/product-version/{productVersionId}/ingredient/{ingredientId}")
     public ResponseEntity<ProductIngredientResponse> patch(
             @PathVariable Long productVersionId, @PathVariable Long ingredientId,
@@ -64,6 +76,7 @@ public class ProductIngredientController {
         return ResponseEntity.ok(productIngredientService.patch(productVersionId, ingredientId, request));
     }
 
+    @Operation(operationId = "productIngredientDelete", summary = "Remove o ingrediente do produto")
     @DeleteMapping("/product-version/{productVersionId}/ingredient/{ingredientId}")
     public ResponseEntity<Void> delete(@PathVariable Long productVersionId, @PathVariable Long ingredientId) {
         productIngredientService.delete(productVersionId, ingredientId);
