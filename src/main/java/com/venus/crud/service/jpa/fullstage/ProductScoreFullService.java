@@ -3,9 +3,9 @@ package com.venus.crud.service.jpa.fullstage;
 import com.venus.crud.dto.jpa.response.fullstage.ProductScoreFullResponse;
 import com.venus.crud.dto.jpa.response.scoring.ScoringModelResponse;
 import com.venus.crud.entity.scoring.ProductScore;
-import com.venus.crud.exception.DuplicateResourceException;
+import com.venus.crud.exception.DataAccessFailureTranslator;
+import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.ResourceNotFoundException;
-import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.scoring.ProductScoreMapper;
 import com.venus.crud.mapper.jpa.scoring.ScoringModelCategoryMapper;
 import com.venus.crud.mapper.jpa.scoring.ScoringModelMapper;
@@ -68,11 +68,10 @@ public class ProductScoreFullService {
         try {
             return action.get();
         } catch (DataIntegrityViolationException ex) {
-            log.warn("Violacao de integridade de dados: {}", ex.getMessage());
-            throw new DuplicateResourceException("Os dados informados conflitam com um registro existente.");
+            throw DataIntegrityViolationTranslator.translate(ex);
         } catch (DataAccessException ex) {
             log.error(errorMessage, ex);
-            throw new ServiceUnavailableException(errorMessage + ". Tente novamente mais tarde.", ex);
+            throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
     }
 }

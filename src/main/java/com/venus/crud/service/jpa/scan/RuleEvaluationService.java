@@ -4,9 +4,9 @@ import com.venus.crud.dto.jpa.patch.scan.RuleEvaluationPatchRequest;
 import com.venus.crud.dto.jpa.request.scan.RuleEvaluationRequest;
 import com.venus.crud.dto.jpa.response.scan.RuleEvaluationResponse;
 import com.venus.crud.entity.scan.RuleEvaluation;
-import com.venus.crud.exception.DuplicateResourceException;
+import com.venus.crud.exception.DataAccessFailureTranslator;
+import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.ResourceNotFoundException;
-import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.scan.RuleEvaluationMapper;
 import com.venus.crud.repository.jpa.scan.RuleEvaluationRepository;
 import java.util.List;
@@ -120,11 +120,10 @@ public class RuleEvaluationService {
         try {
             return action.get();
         } catch (DataIntegrityViolationException ex) {
-            log.warn("Violacao de integridade de dados: {}", ex.getMessage());
-            throw new DuplicateResourceException("Os dados informados conflitam com um registro existente.");
+            throw DataIntegrityViolationTranslator.translate(ex);
         } catch (DataAccessException ex) {
             log.error(errorMessage, ex);
-            throw new ServiceUnavailableException(errorMessage + ". Tente novamente mais tarde.", ex);
+            throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
     }
 }

@@ -5,10 +5,10 @@ import com.venus.crud.dto.jpa.request.scan.AnalysisResultRequest;
 import com.venus.crud.dto.jpa.response.scan.AnalysisResultResponse;
 import com.venus.crud.entity.enums.AnalysisStatus;
 import com.venus.crud.entity.scan.AnalysisResult;
-import com.venus.crud.exception.DuplicateResourceException;
+import com.venus.crud.exception.DataAccessFailureTranslator;
+import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.InvalidStateTransitionException;
 import com.venus.crud.exception.ResourceNotFoundException;
-import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.scan.AnalysisResultMapper;
 import com.venus.crud.repository.jpa.scan.AnalysisResultRepository;
 import java.sql.SQLException;
@@ -124,12 +124,11 @@ public class AnalysisResultService {
                 throw new InvalidStateTransitionException(
                         "Transicao de status invalida. Analises concluidas ou com falha nao mudam de status.");
             }
-            if (ex instanceof DataIntegrityViolationException) {
-                log.warn("Violacao de integridade de dados: {}", ex.getMessage());
-                throw new DuplicateResourceException("Os dados informados conflitam com um registro existente.");
+            if (ex instanceof DataIntegrityViolationException integrityViolation) {
+                throw DataIntegrityViolationTranslator.translate(integrityViolation);
             }
             log.error(errorMessage, ex);
-            throw new ServiceUnavailableException(errorMessage + ". Tente novamente mais tarde.", ex);
+            throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
     }
 

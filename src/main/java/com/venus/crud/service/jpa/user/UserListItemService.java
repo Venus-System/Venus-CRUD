@@ -4,9 +4,10 @@ import com.venus.crud.dto.jpa.patch.user.UserListItemPatchRequest;
 import com.venus.crud.dto.jpa.request.user.UserListItemRequest;
 import com.venus.crud.dto.jpa.response.user.UserListItemResponse;
 import com.venus.crud.entity.user.UserListItem;
+import com.venus.crud.exception.DataAccessFailureTranslator;
+import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
-import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.user.UserListItemMapper;
 import com.venus.crud.repository.jpa.user.UserListItemRepository;
 import java.util.List;
@@ -100,11 +101,10 @@ public class UserListItemService {
         try {
             return action.get();
         } catch (DataIntegrityViolationException ex) {
-            log.warn("Violacao de integridade de dados: {}", ex.getMessage());
-            throw new DuplicateResourceException("Os dados informados conflitam com um registro existente.");
+            throw DataIntegrityViolationTranslator.translate(ex);
         } catch (DataAccessException ex) {
             log.error(errorMessage, ex);
-            throw new ServiceUnavailableException(errorMessage + ". Tente novamente mais tarde.", ex);
+            throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
     }
 }
