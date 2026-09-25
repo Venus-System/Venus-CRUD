@@ -6,9 +6,9 @@ import com.venus.crud.dto.jpa.response.ingredient.CompatibilityRuleResponse;
 import com.venus.crud.entity.enums.EffectType;
 import com.venus.crud.entity.enums.SourceType;
 import com.venus.crud.entity.ingredient.CompatibilityRule;
-import com.venus.crud.exception.DuplicateResourceException;
+import com.venus.crud.exception.DataAccessFailureTranslator;
+import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.ResourceNotFoundException;
-import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.ingredient.CompatibilityRuleMapper;
 import com.venus.crud.repository.jpa.ingredient.CompatibilityRuleRepository;
 import java.util.List;
@@ -128,11 +128,10 @@ public class CompatibilityRuleService {
         try {
             return action.get();
         } catch (DataIntegrityViolationException ex) {
-            log.warn("Violacao de integridade de dados: {}", ex.getMessage());
-            throw new DuplicateResourceException("Os dados informados conflitam com um registro existente.");
+            throw DataIntegrityViolationTranslator.translate(ex);
         } catch (DataAccessException ex) {
             log.error(errorMessage, ex);
-            throw new ServiceUnavailableException(errorMessage + ". Tente novamente mais tarde.", ex);
+            throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
     }
 }

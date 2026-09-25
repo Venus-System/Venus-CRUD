@@ -5,8 +5,11 @@ import com.venus.crud.entity.ingredient.IngredientAlias;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,4 +22,7 @@ public interface IngredientAliasRepository extends JpaRepository<IngredientAlias
     Slice<IngredientAlias> findByAliasLanguage(String aliasLanguage, Pageable pageable);
     Slice<IngredientAlias> findBySourceType(SourceType sourceType, Pageable pageable);
     Slice<IngredientAlias> findAllBy(Pageable pageable);
+
+    @Query("select a from IngredientAlias a join fetch a.ingredient where upper(a.aliasName) in :names")
+    List<IngredientAlias> findWithIngredientByUpperAliasNameIn(@Param("names") Collection<String> names);
 }

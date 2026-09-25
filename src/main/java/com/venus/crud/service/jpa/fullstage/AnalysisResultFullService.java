@@ -4,9 +4,9 @@ import com.venus.crud.dto.jpa.response.fullstage.AnalysisResultFullResponse;
 import com.venus.crud.dto.jpa.response.fullstage.RuleEvaluationDetailResponse;
 import com.venus.crud.dto.jpa.response.scan.PersonalizedScoreResponse;
 import com.venus.crud.entity.scan.AnalysisResult;
-import com.venus.crud.exception.DuplicateResourceException;
+import com.venus.crud.exception.DataAccessFailureTranslator;
+import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.ResourceNotFoundException;
-import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.ingredient.IngredientMapper;
 import com.venus.crud.mapper.jpa.scan.AnalysisResultMapper;
 import com.venus.crud.mapper.jpa.scan.PersonalizedScoreMapper;
@@ -80,11 +80,10 @@ public class AnalysisResultFullService {
         try {
             return action.get();
         } catch (DataIntegrityViolationException ex) {
-            log.warn("Violacao de integridade de dados: {}", ex.getMessage());
-            throw new DuplicateResourceException("Os dados informados conflitam com um registro existente.");
+            throw DataIntegrityViolationTranslator.translate(ex);
         } catch (DataAccessException ex) {
             log.error(errorMessage, ex);
-            throw new ServiceUnavailableException(errorMessage + ". Tente novamente mais tarde.", ex);
+            throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
     }
 }

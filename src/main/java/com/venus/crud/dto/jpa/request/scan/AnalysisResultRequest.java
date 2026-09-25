@@ -23,9 +23,9 @@ public record AnalysisResultRequest(
         @Schema(description = "Nota de desempenho, de 0 a 100.", example = "70")
         @NotNull Integer performanceScore,
         @Schema(description = "Nota de transparência, de 0 a 100.", example = "65")
-        @NotNull Integer transparencyScore,
+        Integer transparencyScore,
         @Schema(description = "Grau de confiança no dado; quanto maior, mais confiável.", example = "90")
-        @NotNull Short confidenceScore,
+        Short confidenceScore,
         @Schema(description = "Tempo de processamento, em milissegundos.", example = "850")
         @NotNull Integer processingTimeMs,
         @Schema(description = "Situação atual do registro.")

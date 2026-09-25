@@ -3,9 +3,10 @@ package com.venus.crud.service.jpa.user;
 import com.venus.crud.dto.jpa.request.user.FavoriteRequest;
 import com.venus.crud.dto.jpa.response.user.FavoriteResponse;
 import com.venus.crud.entity.user.Favorite;
+import com.venus.crud.exception.DataAccessFailureTranslator;
+import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
-import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.user.FavoriteMapper;
 import com.venus.crud.repository.jpa.user.FavoriteRepository;
 import java.util.List;
@@ -99,11 +100,10 @@ public class FavoriteService {
         try {
             return action.get();
         } catch (DataIntegrityViolationException ex) {
-            log.warn("Violacao de integridade de dados: {}", ex.getMessage());
-            throw new DuplicateResourceException("Os dados informados conflitam com um registro existente.");
+            throw DataIntegrityViolationTranslator.translate(ex);
         } catch (DataAccessException ex) {
             log.error(errorMessage, ex);
-            throw new ServiceUnavailableException(errorMessage + ". Tente novamente mais tarde.", ex);
+            throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
     }
 }

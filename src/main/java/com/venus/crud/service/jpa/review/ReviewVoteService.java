@@ -5,9 +5,10 @@ import com.venus.crud.dto.jpa.request.review.ReviewVoteRequest;
 import com.venus.crud.dto.jpa.response.review.ReviewVoteResponse;
 import com.venus.crud.entity.enums.VoteType;
 import com.venus.crud.entity.review.ReviewVote;
+import com.venus.crud.exception.DataAccessFailureTranslator;
+import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
-import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.review.ReviewVoteMapper;
 import com.venus.crud.repository.jpa.review.ReviewVoteRepository;
 import java.util.List;
@@ -113,11 +114,10 @@ public class ReviewVoteService {
         try {
             return action.get();
         } catch (DataIntegrityViolationException ex) {
-            log.warn("Violacao de integridade de dados: {}", ex.getMessage());
-            throw new DuplicateResourceException("Os dados informados conflitam com um registro existente.");
+            throw DataIntegrityViolationTranslator.translate(ex);
         } catch (DataAccessException ex) {
             log.error(errorMessage, ex);
-            throw new ServiceUnavailableException(errorMessage + ". Tente novamente mais tarde.", ex);
+            throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
     }
 }

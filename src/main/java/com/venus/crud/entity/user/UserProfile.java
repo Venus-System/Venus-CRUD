@@ -39,16 +39,16 @@ public class UserProfile extends AuditableEntity {
     @Column(name = "skin_phototype", nullable = false)
     private SkinPhototype skinPhototype;
 
-    @Column(name = "has_hyperpigmentation", nullable = false)
+    @Column(name = "has_hyperpigmentation")
     private Boolean hasHyperpigmentation;
 
-    @Column(name = "has_melasma", nullable = false)
+    @Column(name = "has_melasma")
     private Boolean hasMelasma;
 
-    @Column(name = "has_rosacea", nullable = false)
+    @Column(name = "has_rosacea")
     private Boolean hasRosacea;
 
-    @Column(name = "has_eczema", nullable = false)
+    @Column(name = "has_eczema")
     private Boolean hasEczema;
 
     @Column(name = "hair_pattern", nullable = false)
@@ -60,7 +60,7 @@ public class UserProfile extends AuditableEntity {
     @Column(name = "skin_sensitivity", nullable = false)
     private SensitivityLevel skinSensitivity;
 
-    @Column(name = "acne_prone", nullable = false)
+    @Column(name = "acne_prone")
     private Boolean acneProne;
 
     @Column(name = "age_range", nullable = false)
@@ -69,9 +69,9 @@ public class UserProfile extends AuditableEntity {
     @Column(name = "gender", nullable = false)
     private Gender gender;
 
-    @Column(name = "is_pregnant", nullable = false)
+    @Column(name = "is_pregnant")
     private Boolean isPregnant;
 
-    @Column(name = "is_breastfeeding", nullable = false)
+    @Column(name = "is_breastfeeding")
     private Boolean isBreastfeeding;
 }

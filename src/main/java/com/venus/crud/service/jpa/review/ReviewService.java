@@ -4,9 +4,10 @@ import com.venus.crud.dto.jpa.patch.review.ReviewPatchRequest;
 import com.venus.crud.dto.jpa.request.review.ReviewRequest;
 import com.venus.crud.dto.jpa.response.review.ReviewResponse;
 import com.venus.crud.entity.review.Review;
+import com.venus.crud.exception.DataAccessFailureTranslator;
+import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
-import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.review.ReviewMapper;
 import com.venus.crud.repository.jpa.review.ReviewRepository;
 import java.math.BigDecimal;
@@ -132,11 +133,10 @@ public class ReviewService {
         try {
             return action.get();
         } catch (DataIntegrityViolationException ex) {
-            log.warn("Violacao de integridade de dados: {}", ex.getMessage());
-            throw new DuplicateResourceException("Os dados informados conflitam com um registro existente.");
+            throw DataIntegrityViolationTranslator.translate(ex);
         } catch (DataAccessException ex) {
             log.error(errorMessage, ex);
-            throw new ServiceUnavailableException(errorMessage + ". Tente novamente mais tarde.", ex);
+            throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
     }
 }

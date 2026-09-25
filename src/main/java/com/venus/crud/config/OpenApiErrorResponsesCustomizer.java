@@ -66,9 +66,15 @@ public class OpenApiErrorResponsesCustomizer implements OperationCustomizer {
         }
         if (hasRequestBody || hasUpload) {
             addResponse(responses, HttpStatus.CONFLICT,
-                    "Já existe um registro com os mesmos dados únicos, ou a mudança de estado não é permitida.",
+                    "Já existe um registro com os mesmos dados únicos, o registro referenciado não existe "
+                            + "ou a mudança de estado não é permitida.",
                     example(HttpStatus.CONFLICT, "Ja existe um usuario com o email contato@venus.com", "/api/users",
                             List.of()));
+            addResponse(responses, HttpStatus.UNPROCESSABLE_ENTITY,
+                    "O banco recusou os dados: campo obrigatório ausente ou regra de consistência violada. "
+                            + "O campo details traz a constraint ou a coluna.",
+                    example(HttpStatus.UNPROCESSABLE_ENTITY, "Um campo obrigatorio nao foi informado.",
+                            "/api/user-profiles", List.of("column: has_melasma")));
         }
         if (hasPathVariable) {
             addResponse(responses, HttpStatus.NOT_FOUND,
@@ -85,6 +91,11 @@ public class OpenApiErrorResponsesCustomizer implements OperationCustomizer {
                 "Erro inesperado no servidor.",
                 example(HttpStatus.INTERNAL_SERVER_ERROR, "Ocorreu um erro inesperado. Tente novamente mais tarde.",
                         "/api/users", List.of()));
+        addResponse(responses, HttpStatus.SERVICE_UNAVAILABLE,
+                "Banco de dados ou serviço externo indisponível no momento. Tentar de novo depois costuma resolver.",
+                example(HttpStatus.SERVICE_UNAVAILABLE,
+                        "Falha ao consultar usuarios no banco de dados. Tente novamente mais tarde.", "/api/users",
+                        List.of()));
 
         return operation;
     }

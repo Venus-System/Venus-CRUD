@@ -4,9 +4,10 @@ import com.venus.crud.dto.jpa.patch.ingredient.ProductIngredientPatchRequest;
 import com.venus.crud.dto.jpa.request.ingredient.ProductIngredientRequest;
 import com.venus.crud.dto.jpa.response.ingredient.ProductIngredientResponse;
 import com.venus.crud.entity.ingredient.ProductIngredient;
+import com.venus.crud.exception.DataAccessFailureTranslator;
+import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
-import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.ingredient.ProductIngredientMapper;
 import com.venus.crud.repository.jpa.ingredient.ProductIngredientRepository;
 import java.util.List;
@@ -107,11 +108,10 @@ public class ProductIngredientService {
         try {
             return action.get();
         } catch (DataIntegrityViolationException ex) {
-            log.warn("Violacao de integridade de dados: {}", ex.getMessage());
-            throw new DuplicateResourceException("Os dados informados conflitam com um registro existente.");
+            throw DataIntegrityViolationTranslator.translate(ex);
         } catch (DataAccessException ex) {
             log.error(errorMessage, ex);
-            throw new ServiceUnavailableException(errorMessage + ". Tente novamente mais tarde.", ex);
+            throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
     }
 }

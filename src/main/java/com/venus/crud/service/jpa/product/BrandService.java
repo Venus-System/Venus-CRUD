@@ -4,9 +4,10 @@ import com.venus.crud.dto.jpa.patch.product.BrandPatchRequest;
 import com.venus.crud.dto.jpa.request.product.BrandRequest;
 import com.venus.crud.dto.jpa.response.product.BrandResponse;
 import com.venus.crud.entity.product.Brand;
+import com.venus.crud.exception.DataAccessFailureTranslator;
+import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
-import com.venus.crud.exception.ServiceUnavailableException;
 import com.venus.crud.mapper.jpa.product.BrandMapper;
 import com.venus.crud.repository.jpa.product.BrandRepository;
 import java.util.List;
@@ -126,11 +127,10 @@ public class BrandService {
         try {
             return action.get();
         } catch (DataIntegrityViolationException ex) {
-            log.warn("Violacao de integridade de dados: {}", ex.getMessage());
-            throw new DuplicateResourceException("Os dados informados conflitam com um registro existente.");
+            throw DataIntegrityViolationTranslator.translate(ex);
         } catch (DataAccessException ex) {
             log.error(errorMessage, ex);
-            throw new ServiceUnavailableException(errorMessage + ". Tente novamente mais tarde.", ex);
+            throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
     }
 }

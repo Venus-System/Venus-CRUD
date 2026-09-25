@@ -6,6 +6,7 @@ import com.venus.crud.dto.jpa.request.user.UserProfileRequest;
 import com.venus.crud.dto.jpa.response.user.UserProfileResponse;
 import com.venus.crud.entity.user.User;
 import com.venus.crud.entity.user.UserProfile;
+import org.mapstruct.AfterMapping;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
@@ -32,8 +33,26 @@ public interface UserProfileMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "user", source = "userId")
+    @Mapping(target = "hasHyperpigmentation", ignore = true)
+    @Mapping(target = "hasMelasma", ignore = true)
+    @Mapping(target = "hasRosacea", ignore = true)
+    @Mapping(target = "hasEczema", ignore = true)
+    @Mapping(target = "acneProne", ignore = true)
+    @Mapping(target = "isPregnant", ignore = true)
+    @Mapping(target = "isBreastfeeding", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(UserProfilePatchRequest request, @MappingTarget UserProfile entity);
+
+    @AfterMapping
+    default void patchHealthData(UserProfilePatchRequest request, @MappingTarget UserProfile entity) {
+        request.hasHyperpigmentation().ifPresent(entity::setHasHyperpigmentation);
+        request.hasMelasma().ifPresent(entity::setHasMelasma);
+        request.hasRosacea().ifPresent(entity::setHasRosacea);
+        request.hasEczema().ifPresent(entity::setHasEczema);
+        request.acneProne().ifPresent(entity::setAcneProne);
+        request.isPregnant().ifPresent(entity::setIsPregnant);
+        request.isBreastfeeding().ifPresent(entity::setIsBreastfeeding);
+    }
 
     default User mapUser(Long userId) {
         if (userId == null) {

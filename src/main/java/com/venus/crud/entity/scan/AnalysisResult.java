@@ -53,10 +53,10 @@ public class AnalysisResult extends AuditableEntity {
     @Column(name = "performance_score", nullable = false)
     private Integer performanceScore;
 
-    @Column(name = "transparency_score", nullable = false)
+    @Column(name = "transparency_score")
     private Integer transparencyScore;
 
-    @Column(name = "confidence_score", nullable = false)
+    @Column(name = "confidence_score")
     private Short confidenceScore;
 
     @Column(name = "processing_time_ms", nullable = false)
