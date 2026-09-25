@@ -1,7 +1,8 @@
 package com.venus.crud.document;
 
-import com.venus.crud.entity.enums.AnalysisStatus;
+import com.venus.crud.entity.enums.ScanStatus;
 import java.time.OffsetDateTime;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -23,7 +25,16 @@ public class ScanSession {
     @Id
     private String id;
 
-    private AnalysisStatus status;
+    @Field("scan_id")
+    private String scanId;
+
+    private ScanStatus status;
+
+    @Setter(AccessLevel.NONE)
+    @Version
+    private Long version;
+
+    private ScanSource source;
 
     private ScanDevice device;
 
@@ -36,8 +47,11 @@ public class ScanSession {
     @Field("quality_check")
     private ScanQualityCheck qualityCheck;
 
-    @Field("full_ocr_text")
-    private String fullOcrText;
+    private ScanImages images;
+
+    private ScanOcr ocr;
+
+    private List<ScanIngredient> ingredients;
 
     @Setter(AccessLevel.NONE)
     @CreatedDate
