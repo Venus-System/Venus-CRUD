@@ -8,6 +8,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -25,7 +26,8 @@ public class SwaggerConfig {
                                 .name("Venus System")
                                 .url("https://github.com/Venus-System/Venus-CRUD")))
                 .components(new Components()
-                        .addSchemas(OpenApiErrorResponsesCustomizer.ERROR_SCHEMA_NAME, errorResponseSchema()));
+                        .addSchemas(OpenApiErrorResponsesCustomizer.ERROR_SCHEMA_NAME, errorResponseSchema())
+                        .addSecuritySchemes(OpenApiSecurityCustomizer.SECURITY_SCHEME_NAME, bearerScheme()));
     }
 
     private String description() {
@@ -39,7 +41,21 @@ public class SwaggerConfig {
 
                 **Listagens paginadas** — aceitam `page`, `size` e `sort` (ex: `sort=name,asc`) e devolvem um \
                 `Slice`: traz `content` e `last`, e não traz contagem total de registros.
+
+                **Autenticação** — o catálogo é aberto para leitura. As outras rotas exigem o cabeçalho \
+                `Authorization: Bearer <token>`, com um de dois tokens: o **ID token do Firebase**, que o app recebe \
+                no login do usuário, ou o **token de administrador**, devolvido por `POST /api/auth/admin/login` e \
+                válido por 8 horas. Sem token, a resposta é 401; com um token sem permissão para a rota ou para o \
+                registro, 403. Use o botão **Authorize** para testar aqui.
                 """;
+    }
+
+    private SecurityScheme bearerScheme() {
+        return new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT")
+                .description("ID token do Firebase (usuário do app) ou o token de POST /api/auth/admin/login (administrador).");
     }
 
     private Schema<?> errorResponseSchema() {
