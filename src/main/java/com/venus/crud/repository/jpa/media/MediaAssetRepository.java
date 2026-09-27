@@ -24,6 +24,8 @@ public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
     List<MediaAsset> findByProductVersionIdAndPurposeAndStatusInOrderBySortOrderAscIdAsc(
             Long productVersionId, MediaPurpose purpose, Collection<MediaStatus> statuses);
 
+    boolean existsByPublicId(String publicId);
+
     @Query("select coalesce(max(media.sortOrder), -1) from MediaAsset media "
             + "where media.productVersion.id = :productVersionId "
             + "and media.purpose = com.venus.crud.entity.enums.MediaPurpose.PRODUCT_PHOTO "

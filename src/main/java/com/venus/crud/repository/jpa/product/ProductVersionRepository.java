@@ -16,6 +16,7 @@ public interface ProductVersionRepository extends JpaRepository<ProductVersion, 
     List<ProductVersion> findByProductId(Long productId);
     Slice<ProductVersion> findByProductId(Long productId, Pageable pageable);
     Optional<ProductVersion> findByProductIdAndIsCurrentTrue(Long productId);
+    Optional<ProductVersion> findByProductIdAndFormulaSignature(Long productId, String formulaSignature);
     Slice<ProductVersion> findByStatus(VersionStatus status, Pageable pageable);
     Slice<ProductVersion> findByFormulaSignature(String formulaSignature, Pageable pageable);
     Slice<ProductVersion> findAllBy(Pageable pageable);
