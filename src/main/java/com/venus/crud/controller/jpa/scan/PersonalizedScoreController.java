@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -39,18 +40,21 @@ public class PersonalizedScoreController {
     }
 
     @Operation(operationId = "personalizedScoreFindAll", summary = "Lista os scores personalizados")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<PersonalizedScoreResponse>> findAll() {
         return ResponseEntity.ok(personalizedScoreService.findAll());
     }
 
     @Operation(operationId = "personalizedScoreSearch", summary = "Busca os scores personalizados com filtros e paginação")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<Slice<PersonalizedScoreResponse>> search(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(personalizedScoreService.search(pageable));
     }
 
     @Operation(operationId = "personalizedScoreFindByUserId", summary = "Lista os scores personalizados de um usuário")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @GetMapping("/user/{userId}")
     public ResponseEntity<Slice<PersonalizedScoreResponse>> findByUserId(
             @PathVariable Long userId,
@@ -64,12 +68,14 @@ public class PersonalizedScoreController {
     @Operation(
             operationId = "personalizedScoreFindByAnalysisResultId",
             summary = "Lista os scores personalizados de um resultado de análise")
+    @PreAuthorize("@ownership.canAccessAnalysisResult(#analysisResultId)")
     @GetMapping("/analysis-result/{analysisResultId}")
     public ResponseEntity<PersonalizedScoreResponse> findByAnalysisResultId(@PathVariable Long analysisResultId) {
         return ResponseEntity.ok(personalizedScoreService.findByAnalysisResultId(analysisResultId));
     }
 
     @Operation(operationId = "personalizedScoreCreate", summary = "Cadastra um score personalizado")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<PersonalizedScoreResponse> create(@Valid @RequestBody PersonalizedScoreRequest request) {
         PersonalizedScoreResponse created = personalizedScoreService.create(request);
@@ -81,6 +87,7 @@ public class PersonalizedScoreController {
     }
 
     @Operation(operationId = "personalizedScoreUpdate", summary = "Substitui os dados do score personalizado")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/analysis-result/{analysisResultId}")
     public ResponseEntity<PersonalizedScoreResponse> update(
             @PathVariable Long analysisResultId, @Valid @RequestBody PersonalizedScoreRequest request) {
@@ -88,6 +95,7 @@ public class PersonalizedScoreController {
     }
 
     @Operation(operationId = "personalizedScorePatch", summary = "Atualiza parcialmente o score personalizado")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/analysis-result/{analysisResultId}")
     public ResponseEntity<PersonalizedScoreResponse> patch(
             @PathVariable Long analysisResultId, @Valid @RequestBody PersonalizedScorePatchRequest request) {
@@ -95,6 +103,7 @@ public class PersonalizedScoreController {
     }
 
     @Operation(operationId = "personalizedScoreDelete", summary = "Remove o score personalizado")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/analysis-result/{analysisResultId}")
     public ResponseEntity<Void> delete(@PathVariable Long analysisResultId) {
         personalizedScoreService.delete(analysisResultId);

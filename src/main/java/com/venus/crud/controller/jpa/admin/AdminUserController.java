@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -39,12 +40,14 @@ public class AdminUserController {
     }
 
     @Operation(operationId = "adminUserFindAll", summary = "Lista os administradores")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<AdminUserResponse>> findAll() {
         return ResponseEntity.ok(adminUserService.findAll());
     }
 
     @Operation(operationId = "adminUserSearch", summary = "Busca os administradores com filtros e paginação")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<Slice<AdminUserResponse>> search(
             @RequestParam(required = false) String name,
@@ -55,18 +58,21 @@ public class AdminUserController {
     }
 
     @Operation(operationId = "adminUserFindByEmail", summary = "Busca o administrador pelo e-mail")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/email/{email}")
     public ResponseEntity<AdminUserResponse> findByEmail(@PathVariable String email) {
         return ResponseEntity.ok(adminUserService.findByEmail(email));
     }
 
     @Operation(operationId = "adminUserFindById", summary = "Busca o administrador por id")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<AdminUserResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(adminUserService.findById(id));
     }
 
     @Operation(operationId = "adminUserCreate", summary = "Cadastra um administrador")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<AdminUserResponse> create(@Valid @RequestBody AdminUserRequest request) {
         AdminUserResponse created = adminUserService.create(request);
@@ -78,18 +84,21 @@ public class AdminUserController {
     }
 
     @Operation(operationId = "adminUserUpdate", summary = "Substitui os dados do administrador")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<AdminUserResponse> update(@PathVariable Long id, @Valid @RequestBody AdminUserRequest request) {
         return ResponseEntity.ok(adminUserService.update(id, request));
     }
 
     @Operation(operationId = "adminUserPatch", summary = "Atualiza parcialmente o administrador")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<AdminUserResponse> patch(@PathVariable Long id, @Valid @RequestBody AdminUserPatchRequest request) {
         return ResponseEntity.ok(adminUserService.patch(id, request));
     }
 
     @Operation(operationId = "adminUserDelete", summary = "Remove o administrador")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         adminUserService.delete(id);
@@ -99,9 +108,10 @@ public class AdminUserController {
     @Operation(
             operationId = "adminUserChangePassword",
             summary = "Troca a senha local do administrador",
-            description = "Exige a senha atual correta no corpo. Devolve **401** quando a senha atual não confere ou "
-                    + "quando o administrador ainda não tem senha local cadastrada. Em caso de sucesso não há corpo na "
-                    + "resposta.")
+            description = "Só o próprio administrador troca a senha: o id da rota tem que ser o do token (**403** para "
+                    + "outro id). Exige a senha atual correta no corpo e devolve **400** quando ela não confere ou quando "
+                    + "o administrador ainda não tem senha local cadastrada. Em caso de sucesso não há corpo na resposta.")
+    @PreAuthorize("@ownership.isCurrentAdmin(#id)")
     @PatchMapping("/{id}/password")
     public ResponseEntity<Void> changePassword(@PathVariable Long id, @Valid @RequestBody AdminUserPasswordChangeRequest request) {
         adminUserService.changePassword(id, request);

@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -39,12 +40,14 @@ public class ReportController {
     }
 
     @Operation(operationId = "reportFindAll", summary = "Lista as denúncias")
+    @PreAuthorize("hasRole('ANALYST')")
     @GetMapping
     public ResponseEntity<List<ReportResponse>> findAll() {
         return ResponseEntity.ok(reportService.findAll());
     }
 
     @Operation(operationId = "reportSearch", summary = "Busca as denúncias com filtros e paginação")
+    @PreAuthorize("hasRole('ANALYST')")
     @GetMapping("/search")
     public ResponseEntity<Slice<ReportResponse>> search(
             @RequestParam(required = false) Long userId,
@@ -57,12 +60,14 @@ public class ReportController {
     }
 
     @Operation(operationId = "reportFindById", summary = "Busca a denúncia por id")
+    @PreAuthorize("hasRole('ANALYST')")
     @GetMapping("/{id}")
     public ResponseEntity<ReportResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(reportService.findById(id));
     }
 
     @Operation(operationId = "reportCreate", summary = "Cadastra uma denúncia")
+    @PreAuthorize("hasRole('MODERATOR') or (@ownership.canAccessUser(#request.userId()) and #request.adminUserId() == null)")
     @PostMapping
     public ResponseEntity<ReportResponse> create(@Valid @RequestBody ReportRequest request) {
         ReportResponse created = reportService.create(request);
@@ -74,18 +79,21 @@ public class ReportController {
     }
 
     @Operation(operationId = "reportUpdate", summary = "Substitui os dados da denúncia")
+    @PreAuthorize("hasRole('MODERATOR')")
     @PutMapping("/{id}")
     public ResponseEntity<ReportResponse> update(@PathVariable Long id, @Valid @RequestBody ReportRequest request) {
         return ResponseEntity.ok(reportService.update(id, request));
     }
 
     @Operation(operationId = "reportPatch", summary = "Atualiza parcialmente a denúncia")
+    @PreAuthorize("hasRole('MODERATOR')")
     @PatchMapping("/{id}")
     public ResponseEntity<ReportResponse> patch(@PathVariable Long id, @Valid @RequestBody ReportPatchRequest request) {
         return ResponseEntity.ok(reportService.patch(id, request));
     }
 
     @Operation(operationId = "reportDelete", summary = "Remove a denúncia")
+    @PreAuthorize("hasRole('MODERATOR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         reportService.delete(id);

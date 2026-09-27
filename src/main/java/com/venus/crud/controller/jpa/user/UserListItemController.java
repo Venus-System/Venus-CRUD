@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -35,18 +36,21 @@ public class UserListItemController {
     }
 
     @Operation(operationId = "userListItemFindAll", summary = "Lista os itens da lista")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<UserListItemResponse>> findAll() {
         return ResponseEntity.ok(userListItemService.findAll());
     }
 
     @Operation(operationId = "userListItemFindByUserListId", summary = "Lista os itens de uma lista")
+    @PreAuthorize("@ownership.canAccessUserList(#userListId)")
     @GetMapping("/user-list/{userListId}")
     public ResponseEntity<List<UserListItemResponse>> findByUserListId(@PathVariable Long userListId) {
         return ResponseEntity.ok(userListItemService.findByUserListId(userListId));
     }
 
     @Operation(operationId = "userListItemFindByProductId", summary = "Lista as listas que contêm um produto")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/product/{productId}")
     public ResponseEntity<Slice<UserListItemResponse>> findByProductId(
             @PathVariable Long productId, @PageableDefault(size = 20) Pageable pageable) {
@@ -54,6 +58,7 @@ public class UserListItemController {
     }
 
     @Operation(operationId = "userListItemCreate", summary = "Cadastra um item da lista")
+    @PreAuthorize("@ownership.canAccessUserList(#request.userListId())")
     @PostMapping
     public ResponseEntity<UserListItemResponse> create(@Valid @RequestBody UserListItemRequest request) {
         UserListItemResponse created = userListItemService.create(request);
@@ -65,6 +70,7 @@ public class UserListItemController {
     }
 
     @Operation(operationId = "userListItemPatch", summary = "Atualiza parcialmente o item da lista")
+    @PreAuthorize("@ownership.canAccessUserList(#userListId) and @ownership.canAccessUserListIfPresent(#request.userListId())")
     @PatchMapping("/user-list/{userListId}/product/{productId}")
     public ResponseEntity<UserListItemResponse> patch(
             @PathVariable Long userListId, @PathVariable Long productId, @Valid @RequestBody UserListItemPatchRequest request) {
@@ -72,6 +78,7 @@ public class UserListItemController {
     }
 
     @Operation(operationId = "userListItemDelete", summary = "Remove o item da lista")
+    @PreAuthorize("@ownership.canAccessUserList(#userListId)")
     @DeleteMapping("/user-list/{userListId}/product/{productId}")
     public ResponseEntity<Void> delete(@PathVariable Long userListId, @PathVariable Long productId) {
         userListItemService.delete(userListId, productId);

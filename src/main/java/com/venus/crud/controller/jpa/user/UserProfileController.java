@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -42,12 +43,14 @@ public class UserProfileController {
     }
 
     @Operation(operationId = "userProfileFindAll", summary = "Lista os perfis de usuário")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<UserProfileResponse>> findAll() {
         return ResponseEntity.ok(userProfileService.findAll());
     }
 
     @Operation(operationId = "userProfileSearch", summary = "Busca os perfis de usuário com filtros e paginação")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<Slice<UserProfileResponse>> search(
             @RequestParam(required = false) SkinType skinType,
@@ -63,24 +66,28 @@ public class UserProfileController {
     }
 
     @Operation(operationId = "userProfileCountBySkinType", summary = "Conta os perfis por tipo de pele")
+    @PreAuthorize("hasRole('ANALYST')")
     @GetMapping("/count/skin-type")
     public ResponseEntity<Long> countBySkinType(@RequestParam SkinType skinType) {
         return ResponseEntity.ok(userProfileService.countBySkinType(skinType));
     }
 
     @Operation(operationId = "userProfileCountByAcneProne", summary = "Conta os perfis com tendência a acne")
+    @PreAuthorize("hasRole('ANALYST')")
     @GetMapping("/count/acne-prone")
     public ResponseEntity<Long> countByAcneProne() {
         return ResponseEntity.ok(userProfileService.countByAcneProne());
     }
 
     @Operation(operationId = "userProfileFindByUserId", summary = "Busca o perfil de um usuário")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @GetMapping("/{userId}")
     public ResponseEntity<UserProfileResponse> findByUserId(@PathVariable Long userId) {
         return ResponseEntity.ok(userProfileService.findByUserId(userId));
     }
 
     @Operation(operationId = "userProfileCreate", summary = "Cadastra um perfil de usuário")
+    @PreAuthorize("@ownership.canAccessUser(#request.userId())")
     @PostMapping
     public ResponseEntity<UserProfileResponse> create(@Valid @RequestBody UserProfileRequest request) {
         UserProfileResponse created = userProfileService.create(request);
@@ -92,18 +99,21 @@ public class UserProfileController {
     }
 
     @Operation(operationId = "userProfileUpdate", summary = "Substitui os dados do perfil de usuário")
+    @PreAuthorize("@ownership.canWriteForUser(#userId, #request.userId())")
     @PutMapping("/{userId}")
     public ResponseEntity<UserProfileResponse> update(@PathVariable Long userId, @Valid @RequestBody UserProfileRequest request) {
         return ResponseEntity.ok(userProfileService.update(userId, request));
     }
 
     @Operation(operationId = "userProfilePatch", summary = "Atualiza parcialmente o perfil de usuário")
+    @PreAuthorize("@ownership.canWriteForUser(#userId, #request.userId())")
     @PatchMapping("/{userId}")
     public ResponseEntity<UserProfileResponse> patch(@PathVariable Long userId, @Valid @RequestBody UserProfilePatchRequest request) {
         return ResponseEntity.ok(userProfileService.patch(userId, request));
     }
 
     @Operation(operationId = "userProfileDelete", summary = "Remove o perfil de usuário")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> delete(@PathVariable Long userId) {
         userProfileService.delete(userId);

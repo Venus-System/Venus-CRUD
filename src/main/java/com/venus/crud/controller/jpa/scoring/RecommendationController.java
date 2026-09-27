@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -38,12 +39,14 @@ public class RecommendationController {
     }
 
     @Operation(operationId = "recommendationFindAll", summary = "Lista as recomendações")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<RecommendationResponse>> findAll() {
         return ResponseEntity.ok(recommendationService.findAll());
     }
 
     @Operation(operationId = "recommendationSearch", summary = "Busca as recomendações com filtros e paginação")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<Slice<RecommendationResponse>> search(
             @RequestParam(required = false) Long userId,
@@ -54,6 +57,7 @@ public class RecommendationController {
     }
 
     @Operation(operationId = "recommendationFindByUserId", summary = "Lista as recomendações de um usuário")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<RecommendationResponse>> findByUserId(@PathVariable Long userId) {
         return ResponseEntity.ok(recommendationService.findByUserId(userId));
@@ -62,18 +66,21 @@ public class RecommendationController {
     @Operation(
             operationId = "recommendationFindByAnalysisResultId",
             summary = "Lista as recomendações geradas por um resultado de análise")
+    @PreAuthorize("@ownership.canAccessAnalysisResult(#analysisResultId)")
     @GetMapping("/analysis-result/{analysisResultId}")
     public ResponseEntity<List<RecommendationResponse>> findByAnalysisResultId(@PathVariable Long analysisResultId) {
         return ResponseEntity.ok(recommendationService.findByAnalysisResultId(analysisResultId));
     }
 
     @Operation(operationId = "recommendationFindById", summary = "Busca a recomendação por id")
+    @PreAuthorize("@ownership.canAccessRecommendation(#id)")
     @GetMapping("/{id}")
     public ResponseEntity<RecommendationResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(recommendationService.findById(id));
     }
 
     @Operation(operationId = "recommendationCreate", summary = "Cadastra uma recomendação")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<RecommendationResponse> create(@Valid @RequestBody RecommendationRequest request) {
         RecommendationResponse created = recommendationService.create(request);
@@ -85,18 +92,21 @@ public class RecommendationController {
     }
 
     @Operation(operationId = "recommendationUpdate", summary = "Substitui os dados da recomendação")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<RecommendationResponse> update(@PathVariable Long id, @Valid @RequestBody RecommendationRequest request) {
         return ResponseEntity.ok(recommendationService.update(id, request));
     }
 
     @Operation(operationId = "recommendationPatch", summary = "Atualiza parcialmente a recomendação")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<RecommendationResponse> patch(@PathVariable Long id, @Valid @RequestBody RecommendationPatchRequest request) {
         return ResponseEntity.ok(recommendationService.patch(id, request));
     }
 
     @Operation(operationId = "recommendationDelete", summary = "Remove a recomendação")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         recommendationService.delete(id);

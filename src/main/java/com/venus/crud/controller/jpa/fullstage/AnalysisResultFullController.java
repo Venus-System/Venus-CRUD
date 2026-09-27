@@ -5,6 +5,7 @@ import com.venus.crud.service.jpa.fullstage.AnalysisResultFullService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,7 @@ public class AnalysisResultFullController {
     }
 
     @Operation(operationId = "analysisResultFullFindById", summary = "Busca o resultado de análise completo por id")
+    @PreAuthorize("@ownership.canAccessAnalysisResult(#id)")
     @GetMapping("/{id}/full")
     public ResponseEntity<AnalysisResultFullResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(analysisResultFullService.findById(id));

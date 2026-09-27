@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -37,12 +38,14 @@ public class RuleEvaluationController {
     }
 
     @Operation(operationId = "ruleEvaluationFindAll", summary = "Lista as avaliações de regra")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<RuleEvaluationResponse>> findAll() {
         return ResponseEntity.ok(ruleEvaluationService.findAll());
     }
 
     @Operation(operationId = "ruleEvaluationSearch", summary = "Busca as avaliações de regra com filtros e paginação")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<Slice<RuleEvaluationResponse>> search(
             @RequestParam(required = false) Long ingredientId,
@@ -54,6 +57,7 @@ public class RuleEvaluationController {
     @Operation(
             operationId = "ruleEvaluationFindByAnalysisResultId",
             summary = "Lista as regras disparadas num resultado de análise")
+    @PreAuthorize("@ownership.canAccessAnalysisResult(#analysisResultId)")
     @GetMapping("/analysis-result/{analysisResultId}")
     public ResponseEntity<List<RuleEvaluationResponse>> findByAnalysisResultId(
             @PathVariable Long analysisResultId, @RequestParam(required = false) Boolean wasMatched) {
@@ -61,12 +65,14 @@ public class RuleEvaluationController {
     }
 
     @Operation(operationId = "ruleEvaluationFindById", summary = "Busca a avaliação de regra por id")
+    @PreAuthorize("@ownership.canAccessRuleEvaluation(#id)")
     @GetMapping("/{id}")
     public ResponseEntity<RuleEvaluationResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(ruleEvaluationService.findById(id));
     }
 
     @Operation(operationId = "ruleEvaluationCreate", summary = "Cadastra uma avaliação de regra")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<RuleEvaluationResponse> create(@Valid @RequestBody RuleEvaluationRequest request) {
         RuleEvaluationResponse created = ruleEvaluationService.create(request);
@@ -78,18 +84,21 @@ public class RuleEvaluationController {
     }
 
     @Operation(operationId = "ruleEvaluationUpdate", summary = "Substitui os dados da avaliação de regra")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<RuleEvaluationResponse> update(@PathVariable Long id, @Valid @RequestBody RuleEvaluationRequest request) {
         return ResponseEntity.ok(ruleEvaluationService.update(id, request));
     }
 
     @Operation(operationId = "ruleEvaluationPatch", summary = "Atualiza parcialmente a avaliação de regra")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<RuleEvaluationResponse> patch(@PathVariable Long id, @Valid @RequestBody RuleEvaluationPatchRequest request) {
         return ResponseEntity.ok(ruleEvaluationService.patch(id, request));
     }
 
     @Operation(operationId = "ruleEvaluationDelete", summary = "Remove a avaliação de regra")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         ruleEvaluationService.delete(id);

@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -37,12 +38,14 @@ public class UserAllergyController {
     }
 
     @Operation(operationId = "userAllergyFindAll", summary = "Lista as alergias do usuário")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<UserAllergyResponse>> findAll() {
         return ResponseEntity.ok(userAllergyService.findAll());
     }
 
     @Operation(operationId = "userAllergyFindByUserId", summary = "Lista as alergias de um usuário")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @GetMapping("/user/{userId}")
     public ResponseEntity<Slice<UserAllergyResponse>> findByUserId(
             @PathVariable Long userId,
@@ -52,6 +55,7 @@ public class UserAllergyController {
     }
 
     @Operation(operationId = "userAllergyFindByAllergyId", summary = "Lista os usuários que têm uma alergia")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/allergy/{allergyId}")
     public ResponseEntity<Slice<UserAllergyResponse>> findByAllergyId(
             @PathVariable Long allergyId, @PageableDefault(size = 20) Pageable pageable) {
@@ -59,6 +63,7 @@ public class UserAllergyController {
     }
 
     @Operation(operationId = "userAllergyCreate", summary = "Cadastra uma alergia do usuário")
+    @PreAuthorize("@ownership.canAccessUser(#request.userId())")
     @PostMapping
     public ResponseEntity<UserAllergyResponse> create(@Valid @RequestBody UserAllergyRequest request) {
         UserAllergyResponse created = userAllergyService.create(request);
@@ -70,6 +75,7 @@ public class UserAllergyController {
     }
 
     @Operation(operationId = "userAllergyPatch", summary = "Atualiza parcialmente a alergia do usuário")
+    @PreAuthorize("@ownership.canWriteForUser(#userId, #request.userId())")
     @PatchMapping("/user/{userId}/allergy/{allergyId}")
     public ResponseEntity<UserAllergyResponse> patch(
             @PathVariable Long userId, @PathVariable Long allergyId, @Valid @RequestBody UserAllergyPatchRequest request) {
@@ -77,6 +83,7 @@ public class UserAllergyController {
     }
 
     @Operation(operationId = "userAllergyDelete", summary = "Remove a alergia do usuário")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @DeleteMapping("/user/{userId}/allergy/{allergyId}")
     public ResponseEntity<Void> delete(@PathVariable Long userId, @PathVariable Long allergyId) {
         userAllergyService.delete(userId, allergyId);

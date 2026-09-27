@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -38,18 +39,21 @@ public class ReviewController {
     }
 
     @Operation(operationId = "reviewFindAll", summary = "Lista as avaliações")
+    @PreAuthorize("permitAll()")
     @GetMapping
     public ResponseEntity<List<ReviewResponse>> findAll() {
         return ResponseEntity.ok(reviewService.findAll());
     }
 
     @Operation(operationId = "reviewSearch", summary = "Busca as avaliações com filtros e paginação")
+    @PreAuthorize("permitAll()")
     @GetMapping("/search")
     public ResponseEntity<Slice<ReviewResponse>> search(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(reviewService.search(pageable));
     }
 
     @Operation(operationId = "reviewFindByProductVersionId", summary = "Lista as avaliações de uma versão de produto")
+    @PreAuthorize("permitAll()")
     @GetMapping("/product-version/{productVersionId}")
     public ResponseEntity<Slice<ReviewResponse>> findByProductVersionId(
             @PathVariable Long productVersionId,
@@ -60,6 +64,7 @@ public class ReviewController {
     }
 
     @Operation(operationId = "reviewFindByUserId", summary = "Lista as avaliações escritas por um usuário")
+    @PreAuthorize("permitAll()")
     @GetMapping("/user/{userId}")
     public ResponseEntity<Slice<ReviewResponse>> findByUserId(
             @PathVariable Long userId, @PageableDefault(size = 20) Pageable pageable) {
@@ -67,12 +72,14 @@ public class ReviewController {
     }
 
     @Operation(operationId = "reviewFindById", summary = "Busca a avaliação por id")
+    @PreAuthorize("permitAll()")
     @GetMapping("/{id}")
     public ResponseEntity<ReviewResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(reviewService.findById(id));
     }
 
     @Operation(operationId = "reviewCreate", summary = "Cadastra uma avaliação")
+    @PreAuthorize("@ownership.canAccessUser(#request.userId())")
     @PostMapping
     public ResponseEntity<ReviewResponse> create(@Valid @RequestBody ReviewRequest request) {
         ReviewResponse created = reviewService.create(request);
@@ -84,18 +91,21 @@ public class ReviewController {
     }
 
     @Operation(operationId = "reviewUpdate", summary = "Substitui os dados da avaliação")
+    @PreAuthorize("hasRole('MODERATOR') or (@ownership.canAccessReview(#id) and @ownership.canAccessUserIfPresent(#request.userId()))")
     @PutMapping("/{id}")
     public ResponseEntity<ReviewResponse> update(@PathVariable Long id, @Valid @RequestBody ReviewRequest request) {
         return ResponseEntity.ok(reviewService.update(id, request));
     }
 
     @Operation(operationId = "reviewPatch", summary = "Atualiza parcialmente a avaliação")
+    @PreAuthorize("hasRole('MODERATOR') or (@ownership.canAccessReview(#id) and @ownership.canAccessUserIfPresent(#request.userId()))")
     @PatchMapping("/{id}")
     public ResponseEntity<ReviewResponse> patch(@PathVariable Long id, @Valid @RequestBody ReviewPatchRequest request) {
         return ResponseEntity.ok(reviewService.patch(id, request));
     }
 
     @Operation(operationId = "reviewDelete", summary = "Remove a avaliação")
+    @PreAuthorize("hasRole('MODERATOR') or @ownership.canAccessReview(#id)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         reviewService.delete(id);
