@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -110,7 +111,7 @@ public class OpenApiErrorResponsesCustomizer implements OperationCustomizer {
                     new ApiResponse().description("Operação concluída. A resposta não tem corpo."));
             return;
         }
-        if (handlerMethod.hasMethodAnnotation(PostMapping.class)) {
+        if (handlerMethod.hasMethodAnnotation(PostMapping.class) && !handlerMethod.hasMethodAnnotation(ResponseStatus.class)) {
             responses.addApiResponse(String.valueOf(HttpStatus.CREATED.value()), sucesso
                     .description("Registro criado.")
                     .addHeaderObject("Location", new Header()

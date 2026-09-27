@@ -15,7 +15,7 @@ public record ReportPatchRequest(
         Long targetId,
         @Schema(description = "Motivo da denúncia.", example = "Avaliação com conteúdo ofensivo.")
         String reason,
-        @Schema(description = "Situação atual do registro.")
+        @Schema(description = "Situação da denúncia. Segue OPEN → IN_REVIEW → RESOLVED ou REJECTED; outra troca devolve 409.")
         ReportStatus status
 ) {
 }

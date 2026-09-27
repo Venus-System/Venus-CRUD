@@ -17,7 +17,7 @@ public record ReportRequest(
         @NotNull Long targetId,
         @Schema(description = "Motivo da denúncia.", example = "Avaliação com conteúdo ofensivo.")
         @NotBlank String reason,
-        @Schema(description = "Situação atual do registro.")
+        @Schema(description = "Situação da denúncia. Segue OPEN → IN_REVIEW → RESOLVED ou REJECTED; outra troca devolve 409.")
         @NotNull ReportStatus status
 ) {
 }
