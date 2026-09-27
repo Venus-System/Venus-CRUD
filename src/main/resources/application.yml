@@ -66,3 +66,9 @@ venus:
       max-bytes: ${MEDIA_PRODUCT_MAX_BYTES}
       max-width: ${MEDIA_PRODUCT_MAX_WIDTH}
       max-height: ${MEDIA_PRODUCT_MAX_HEIGHT}
+  security:
+    admin-token:
+      secret: ${ADMIN_JWT_SECRET}
+      expiration: ${ADMIN_JWT_EXPIRATION}
+    firebase:
+      project-id: ${FIREBASE_PROJECT_ID}
