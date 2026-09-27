@@ -9,12 +9,15 @@ import com.venus.crud.document.ScanFrontExtracted;
 import com.venus.crud.document.ScanImage;
 import com.venus.crud.document.ScanImages;
 import com.venus.crud.document.ScanIngredient;
+import com.venus.crud.document.ScanIngredientDecision;
 import com.venus.crud.document.ScanOcr;
 import com.venus.crud.document.ScanOcrBack;
 import com.venus.crud.document.ScanOcrFront;
 import com.venus.crud.document.ScanQualityCheck;
+import com.venus.crud.document.ScanReview;
 import com.venus.crud.document.ScanSession;
 import com.venus.crud.document.ScanSource;
+import com.venus.crud.document.ScanSync;
 import com.venus.crud.dto.mongo.request.ScanBackExtractedRequest;
 import com.venus.crud.dto.mongo.request.ScanDeviceRequest;
 import com.venus.crud.dto.mongo.request.ScanFrontExtractedRequest;
@@ -33,14 +36,18 @@ import com.venus.crud.dto.mongo.response.ScanDeviceResponse;
 import com.venus.crud.dto.mongo.response.ScanFrontExtractedResponse;
 import com.venus.crud.dto.mongo.response.ScanImageResponse;
 import com.venus.crud.dto.mongo.response.ScanImagesResponse;
+import com.venus.crud.dto.mongo.response.ScanIngredientDecisionResponse;
 import com.venus.crud.dto.mongo.response.ScanIngredientResponse;
 import com.venus.crud.dto.mongo.response.ScanOcrBackResponse;
 import com.venus.crud.dto.mongo.response.ScanOcrFrontResponse;
 import com.venus.crud.dto.mongo.response.ScanOcrResponse;
 import com.venus.crud.dto.mongo.response.ScanQualityCheckResponse;
+import com.venus.crud.dto.mongo.response.ScanReviewResponse;
 import com.venus.crud.dto.mongo.response.ScanSessionResponse;
 import com.venus.crud.dto.mongo.response.ScanSourceResponse;
+import com.venus.crud.dto.mongo.response.ScanSyncResponse;
 import java.util.UUID;
+import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -51,6 +58,9 @@ public interface ScanSessionMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "version", ignore = true)
     @Mapping(target = "source", ignore = true)
+    @Mapping(target = "review", ignore = true)
+    @Mapping(target = "approvedSnapshot", ignore = true)
+    @Mapping(target = "sync", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     ScanSession toEntity(ScanSessionRequest request);
@@ -78,9 +88,10 @@ public interface ScanSessionMapper {
     @Mapping(target = "match", ignore = true)
     ScanIngredient toEntity(ScanIngredientRequest request);
 
-    ScanSessionResponse toResponse(ScanSession document);
+    ScanSessionResponse toResponse(ScanSession document, @Context ScanUserNames userNames);
 
-    ScanSourceResponse toResponse(ScanSource source);
+    @Mapping(target = "userName", expression = "java(userNames.nameOf(source.getUserId()))")
+    ScanSourceResponse toResponse(ScanSource source, @Context ScanUserNames userNames);
 
     ScanDeviceResponse toResponse(ScanDevice device);
 
@@ -105,6 +116,12 @@ public interface ScanSessionMapper {
     IngredientMatchResponse toResponse(IngredientMatch match);
 
     IngredientCandidateResponse toResponse(IngredientCandidate candidate);
+
+    ScanReviewResponse toResponse(ScanReview review);
+
+    ScanIngredientDecisionResponse toResponse(ScanIngredientDecision decision);
+
+    ScanSyncResponse toResponse(ScanSync sync);
 
     default String map(UUID value) {
         return value == null ? null : value.toString();

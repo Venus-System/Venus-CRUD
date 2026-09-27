@@ -28,6 +28,10 @@ public record ScanSessionResponse(
         ScanOcrResponse ocr,
         @Schema(description = "Ingredientes do rótulo com o resultado da busca no catálogo.")
         List<ScanIngredientResponse> ingredients,
+        @Schema(description = "Decisão do administrador: quem aprovou ou recusou, quando e por quê.")
+        ScanReviewResponse review,
+        @Schema(description = "Resultado da sincronização do scan aprovado com o catálogo.")
+        ScanSyncResponse sync,
         @Schema(description = "Data e hora de criação do registro. Gerado pelo banco.",
                 example = "2026-09-22T14:30:00-03:00")
         OffsetDateTime createdAt,
