@@ -12,10 +12,18 @@ import com.venus.crud.exception.DataAccessFailureTranslator;
 import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.mapper.mongo.ScanSessionMapper;
+import com.venus.crud.mapper.mongo.ScanUserNames;
 import com.venus.crud.repository.jpa.user.UserRepository;
 import com.venus.crud.repository.mongo.ScanSessionRepository;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,23 +58,21 @@ public class ScanSessionService {
     }
 
     public Slice<ScanSessionResponse> findAll(Pageable pageable) {
-        return executeOrFail(() -> scanSessionRepository.findAllBy(pageable), "Falha ao consultar sessoes de scan")
-                .map(scanSessionMapper::toResponse);
+        return toResponses(executeOrFail(() -> scanSessionRepository.findAllBy(pageable), "Falha ao consultar sessoes de scan"));
     }
 
     public ScanSessionResponse findById(String id) {
-        return scanSessionMapper.toResponse(getOrThrow(id));
+        return toResponse(getOrThrow(id));
     }
 
     public Slice<ScanSessionResponse> findByStatus(ScanStatus status, Pageable pageable) {
-        return executeOrFail(() -> scanSessionRepository.findByStatus(status, pageable), "Falha ao consultar sessoes de scan por status")
-                .map(scanSessionMapper::toResponse);
+        return toResponses(executeOrFail(() -> scanSessionRepository.findByStatus(status, pageable),
+                "Falha ao consultar sessoes de scan por status"));
     }
 
     public Slice<ScanSessionResponse> findByDeviceId(String deviceId, Pageable pageable) {
-        return executeOrFail(() -> scanSessionRepository.findByDevice_DeviceId(deviceId, pageable),
-                "Falha ao consultar sessoes de scan por dispositivo")
-                .map(scanSessionMapper::toResponse);
+        return toResponses(executeOrFail(() -> scanSessionRepository.findByDevice_DeviceId(deviceId, pageable),
+                "Falha ao consultar sessoes de scan por dispositivo"));
     }
 
     public ScanSessionResponse create(ScanSessionRequest request) {
@@ -74,7 +80,7 @@ public class ScanSessionService {
 
         Optional<ScanSession> existing = findByScanId(request.scanId().toString());
         if (existing.isPresent()) {
-            return scanSessionMapper.toResponse(existing.get());
+            return toResponse(existing.get());
         }
 
         User user = getUserOrThrow(request.firebaseUid());
@@ -84,7 +90,7 @@ public class ScanSessionService {
         fillSecureUrls(scanSession.getImages());
         ingredientMatcher.matchAll(scanSession.getIngredients());
 
-        return scanSessionMapper.toResponse(insertOrReturnExisting(scanSession));
+        return toResponse(insertOrReturnExisting(scanSession));
     }
 
     private ScanSession insertOrReturnExisting(ScanSession scanSession) {
@@ -131,12 +137,42 @@ public class ScanSessionService {
         }
     }
 
-    private ScanSession getOrThrow(String id) {
+    ScanSession getOrThrow(String id) {
         if (!ObjectId.isValid(id)) {
             throw new ResourceNotFoundException("Sessao de scan nao encontrada com id " + id);
         }
         return executeOrFail(() -> scanSessionRepository.findById(id), "Falha ao consultar sessao de scan")
                 .orElseThrow(() -> new ResourceNotFoundException("Sessao de scan nao encontrada com id " + id));
+    }
+
+    ScanSessionResponse toResponse(ScanSession scanSession) {
+        return scanSessionMapper.toResponse(scanSession, userNamesFor(List.of(scanSession)));
+    }
+
+    private Slice<ScanSessionResponse> toResponses(Slice<ScanSession> scanSessions) {
+        ScanUserNames userNames = userNamesFor(scanSessions.getContent());
+        return scanSessions.map(scanSession -> scanSessionMapper.toResponse(scanSession, userNames));
+    }
+
+    private ScanUserNames userNamesFor(Collection<ScanSession> scanSessions) {
+        Set<Long> userIds = scanSessions.stream()
+                .map(ScanSession::getSource)
+                .filter(Objects::nonNull)
+                .map(ScanSource::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (userIds.isEmpty()) {
+            return ScanUserNames.EMPTY;
+        }
+        List<User> users = executeOrFail(() -> userRepository.findAllById(userIds),
+                "Falha ao consultar os nomes de quem enviou os scans");
+        Map<Long, String> namesById = new HashMap<>();
+        for (User user : users) {
+            if (user.getName() != null) {
+                namesById.put(user.getId(), user.getName());
+            }
+        }
+        return new ScanUserNames(namesById);
     }
 
     private <T> T executeOrFail(Supplier<T> action, String errorMessage) {

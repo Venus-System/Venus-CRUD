@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,12 +34,14 @@ public class FavoriteController {
     }
 
     @Operation(operationId = "favoriteFindAll", summary = "Lista os favoritos")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<FavoriteResponse>> findAll() {
         return ResponseEntity.ok(favoriteService.findAll());
     }
 
     @Operation(operationId = "favoriteFindByUserId", summary = "Lista os favoritos de um usuário")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @GetMapping("/user/{userId}")
     public ResponseEntity<Slice<FavoriteResponse>> findByUserId(
             @PathVariable Long userId, @PageableDefault(size = 20) Pageable pageable) {
@@ -46,6 +49,7 @@ public class FavoriteController {
     }
 
     @Operation(operationId = "favoriteFindByProductId", summary = "Lista os usuários que favoritaram um produto")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/product/{productId}")
     public ResponseEntity<Slice<FavoriteResponse>> findByProductId(
             @PathVariable Long productId, @PageableDefault(size = 20) Pageable pageable) {
@@ -53,18 +57,21 @@ public class FavoriteController {
     }
 
     @Operation(operationId = "favoriteCountByProductId", summary = "Conta quantas vezes um produto foi favoritado")
+    @PreAuthorize("permitAll()")
     @GetMapping("/product/{productId}/count")
     public ResponseEntity<Long> countByProductId(@PathVariable Long productId) {
         return ResponseEntity.ok(favoriteService.countByProductId(productId));
     }
 
     @Operation(operationId = "favoriteCountByUserId", summary = "Conta os favoritos de um usuário")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @GetMapping("/user/{userId}/count")
     public ResponseEntity<Long> countByUserId(@PathVariable Long userId) {
         return ResponseEntity.ok(favoriteService.countByUserId(userId));
     }
 
     @Operation(operationId = "favoriteCreate", summary = "Cadastra um favorito")
+    @PreAuthorize("@ownership.canAccessUser(#request.userId())")
     @PostMapping
     public ResponseEntity<FavoriteResponse> create(@Valid @RequestBody FavoriteRequest request) {
         FavoriteResponse created = favoriteService.create(request);
@@ -76,6 +83,7 @@ public class FavoriteController {
     }
 
     @Operation(operationId = "favoriteDelete", summary = "Remove o favorito")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @DeleteMapping("/user/{userId}/product/{productId}")
     public ResponseEntity<Void> delete(@PathVariable Long userId, @PathVariable Long productId) {
         favoriteService.delete(userId, productId);

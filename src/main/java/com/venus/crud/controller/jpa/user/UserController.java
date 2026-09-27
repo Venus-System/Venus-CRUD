@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -39,6 +40,7 @@ public class UserController {
     }
 
     @Operation(operationId = "userFindAll", summary = "Lista os usuários")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<UserResponse>> findAll() {
         return ResponseEntity.ok(userService.findAll());
@@ -49,6 +51,7 @@ public class UserController {
             summary = "Busca os usuários com filtros e paginação",
             description = "`firebaseUid` tem precedência sobre os demais filtros e devolve no máximo um registro. `status` "
                     + "e `name` combinam entre si; `name` casa por trecho, sem diferenciar maiúsculas.")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<Slice<UserResponse>> search(
             @RequestParam(required = false) UserStatus status,
@@ -60,12 +63,14 @@ public class UserController {
     }
 
     @Operation(operationId = "userFindById", summary = "Busca o usuário por id")
+    @PreAuthorize("@ownership.canAccessUser(#id)")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.findById(id));
     }
 
     @Operation(operationId = "userCreate", summary = "Cadastra um usuário")
+    @PreAuthorize("hasRole('ADMIN') or @ownership.isCurrentFirebaseUid(#request.firebaseUid())")
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody UserRequest request) {
         UserResponse created = userService.create(request);
@@ -77,18 +82,21 @@ public class UserController {
     }
 
     @Operation(operationId = "userUpdate", summary = "Substitui os dados do usuário")
+    @PreAuthorize("@ownership.canAccessUser(#id) and @ownership.keepsOwnFirebaseUid(#request.firebaseUid())")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(@PathVariable Long id, @Valid @RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.update(id, request));
     }
 
     @Operation(operationId = "userPatch", summary = "Atualiza parcialmente o usuário")
+    @PreAuthorize("@ownership.canAccessUser(#id)")
     @PatchMapping("/{id}")
     public ResponseEntity<UserResponse> patch(@PathVariable Long id, @Valid @RequestBody UserPatchRequest request) {
         return ResponseEntity.ok(userService.patch(id, request));
     }
 
     @Operation(operationId = "userDelete", summary = "Remove o usuário")
+    @PreAuthorize("@ownership.canAccessUser(#id)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.delete(id);

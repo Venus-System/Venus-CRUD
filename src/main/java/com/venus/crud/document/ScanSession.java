@@ -53,6 +53,13 @@ public class ScanSession {
 
     private List<ScanIngredient> ingredients;
 
+    private ScanReview review;
+
+    @Field("approved_snapshot")
+    private ScanApprovedSnapshot approvedSnapshot;
+
+    private ScanSync sync;
+
     @Setter(AccessLevel.NONE)
     @CreatedDate
     @Field("created_at")

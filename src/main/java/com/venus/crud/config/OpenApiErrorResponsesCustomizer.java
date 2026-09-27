@@ -134,7 +134,7 @@ public class OpenApiErrorResponsesCustomizer implements OperationCustomizer {
         return bound && !String.class.equals(type) && !MultipartFile.class.isAssignableFrom(type);
     }
 
-    private Map<String, Object> example(HttpStatus status, String message, String path, List<String> details) {
+    static Map<String, Object> example(HttpStatus status, String message, String path, List<String> details) {
         Map<String, Object> exemplo = new LinkedHashMap<>();
         exemplo.put("timestamp", EXEMPLO_TIMESTAMP);
         exemplo.put("status", status.value());
@@ -145,7 +145,7 @@ public class OpenApiErrorResponsesCustomizer implements OperationCustomizer {
         return exemplo;
     }
 
-    private void addResponse(ApiResponses responses, HttpStatus status, String description, Map<String, Object> example) {
+    static void addResponse(ApiResponses responses, HttpStatus status, String description, Map<String, Object> example) {
         String code = String.valueOf(status.value());
         if (responses.containsKey(code)) {
             return;

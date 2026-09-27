@@ -1,10 +1,13 @@
 package com.venus.crud.controller.mongo;
 
+import com.venus.crud.dto.mongo.request.ScanApproveRequest;
+import com.venus.crud.dto.mongo.request.ScanRejectRequest;
 import com.venus.crud.dto.mongo.request.ScanSessionRequest;
 import com.venus.crud.dto.mongo.response.ScanSessionResponse;
 import com.venus.crud.dto.mongo.response.ScanUploadSignaturesResponse;
 import com.venus.crud.entity.enums.ScanStatus;
 import com.venus.crud.service.mongo.ScanCloudinaryService;
+import com.venus.crud.service.mongo.ScanReviewService;
 import com.venus.crud.service.mongo.ScanSessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,13 +19,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -33,25 +39,31 @@ public class ScanSessionController {
 
     private final ScanSessionService scanSessionService;
     private final ScanCloudinaryService scanCloudinaryService;
+    private final ScanReviewService scanReviewService;
 
-    public ScanSessionController(ScanSessionService scanSessionService, ScanCloudinaryService scanCloudinaryService) {
+    public ScanSessionController(ScanSessionService scanSessionService, ScanCloudinaryService scanCloudinaryService,
+            ScanReviewService scanReviewService) {
         this.scanSessionService = scanSessionService;
         this.scanCloudinaryService = scanCloudinaryService;
+        this.scanReviewService = scanReviewService;
     }
 
     @Operation(operationId = "scanSessionFindAll", summary = "Lista as sessões de scan")
+    @PreAuthorize("hasRole('ANALYST')")
     @GetMapping
     public ResponseEntity<Slice<ScanSessionResponse>> findAll(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(scanSessionService.findAll(pageable));
     }
 
     @Operation(operationId = "scanSessionFindById", summary = "Busca a sessão de scan por id")
+    @PreAuthorize("hasRole('ANALYST') or @ownership.canAccessScanSession(#id)")
     @GetMapping("/{id}")
     public ResponseEntity<ScanSessionResponse> findById(@PathVariable String id) {
         return ResponseEntity.ok(scanSessionService.findById(id));
     }
 
     @Operation(operationId = "scanSessionFindByStatus", summary = "Lista as sessões de scan por status")
+    @PreAuthorize("hasRole('ANALYST')")
     @GetMapping("/status/{status}")
     public ResponseEntity<Slice<ScanSessionResponse>> findByStatus(
             @PathVariable ScanStatus status, @PageableDefault(size = 20) Pageable pageable) {
@@ -59,6 +71,7 @@ public class ScanSessionController {
     }
 
     @Operation(operationId = "scanSessionFindByDeviceId", summary = "Lista as sessões de scan de um dispositivo")
+    @PreAuthorize("hasRole('ANALYST')")
     @GetMapping("/device/{deviceId}")
     public ResponseEntity<Slice<ScanSessionResponse>> findByDeviceId(
             @Parameter(description = "Identificador do aparelho que originou o scan.")
@@ -72,6 +85,7 @@ public class ScanSessionController {
             description = "Devolve uma assinatura para a frente e outra para o verso, com os public_id scans/{scanId}/front "
                     + "e scans/{scanId}/back. O app sobe as fotos direto no Cloudinary mandando exatamente esses "
                     + "parâmetros e depois envia o scan com a referência das fotos. A assinatura vale por 1 hora.")
+    @PreAuthorize("@ownership.hasActiveAccount()")
     @GetMapping("/upload-signatures")
     public ResponseEntity<ScanUploadSignaturesResponse> uploadSignatures(
             @Parameter(description = "Identificador do scan gerado pelo app.")
@@ -86,6 +100,7 @@ public class ScanSessionController {
             summary = "Cadastra uma sessão de scan",
             description = "Grava o scan com status PENDING_REVIEW e compara cada ingrediente com o catálogo. "
                     + "Reenviar o mesmo scanId não cria outro scan: devolve o que já existe, com o mesmo id.")
+    @PreAuthorize("@ownership.isCurrentFirebaseUid(#request.firebaseUid()) and @ownership.hasActiveAccount()")
     @PostMapping
     public ResponseEntity<ScanSessionResponse> create(@Valid @RequestBody ScanSessionRequest request) {
         ScanSessionResponse created = scanSessionService.create(request);
@@ -94,5 +109,46 @@ public class ScanSessionController {
                 .buildAndExpand(created.id())
                 .toUri();
         return ResponseEntity.created(location).body(created);
+    }
+
+    @Operation(
+            operationId = "scanSessionApprove",
+            summary = "Aprova o scan e cria o produto no catálogo",
+            description = "Só vale para scan em PENDING_REVIEW. Confere as decisões do administrador (**422** com a lista "
+                    + "do que está errado), grava a aprovação e sincroniza com o catálogo na mesma chamada: cria ou "
+                    + "reaproveita o produto, a versão (verified e atual), os ingredientes, o rótulo e a foto da frente. "
+                    + "Responde 200 também quando a sincronização falha: o status vira SYNC_FAILED e sync.lastError diz o "
+                    + "motivo; POST /{id}/sync tenta de novo. Se outro administrador decidiu antes, devolve **409**. Exige "
+                    + "o token de um administrador MODERATOR ou ADMIN; quem aprovou fica registrado pelo token.")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('MODERATOR')")
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ScanSessionResponse> approve(@PathVariable String id, @Valid @RequestBody ScanApproveRequest request) {
+        return ResponseEntity.ok(scanReviewService.approve(id, request));
+    }
+
+    @Operation(
+            operationId = "scanSessionReject",
+            summary = "Recusa o scan",
+            description = "Só vale para scan em PENDING_REVIEW; o motivo é obrigatório. Nada é criado no catálogo. Se "
+                    + "outro administrador decidiu antes, devolve **409**. Exige o token de um administrador MODERATOR ou "
+                    + "ADMIN; quem recusou fica registrado pelo token.")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('MODERATOR')")
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<ScanSessionResponse> reject(@PathVariable String id, @Valid @RequestBody ScanRejectRequest request) {
+        return ResponseEntity.ok(scanReviewService.reject(id, request));
+    }
+
+    @Operation(
+            operationId = "scanSessionSync",
+            summary = "Tenta de novo a sincronização do scan aprovado",
+            description = "Só vale para scan em APPROVED ou SYNC_FAILED (outro status devolve **409**). Usa a decisão "
+                    + "congelada na aprovação e reaproveita o que já existir no catálogo, sem duplicar.")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('MODERATOR')")
+    @PostMapping("/{id}/sync")
+    public ResponseEntity<ScanSessionResponse> sync(@PathVariable String id) {
+        return ResponseEntity.ok(scanReviewService.sync(id));
     }
 }

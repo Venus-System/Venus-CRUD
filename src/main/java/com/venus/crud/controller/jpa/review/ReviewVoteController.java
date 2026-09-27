@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -38,12 +39,14 @@ public class ReviewVoteController {
     }
 
     @Operation(operationId = "reviewVoteFindAll", summary = "Lista os votos")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ReviewVoteResponse>> findAll() {
         return ResponseEntity.ok(reviewVoteService.findAll());
     }
 
     @Operation(operationId = "reviewVoteSearch", summary = "Busca os votos com filtros e paginação")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<Slice<ReviewVoteResponse>> search(
             @RequestParam(required = false) VoteType voteType,
@@ -52,6 +55,7 @@ public class ReviewVoteController {
     }
 
     @Operation(operationId = "reviewVoteFindByReviewId", summary = "Lista os votos de uma avaliação")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/review/{reviewId}")
     public ResponseEntity<Slice<ReviewVoteResponse>> findByReviewId(
             @PathVariable Long reviewId, @PageableDefault(size = 20) Pageable pageable) {
@@ -63,6 +67,7 @@ public class ReviewVoteController {
             summary = "Conta os votos de uma avaliação por tipo",
             description = "O parâmetro `voteType` é obrigatório: a contagem é sempre por tipo de voto, nunca o total da "
                     + "avaliação.")
+    @PreAuthorize("permitAll()")
     @GetMapping("/review/{reviewId}/count")
     public ResponseEntity<Long> countByReviewIdAndVoteType(@PathVariable Long reviewId, 
             @Parameter(description = "Tipo de voto a contar. Obrigatório.")
@@ -71,12 +76,14 @@ public class ReviewVoteController {
     }
 
     @Operation(operationId = "reviewVoteFindByReviewIdAndUserId", summary = "Busca o voto de um usuário numa avaliação")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @GetMapping("/review/{reviewId}/user/{userId}")
     public ResponseEntity<ReviewVoteResponse> findByReviewIdAndUserId(@PathVariable Long reviewId, @PathVariable Long userId) {
         return ResponseEntity.ok(reviewVoteService.findByReviewIdAndUserId(reviewId, userId));
     }
 
     @Operation(operationId = "reviewVoteCreate", summary = "Cadastra um voto")
+    @PreAuthorize("@ownership.canAccessUser(#request.userId())")
     @PostMapping
     public ResponseEntity<ReviewVoteResponse> create(@Valid @RequestBody ReviewVoteRequest request) {
         ReviewVoteResponse created = reviewVoteService.create(request);
@@ -88,6 +95,7 @@ public class ReviewVoteController {
     }
 
     @Operation(operationId = "reviewVotePatch", summary = "Atualiza parcialmente o voto")
+    @PreAuthorize("@ownership.canWriteForUser(#userId, #request.userId())")
     @PatchMapping("/review/{reviewId}/user/{userId}")
     public ResponseEntity<ReviewVoteResponse> patch(
             @PathVariable Long reviewId, @PathVariable Long userId, @Valid @RequestBody ReviewVotePatchRequest request) {
@@ -95,6 +103,7 @@ public class ReviewVoteController {
     }
 
     @Operation(operationId = "reviewVoteDelete", summary = "Remove o voto")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @DeleteMapping("/review/{reviewId}/user/{userId}")
     public ResponseEntity<Void> delete(@PathVariable Long reviewId, @PathVariable Long userId) {
         reviewVoteService.delete(reviewId, userId);

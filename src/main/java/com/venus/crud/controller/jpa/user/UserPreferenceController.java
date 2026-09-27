@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -37,12 +38,14 @@ public class UserPreferenceController {
     }
 
     @Operation(operationId = "userPreferenceFindAll", summary = "Lista as preferências do usuário")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<UserPreferenceResponse>> findAll() {
         return ResponseEntity.ok(userPreferenceService.findAll());
     }
 
     @Operation(operationId = "userPreferenceSearch", summary = "Busca as preferências do usuário com filtros e paginação")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<Slice<UserPreferenceResponse>> search(
             @RequestParam(required = false) Boolean preferCrueltyFree,
@@ -58,12 +61,14 @@ public class UserPreferenceController {
     }
 
     @Operation(operationId = "userPreferenceFindByUserId", summary = "Busca as preferências de um usuário")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @GetMapping("/{userId}")
     public ResponseEntity<UserPreferenceResponse> findByUserId(@PathVariable Long userId) {
         return ResponseEntity.ok(userPreferenceService.findByUserId(userId));
     }
 
     @Operation(operationId = "userPreferenceCreate", summary = "Cadastra uma preferência do usuário")
+    @PreAuthorize("@ownership.canAccessUser(#request.userId())")
     @PostMapping
     public ResponseEntity<UserPreferenceResponse> create(@Valid @RequestBody UserPreferenceRequest request) {
         UserPreferenceResponse created = userPreferenceService.create(request);
@@ -75,18 +80,21 @@ public class UserPreferenceController {
     }
 
     @Operation(operationId = "userPreferenceUpdate", summary = "Substitui os dados da preferência do usuário")
+    @PreAuthorize("@ownership.canWriteForUser(#userId, #request.userId())")
     @PutMapping("/{userId}")
     public ResponseEntity<UserPreferenceResponse> update(@PathVariable Long userId, @Valid @RequestBody UserPreferenceRequest request) {
         return ResponseEntity.ok(userPreferenceService.update(userId, request));
     }
 
     @Operation(operationId = "userPreferencePatch", summary = "Atualiza parcialmente a preferência do usuário")
+    @PreAuthorize("@ownership.canWriteForUser(#userId, #request.userId())")
     @PatchMapping("/{userId}")
     public ResponseEntity<UserPreferenceResponse> patch(@PathVariable Long userId, @Valid @RequestBody UserPreferencePatchRequest request) {
         return ResponseEntity.ok(userPreferenceService.patch(userId, request));
     }
 
     @Operation(operationId = "userPreferenceDelete", summary = "Remove a preferência do usuário")
+    @PreAuthorize("@ownership.canAccessUser(#userId)")
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> delete(@PathVariable Long userId) {
         userPreferenceService.delete(userId);

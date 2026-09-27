@@ -5,6 +5,7 @@ import com.venus.crud.service.mongo.fullstage.ScanFullService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +25,7 @@ public class ScanFullController {
     @Operation(
             operationId = "scanFullFindByScanSessionIdAndAnalysisResultId",
             summary = "Busca a sessão de scan com o resultado da análise")
+    @PreAuthorize("@ownership.canAccessScanSession(#scanSessionId) and @ownership.canAccessAnalysisResult(#analysisResultId)")
     @GetMapping("/{scanSessionId}/analysis-result/{analysisResultId}/full")
     public ResponseEntity<ScanFullResponse> findByScanSessionIdAndAnalysisResultId(
             @PathVariable String scanSessionId, @PathVariable Long analysisResultId) {

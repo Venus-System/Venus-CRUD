@@ -2,6 +2,8 @@ package com.venus.crud.config;
 
 import com.venus.crud.document.converter.AnalysisStatusReadConverter;
 import com.venus.crud.document.converter.AnalysisStatusWriteConverter;
+import com.venus.crud.document.converter.IngredientDecisionActionReadConverter;
+import com.venus.crud.document.converter.IngredientDecisionActionWriteConverter;
 import com.venus.crud.document.converter.IngredientMatchStatusReadConverter;
 import com.venus.crud.document.converter.IngredientMatchStatusWriteConverter;
 import com.venus.crud.document.converter.ScanStatusReadConverter;
@@ -29,7 +31,9 @@ public class MongoConfig {
                 new ScanStatusReadConverter(),
                 new ScanStatusWriteConverter(),
                 new IngredientMatchStatusReadConverter(),
-                new IngredientMatchStatusWriteConverter()));
+                new IngredientMatchStatusWriteConverter(),
+                new IngredientDecisionActionReadConverter(),
+                new IngredientDecisionActionWriteConverter()));
     }
 
     @Bean

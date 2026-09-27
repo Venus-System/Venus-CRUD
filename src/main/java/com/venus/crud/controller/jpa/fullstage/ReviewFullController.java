@@ -5,6 +5,7 @@ import com.venus.crud.service.jpa.fullstage.ReviewFullService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,7 @@ public class ReviewFullController {
     }
 
     @Operation(operationId = "reviewFullFindById", summary = "Busca a avaliação completa por id")
+    @PreAuthorize("permitAll()")
     @GetMapping("/{id}/full")
     public ResponseEntity<ReviewFullResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(reviewFullService.findById(id));
