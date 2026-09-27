@@ -28,7 +28,7 @@ public record AnalysisResultRequest(
         Short confidenceScore,
         @Schema(description = "Tempo de processamento, em milissegundos.", example = "850")
         @NotNull Integer processingTimeMs,
-        @Schema(description = "Situação atual do registro.")
+        @Schema(description = "Situação da análise. De PROCESSING vai para COMPLETED, FAILED ou PENDING_REVIEW; de PENDING_REVIEW para COMPLETED ou FAILED; outra troca devolve 409.")
         @NotNull AnalysisStatus status,
         @Schema(description = "Resumo do resultado da análise.", example = "Produto compatível com o seu perfil.")
         @NotBlank String summary
