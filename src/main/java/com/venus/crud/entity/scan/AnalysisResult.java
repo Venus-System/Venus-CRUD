@@ -41,10 +41,10 @@ public class AnalysisResult extends AuditableEntity {
     @Column(name = "overall_score", nullable = false)
     private Integer overallScore;
 
-    @Column(name = "health_score", nullable = false)
+    @Column(name = "health_score")
     private Integer healthScore;
 
-    @Column(name = "environmental_score", nullable = false)
+    @Column(name = "environmental_score")
     private Integer environmentalScore;
 
     @Column(name = "ethical_score", nullable = false)

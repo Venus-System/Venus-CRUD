@@ -19,7 +19,8 @@ public record PersonalizedScoreResponse(
         Long scoringModelId,
         @Schema(description = "Nota final depois de aplicadas todas as regras, de 0 a 100.", example = "72")
         Integer finalScore,
-        @Schema(description = "Percentual de compatibilidade entre o produto e o perfil do usuário.", example = "82.5")
+        @Schema(description = "Percentual de compatibilidade entre o produto e o perfil do usuário. Nulo quando nenhuma pergunta do perfil entrou na conta.",
+                example = "82.5", nullable = true)
         BigDecimal compatibilityPercentage,
         @Schema(description = "Nível de risco.")
         RiskLevel riskLevel,

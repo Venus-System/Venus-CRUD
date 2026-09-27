@@ -35,10 +35,10 @@ public class ProductScore extends AuditableEntity {
     @Column(name = "overall_score", nullable = false)
     private Integer overallScore;
 
-    @Column(name = "health_score", nullable = false)
+    @Column(name = "health_score")
     private Integer healthScore;
 
-    @Column(name = "environmental_score", nullable = false)
+    @Column(name = "environmental_score")
     private Integer environmentalScore;
 
     @Column(name = "ethical_score", nullable = false)
@@ -47,10 +47,10 @@ public class ProductScore extends AuditableEntity {
     @Column(name = "performance_score", nullable = false)
     private Integer performanceScore;
 
-    @Column(name = "transparency_score", nullable = false)
+    @Column(name = "transparency_score")
     private Integer transparencyScore;
 
-    @Column(name = "confidence_score", nullable = false)
+    @Column(name = "confidence_score")
     private Short confidenceScore;
 
     @Column(name = "calculated_at", nullable = false)

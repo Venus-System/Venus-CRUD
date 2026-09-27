@@ -47,7 +47,7 @@ public class PersonalizedScore extends AuditableEntity {
     @Column(name = "final_score", nullable = false)
     private Integer finalScore;
 
-    @Column(name = "compatibility_percentage", nullable = false)
+    @Column(name = "compatibility_percentage")
     private BigDecimal compatibilityPercentage;
 
     @Column(name = "risk_level", nullable = false)
