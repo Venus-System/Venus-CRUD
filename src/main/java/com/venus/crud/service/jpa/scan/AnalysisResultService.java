@@ -7,11 +7,11 @@ import com.venus.crud.entity.enums.AnalysisStatus;
 import com.venus.crud.entity.scan.AnalysisResult;
 import com.venus.crud.exception.DataAccessFailureTranslator;
 import com.venus.crud.exception.DataIntegrityViolationTranslator;
+import com.venus.crud.exception.InvalidStateTransitionDetector;
 import com.venus.crud.exception.InvalidStateTransitionException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.mapper.jpa.scan.AnalysisResultMapper;
 import com.venus.crud.repository.jpa.scan.AnalysisResultRepository;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -29,7 +29,9 @@ public class AnalysisResultService {
 
     private static final Logger log = LoggerFactory.getLogger(AnalysisResultService.class);
 
-    private static final String INVALID_STATE_TRANSITION_SQL_STATE = "VE001";
+    private static final String INVALID_TRANSITION_MESSAGE =
+            "Transicao de status invalida. A analise vai de PROCESSING para COMPLETED, FAILED ou PENDING_REVIEW, "
+                    + "e de PENDING_REVIEW para COMPLETED ou FAILED.";
 
     private final AnalysisResultRepository analysisResultRepository;
     private final AnalysisResultMapper analysisResultMapper;
@@ -88,7 +90,7 @@ public class AnalysisResultService {
         AnalysisResult analysisResult = getOrThrow(id);
         analysisResultMapper.updateEntity(request, analysisResult);
 
-        AnalysisResult saved = executeOrFail(() -> analysisResultRepository.save(analysisResult), "Falha ao atualizar analise no banco de dados");
+        AnalysisResult saved = executeOrFail(() -> analysisResultRepository.saveAndFlush(analysisResult), "Falha ao atualizar analise no banco de dados");
         return analysisResultMapper.toResponse(saved);
     }
 
@@ -97,7 +99,7 @@ public class AnalysisResultService {
         AnalysisResult analysisResult = getOrThrow(id);
         analysisResultMapper.patchEntity(request, analysisResult);
 
-        AnalysisResult saved = executeOrFail(() -> analysisResultRepository.save(analysisResult), "Falha ao atualizar analise no banco de dados");
+        AnalysisResult saved = executeOrFail(() -> analysisResultRepository.saveAndFlush(analysisResult), "Falha ao atualizar analise no banco de dados");
         return analysisResultMapper.toResponse(saved);
     }
 
@@ -120,9 +122,8 @@ public class AnalysisResultService {
         try {
             return action.get();
         } catch (DataAccessException ex) {
-            if (isInvalidStateTransition(ex)) {
-                throw new InvalidStateTransitionException(
-                        "Transicao de status invalida. Analises concluidas ou com falha nao mudam de status.");
+            if (InvalidStateTransitionDetector.matches(ex)) {
+                throw new InvalidStateTransitionException(INVALID_TRANSITION_MESSAGE);
             }
             if (ex instanceof DataIntegrityViolationException integrityViolation) {
                 throw DataIntegrityViolationTranslator.translate(integrityViolation);
@@ -130,16 +131,5 @@ public class AnalysisResultService {
             log.error(errorMessage, ex);
             throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
-    }
-
-    private boolean isInvalidStateTransition(DataAccessException ex) {
-        for (Throwable cause = ex; cause != null; cause = cause.getCause()) {
-            if (cause instanceof SQLException sqlException
-                    && INVALID_STATE_TRANSITION_SQL_STATE.equals(sqlException.getSQLState())) {
-                log.warn("Transicao de status rejeitada pelo banco: {}", sqlException.getMessage());
-                return true;
-            }
-        }
-        return false;
     }
 }
