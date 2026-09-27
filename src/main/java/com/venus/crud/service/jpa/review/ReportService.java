@@ -8,11 +8,11 @@ import com.venus.crud.entity.enums.ReportTargetType;
 import com.venus.crud.entity.review.Report;
 import com.venus.crud.exception.DataAccessFailureTranslator;
 import com.venus.crud.exception.DataIntegrityViolationTranslator;
+import com.venus.crud.exception.InvalidStateTransitionDetector;
 import com.venus.crud.exception.InvalidStateTransitionException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.mapper.jpa.review.ReportMapper;
 import com.venus.crud.repository.jpa.review.ReportRepository;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -30,7 +30,8 @@ public class ReportService {
 
     private static final Logger log = LoggerFactory.getLogger(ReportService.class);
 
-    private static final String INVALID_STATE_TRANSITION_SQL_STATE = "VE001";
+    private static final String INVALID_TRANSITION_MESSAGE =
+            "Transicao de status invalida. A denuncia vai de OPEN para IN_REVIEW, e de IN_REVIEW para RESOLVED ou REJECTED.";
 
     private final ReportRepository reportRepository;
     private final ReportMapper reportMapper;
@@ -85,7 +86,7 @@ public class ReportService {
         Report report = getOrThrow(id);
         reportMapper.updateEntity(request, report);
 
-        Report saved = executeOrFail(() -> reportRepository.save(report), "Falha ao atualizar denuncia no banco de dados");
+        Report saved = executeOrFail(() -> reportRepository.saveAndFlush(report), "Falha ao atualizar denuncia no banco de dados");
         return reportMapper.toResponse(saved);
     }
 
@@ -94,7 +95,7 @@ public class ReportService {
         Report report = getOrThrow(id);
         reportMapper.patchEntity(request, report);
 
-        Report saved = executeOrFail(() -> reportRepository.save(report), "Falha ao atualizar denuncia no banco de dados");
+        Report saved = executeOrFail(() -> reportRepository.saveAndFlush(report), "Falha ao atualizar denuncia no banco de dados");
         return reportMapper.toResponse(saved);
     }
 
@@ -116,9 +117,8 @@ public class ReportService {
         try {
             return action.get();
         } catch (DataAccessException ex) {
-            if (isInvalidStateTransition(ex)) {
-                throw new InvalidStateTransitionException(
-                        "Transicao de status invalida. Denuncias resolvidas ou rejeitadas nao mudam de status.");
+            if (InvalidStateTransitionDetector.matches(ex)) {
+                throw new InvalidStateTransitionException(INVALID_TRANSITION_MESSAGE);
             }
             if (ex instanceof DataIntegrityViolationException integrityViolation) {
                 throw DataIntegrityViolationTranslator.translate(integrityViolation);
@@ -126,16 +126,5 @@ public class ReportService {
             log.error(errorMessage, ex);
             throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }
-    }
-
-    private boolean isInvalidStateTransition(DataAccessException ex) {
-        for (Throwable cause = ex; cause != null; cause = cause.getCause()) {
-            if (cause instanceof SQLException sqlException
-                    && INVALID_STATE_TRANSITION_SQL_STATE.equals(sqlException.getSQLState())) {
-                log.warn("Transicao de status rejeitada pelo banco: {}", sqlException.getMessage());
-                return true;
-            }
-        }
-        return false;
     }
 }
