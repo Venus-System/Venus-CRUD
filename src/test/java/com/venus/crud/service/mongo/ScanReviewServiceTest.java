@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -14,6 +15,7 @@ import com.venus.crud.dto.mongo.request.ScanApproveRequest;
 import com.venus.crud.dto.mongo.request.ScanProductDecisionRequest;
 import com.venus.crud.dto.mongo.request.ScanRejectRequest;
 import com.venus.crud.entity.enums.ScanStatus;
+import com.venus.crud.exception.DataConstraintException;
 import com.venus.crud.exception.InvalidStateTransitionException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.repository.mongo.ScanSessionRepository;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 class ScanReviewServiceTest {
@@ -149,6 +152,59 @@ class ScanReviewServiceTest {
         verifyNoInteractions(scanCatalogSync);
     }
 
+    @Test
+    void conflictInTheFirstSyncIsRetriedOnceAndEndsSynced() {
+        ScanSession scan = scanIn(ScanStatus.PENDING_REVIEW);
+        when(scanSessionService.getOrThrow(ID)).thenReturn(scan);
+        when(currentUserProvider.adminUserId()).thenReturn(Optional.of(3L));
+        when(scanReviewValidator.validate(eq(scan), any(), eq(3L))).thenReturn(new ScanApprovedSnapshot());
+        when(scanSessionRepository.save(any(ScanSession.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(scanCatalogSync.synchronize(scan))
+                .thenThrow(conflict())
+                .thenReturn(new ScanCatalogSync.Result(57L, 130L));
+
+        service.approve(ID, approveRequest());
+
+        assertThat(scan.getStatus()).isEqualTo(ScanStatus.SYNCED);
+        assertThat(scan.getSync().getProductVersionId()).isEqualTo(130L);
+        assertThat(scan.getSync().getAttempts()).isEqualTo(1);
+        verify(scanCatalogSync, times(2)).synchronize(scan);
+    }
+
+    @Test
+    void secondConflictInARowEndsSyncFailed() {
+        ScanSession scan = scanIn(ScanStatus.PENDING_REVIEW);
+        when(scanSessionService.getOrThrow(ID)).thenReturn(scan);
+        when(currentUserProvider.adminUserId()).thenReturn(Optional.of(3L));
+        when(scanReviewValidator.validate(eq(scan), any(), eq(3L))).thenReturn(new ScanApprovedSnapshot());
+        when(scanSessionRepository.save(any(ScanSession.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(scanCatalogSync.synchronize(scan)).thenThrow(conflict(), conflict());
+
+        service.approve(ID, approveRequest());
+
+        assertThat(scan.getStatus()).isEqualTo(ScanStatus.SYNC_FAILED);
+        assertThat(scan.getSync().getLastError()).startsWith("Ja existe um registro com os dados informados.");
+        assertThat(scan.getSync().getAttempts()).isEqualTo(1);
+        verify(scanCatalogSync, times(2)).synchronize(scan);
+    }
+
+    @Test
+    void dataErrorThatIsNotAConflictIsNotRetried() {
+        ScanSession scan = scanIn(ScanStatus.PENDING_REVIEW);
+        when(scanSessionService.getOrThrow(ID)).thenReturn(scan);
+        when(currentUserProvider.adminUserId()).thenReturn(Optional.of(3L));
+        when(scanReviewValidator.validate(eq(scan), any(), eq(3L))).thenReturn(new ScanApprovedSnapshot());
+        when(scanSessionRepository.save(any(ScanSession.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(scanCatalogSync.synchronize(scan)).thenThrow(new DataConstraintException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "Um campo obrigatorio nao foi informado.", List.of("column: display_name")));
+
+        service.approve(ID, approveRequest());
+
+        assertThat(scan.getStatus()).isEqualTo(ScanStatus.SYNC_FAILED);
+        assertThat(scan.getSync().getLastError()).isEqualTo("Um campo obrigatorio nao foi informado. (column: display_name)");
+        verify(scanCatalogSync, times(1)).synchronize(scan);
+    }
+
     private ScanSession scanIn(ScanStatus status) {
         ScanSession scanSession = new ScanSession();
         scanSession.setStatus(status);
@@ -157,5 +213,10 @@ class ScanReviewServiceTest {
 
     private ScanApproveRequest approveRequest() {
         return new ScanApproveRequest(new ScanProductDecisionRequest(7L, null, null, null), List.of(), null);
+    }
+
+    private DataConstraintException conflict() {
+        return new DataConstraintException(HttpStatus.CONFLICT, "Ja existe um registro com os dados informados.",
+                List.of("constraint: products_slug_key"));
     }
 }

@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 public final class ScanSyncKeys {
 
-    private static final Pattern MARKS = Pattern.compile("\p{M}+");
+    private static final Pattern MARKS = Pattern.compile("\\p{M}+");
     private static final Pattern NOT_LETTER_OR_DIGIT = Pattern.compile("[^a-z0-9]+");
     private static final Pattern EDGE_HYPHENS = Pattern.compile("^-+|-+$");
     private static final String SEPARATOR = "|";

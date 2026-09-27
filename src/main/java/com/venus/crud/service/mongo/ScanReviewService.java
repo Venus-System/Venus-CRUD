@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -97,7 +98,7 @@ public class ScanReviewService {
         ScanSync sync = scanSession.getSync() != null ? scanSession.getSync() : new ScanSync();
         sync.setAttempts(sync.getAttempts() == null ? 1 : sync.getAttempts() + 1);
         try {
-            ScanCatalogSync.Result result = scanCatalogSync.synchronize(scanSession);
+            ScanCatalogSync.Result result = synchronizeCatalog(scanSession);
             sync.setProductId(result.productId());
             sync.setProductVersionId(result.productVersionId());
             sync.setSyncedAt(OffsetDateTime.now());
@@ -112,6 +113,18 @@ public class ScanReviewService {
         }
         scanSession.setSync(sync);
         return save(scanSession);
+    }
+
+    private ScanCatalogSync.Result synchronizeCatalog(ScanSession scanSession) {
+        try {
+            return scanCatalogSync.synchronize(scanSession);
+        } catch (DataConstraintException ex) {
+            if (ex.getStatus() != HttpStatus.CONFLICT) {
+                throw ex;
+            }
+            log.warn("Conflito ao sincronizar o scan {} com o catalogo; tentando mais uma vez", scanSession.getScanId());
+            return scanCatalogSync.synchronize(scanSession);
+        }
     }
 
     private String describe(RuntimeException ex) {
