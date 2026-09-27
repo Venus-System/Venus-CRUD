@@ -3,18 +3,27 @@ package com.venus.crud.security;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.venus.crud.config.SecurityProperties;
 import com.venus.crud.entity.admin.AdminUser;
 import com.venus.crud.entity.enums.AdminRole;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.BadJwtException;
+import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwtValidationException;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
 class AdminTokenServiceTest {
 
@@ -39,10 +48,17 @@ class AdminTokenServiceTest {
 
     @Test
     void expiredTokenIsRejected() {
-        AdminTokenService service = service(SECRET, Duration.ofMinutes(-5));
-        String token = service.issue(admin(3L, AdminRole.ADMIN)).value();
+        Instant twoHoursAgo = Instant.now().minus(Duration.ofHours(2));
+        String token = sign(SECRET, JwtClaimsSet.builder()
+                .issuer(AdminTokenService.ISSUER)
+                .subject("3")
+                .issuedAt(twoHoursAgo)
+                .expiresAt(twoHoursAgo.plus(Duration.ofHours(1)))
+                .claim(AdminTokenService.ROLE_CLAIM, AdminRole.ADMIN.name())
+                .build());
 
-        assertThatThrownBy(() -> service.decoder().decode(token)).isInstanceOf(JwtValidationException.class);
+        assertThatThrownBy(() -> service(SECRET, Duration.ofHours(8)).decoder().decode(token))
+                .isInstanceOf(JwtValidationException.class);
     }
 
     @Test
@@ -66,6 +82,14 @@ class AdminTokenServiceTest {
         assertThatThrownBy(() -> new SecurityProperties.AdminToken("curto", Duration.ofHours(8)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("32 bytes");
+    }
+
+    private String sign(String secret, JwtClaimsSet claims) {
+        SecretKey key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
+        return new NimbusJwtEncoder(new ImmutableSecret<>(key))
+                .encode(JwtEncoderParameters.from(header, claims))
+                .getTokenValue();
     }
 
     private AdminTokenService service(String secret, Duration expiration) {
