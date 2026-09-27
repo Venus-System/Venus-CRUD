@@ -33,23 +33,37 @@ public interface UserProfileMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "user", source = "userId")
+    @Mapping(target = "skinType", ignore = true)
+    @Mapping(target = "skinPhototype", ignore = true)
     @Mapping(target = "hasHyperpigmentation", ignore = true)
     @Mapping(target = "hasMelasma", ignore = true)
     @Mapping(target = "hasRosacea", ignore = true)
     @Mapping(target = "hasEczema", ignore = true)
+    @Mapping(target = "hairPattern", ignore = true)
+    @Mapping(target = "scalpType", ignore = true)
+    @Mapping(target = "skinSensitivity", ignore = true)
     @Mapping(target = "acneProne", ignore = true)
+    @Mapping(target = "ageRange", ignore = true)
+    @Mapping(target = "gender", ignore = true)
     @Mapping(target = "isPregnant", ignore = true)
     @Mapping(target = "isBreastfeeding", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(UserProfilePatchRequest request, @MappingTarget UserProfile entity);
 
     @AfterMapping
-    default void patchHealthData(UserProfilePatchRequest request, @MappingTarget UserProfile entity) {
+    default void patchAnswers(UserProfilePatchRequest request, @MappingTarget UserProfile entity) {
+        request.skinType().ifPresent(entity::setSkinType);
+        request.skinPhototype().ifPresent(entity::setSkinPhototype);
         request.hasHyperpigmentation().ifPresent(entity::setHasHyperpigmentation);
         request.hasMelasma().ifPresent(entity::setHasMelasma);
         request.hasRosacea().ifPresent(entity::setHasRosacea);
         request.hasEczema().ifPresent(entity::setHasEczema);
+        request.hairPattern().ifPresent(entity::setHairPattern);
+        request.scalpType().ifPresent(entity::setScalpType);
+        request.skinSensitivity().ifPresent(entity::setSkinSensitivity);
         request.acneProne().ifPresent(entity::setAcneProne);
+        request.ageRange().ifPresent(entity::setAgeRange);
+        request.gender().ifPresent(entity::setGender);
         request.isPregnant().ifPresent(entity::setIsPregnant);
         request.isBreastfeeding().ifPresent(entity::setIsBreastfeeding);
     }

@@ -33,10 +33,10 @@ public class UserProfile extends AuditableEntity {
     @JoinColumn(name = "fk_user_id", nullable = false, unique = true)
     private User user;
 
-    @Column(name = "skin_type", nullable = false)
+    @Column(name = "skin_type")
     private SkinType skinType;
 
-    @Column(name = "skin_phototype", nullable = false)
+    @Column(name = "skin_phototype")
     private SkinPhototype skinPhototype;
 
     @Column(name = "has_hyperpigmentation")
@@ -51,22 +51,22 @@ public class UserProfile extends AuditableEntity {
     @Column(name = "has_eczema")
     private Boolean hasEczema;
 
-    @Column(name = "hair_pattern", nullable = false)
+    @Column(name = "hair_pattern")
     private HairPattern hairPattern;
 
-    @Column(name = "scalp_type", nullable = false)
+    @Column(name = "scalp_type")
     private ScalpType scalpType;
 
-    @Column(name = "skin_sensitivity", nullable = false)
+    @Column(name = "skin_sensitivity")
     private SensitivityLevel skinSensitivity;
 
     @Column(name = "acne_prone")
     private Boolean acneProne;
 
-    @Column(name = "age_range", nullable = false)
+    @Column(name = "age_range")
     private AgeRange ageRange;
 
-    @Column(name = "gender", nullable = false)
+    @Column(name = "gender")
     private Gender gender;
 
     @Column(name = "is_pregnant")
