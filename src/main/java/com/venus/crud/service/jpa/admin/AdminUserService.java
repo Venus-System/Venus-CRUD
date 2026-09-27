@@ -9,7 +9,7 @@ import com.venus.crud.entity.enums.AdminRole;
 import com.venus.crud.exception.DataAccessFailureTranslator;
 import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.DuplicateResourceException;
-import com.venus.crud.exception.InvalidCredentialsException;
+import com.venus.crud.exception.InvalidRequestException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.mapper.jpa.admin.AdminUserMapper;
 import com.venus.crud.repository.jpa.admin.AdminUserRepository;
@@ -92,7 +92,7 @@ public class AdminUserService {
     public void changePassword(Long id, AdminUserPasswordChangeRequest request) {
         AdminUser adminUser = getOrThrow(id);
         if (adminUser.getPasswordHash() == null || !passwordEncoder.matches(request.currentPassword(), adminUser.getPasswordHash())) {
-            throw new InvalidCredentialsException("Senha atual incorreta.");
+            throw new InvalidRequestException("Senha atual incorreta.", List.of());
         }
 
         adminUser.setPasswordHash(passwordEncoder.encode(request.newPassword()));
