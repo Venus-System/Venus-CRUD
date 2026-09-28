@@ -15,4 +15,6 @@ public interface ScanSessionRepository extends MongoRepository<ScanSession, Stri
     Slice<ScanSession> findAllBy(Pageable pageable);
     Slice<ScanSession> findByStatus(ScanStatus status, Pageable pageable);
     Slice<ScanSession> findByDevice_DeviceId(String deviceId, Pageable pageable);
+    Slice<ScanSession> findBySourceUserId(Long userId, Pageable pageable);
+    Slice<ScanSession> findBySourceUserIdAndStatus(Long userId, ScanStatus status, Pageable pageable);
 }

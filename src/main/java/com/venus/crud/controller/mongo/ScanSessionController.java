@@ -17,6 +17,7 @@ import java.net.URI;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
@@ -77,6 +78,21 @@ public class ScanSessionController {
             @Parameter(description = "Identificador do aparelho que originou o scan.")
             @PathVariable String deviceId, @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(scanSessionService.findByDeviceId(deviceId, pageable));
+    }
+
+    @Operation(
+            operationId = "scanSessionFindByUserId",
+            summary = "Lista os scans enviados por um usuário",
+            description = "Do mais recente para o mais antigo, a não ser que venha outro sort. O usuário do app só lista "
+                    + "os próprios scans; um administrador lista os de qualquer usuário.")
+    @PreAuthorize("hasRole('ANALYST') or @ownership.canAccessUser(#userId)")
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Slice<ScanSessionResponse>> findByUserId(
+            @PathVariable Long userId,
+            @Parameter(description = "Traz só os scans com este status.")
+            @RequestParam(required = false) ScanStatus status,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(scanSessionService.findByUserId(userId, status, pageable));
     }
 
     @Operation(

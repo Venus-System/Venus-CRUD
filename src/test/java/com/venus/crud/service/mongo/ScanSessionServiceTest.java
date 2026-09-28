@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.venus.crud.document.ScanSession;
 import com.venus.crud.document.ScanSource;
 import com.venus.crud.dto.mongo.response.ScanSessionResponse;
+import com.venus.crud.entity.enums.ScanStatus;
 import com.venus.crud.entity.user.User;
 import com.venus.crud.mapper.mongo.ScanSessionMapperImpl;
 import com.venus.crud.repository.jpa.user.UserRepository;
@@ -92,6 +93,30 @@ class ScanSessionServiceTest {
         service.findAll(pageable);
 
         verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void listingByUserBringsTheScansOfThatUser() {
+        when(scanSessionRepository.findBySourceUserId(10L, pageable))
+                .thenReturn(new SliceImpl<>(List.of(scanFrom(10L), scanFrom(10L)), pageable, false));
+        when(userRepository.findAllById(any())).thenReturn(List.of(user(10L, "Ana Souza")));
+
+        Slice<ScanSessionResponse> page = service.findByUserId(10L, null, pageable);
+
+        assertThat(page.getContent()).extracting(response -> response.source().userName())
+                .containsExactly("Ana Souza", "Ana Souza");
+    }
+
+    @Test
+    void listingByUserWithStatusUsesTheQueryByUserAndStatus() {
+        ScanSession pending = scanFrom(10L);
+        pending.setStatus(ScanStatus.PENDING_REVIEW);
+        when(scanSessionRepository.findBySourceUserIdAndStatus(10L, ScanStatus.PENDING_REVIEW, pageable))
+                .thenReturn(new SliceImpl<>(List.of(pending), pageable, false));
+
+        Slice<ScanSessionResponse> page = service.findByUserId(10L, ScanStatus.PENDING_REVIEW, pageable);
+
+        assertThat(page.getContent()).extracting(ScanSessionResponse::status).containsExactly(ScanStatus.PENDING_REVIEW);
     }
 
     private ScanSession scanFrom(Long userId) {
