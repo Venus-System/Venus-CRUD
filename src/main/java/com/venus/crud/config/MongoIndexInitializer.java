@@ -18,6 +18,7 @@ public class MongoIndexInitializer {
 
     private static final String SCAN_ID_INDEX = "ux_scan_sessions_scan_id";
     private static final String ADMIN_QUEUE_INDEX = "idx_scan_sessions_status_created_at";
+    private static final String USER_HISTORY_INDEX = "idx_scan_sessions_user_created_at";
 
     private final MongoTemplate mongoTemplate;
 
@@ -36,6 +37,10 @@ public class MongoIndexInitializer {
                 .on("status", Sort.Direction.ASC)
                 .on("created_at", Sort.Direction.DESC)
                 .named(ADMIN_QUEUE_INDEX));
+        ensure(scanSessionIndexes, USER_HISTORY_INDEX, new Index()
+                .on("source.user_id", Sort.Direction.ASC)
+                .on("created_at", Sort.Direction.DESC)
+                .named(USER_HISTORY_INDEX));
     }
 
     private void ensure(IndexOperations indexOperations, String name, Index index) {

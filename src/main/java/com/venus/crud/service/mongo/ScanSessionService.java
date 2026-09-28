@@ -75,6 +75,15 @@ public class ScanSessionService {
                 "Falha ao consultar sessoes de scan por dispositivo"));
     }
 
+    public Slice<ScanSessionResponse> findByUserId(Long userId, ScanStatus status, Pageable pageable) {
+        Slice<ScanSession> result = status != null
+                ? executeOrFail(() -> scanSessionRepository.findBySourceUserIdAndStatus(userId, status, pageable),
+                        "Falha ao consultar sessoes de scan do usuario por status")
+                : executeOrFail(() -> scanSessionRepository.findBySourceUserId(userId, pageable),
+                        "Falha ao consultar sessoes de scan do usuario");
+        return toResponses(result);
+    }
+
     public ScanSessionResponse create(ScanSessionRequest request) {
         scanSessionRequestValidator.validate(request);
 
