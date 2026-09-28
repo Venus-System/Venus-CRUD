@@ -1,6 +1,7 @@
 package com.venus.crud.entity.enums;
 
 public enum AgeRange {
+    AGE_13_17,
     AGE_18_24,
     AGE_25_34,
     AGE_35_44,
