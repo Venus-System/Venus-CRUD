@@ -11,6 +11,7 @@ import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.mapper.jpa.user.UserMapper;
 import com.venus.crud.repository.jpa.user.UserRepository;
+import com.venus.crud.security.CurrentUserProvider;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -34,11 +35,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final CurrentUserProvider currentUserProvider;
 
-    public UserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder,
+            CurrentUserProvider currentUserProvider) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Transactional(readOnly = true)
@@ -131,6 +135,15 @@ public class UserService {
             userRepository.delete(user);
             return null;
         }, "Falha ao remover usuario no banco de dados");
+    }
+
+    @Transactional
+    public void registerAccess() {
+        Long userId = currentUserProvider.activeUser()
+                .map(User::getId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario logado nao encontrado"));
+        executeOrFail(() -> userRepository.registerAccess(userId, "APP_OPEN", "{}"),
+                "Falha ao registrar acesso do usuario");
     }
 
     private String hashPasswordIfPresent(String rawPassword) {

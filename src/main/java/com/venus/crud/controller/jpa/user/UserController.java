@@ -102,4 +102,13 @@ public class UserController {
         userService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(operationId = "userRegisterAccess", summary = "Registra o acesso do usuário logado",
+            description = "Chamado quando o app abre. Aciona a function venus.fn_register_user_access no banco.")
+    @PreAuthorize("@ownership.hasActiveAccount()")
+    @PostMapping("/me/access")
+    public ResponseEntity<Void> registerAccess() {
+        userService.registerAccess();
+        return ResponseEntity.noContent().build();
+    }
 }
