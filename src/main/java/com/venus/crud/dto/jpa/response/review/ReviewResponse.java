@@ -10,7 +10,7 @@ public record ReviewResponse(
         @Schema(description = "Identificador do usuário.", example = "42")
         Long userId,
         @Schema(description = "Primeiro nome e inicial do último sobrenome de quem escreveu a avaliação.",
-                example = "Akira K.")
+                example = "Felipe A.")
         String authorName,
         @Schema(description = "Identificador da versão do produto.", example = "31")
         Long productVersionId,

@@ -12,16 +12,16 @@ class ReviewMapperTest {
 
     @Test
     void authorNameIsTheFirstNameAndTheInitialOfTheLastWord() {
-        assertThat(authorNameFor("Akira Kenji Tanaka")).isEqualTo("Akira T.");
-        assertThat(authorNameFor("Maria da Silva")).isEqualTo("Maria S.");
-        assertThat(authorNameFor("akira kenji")).isEqualTo("akira K.");
-        assertThat(authorNameFor("Bia álvares")).isEqualTo("Bia Á.");
+        assertThat(authorNameFor("Henrique Akira")).isEqualTo("Henrique A.");
+        assertThat(authorNameFor("Sophia de Castro")).isEqualTo("Sophia C.");
+        assertThat(authorNameFor("Rafael Lopes")).isEqualTo("Rafael L.");
+        assertThat(authorNameFor("Laura Gomes")).isEqualTo("Laura G.");
     }
 
     @Test
     void singleWordNameAndExtraSpacesKeepOnlyWhatExists() {
-        assertThat(authorNameFor("Akira")).isEqualTo("Akira");
-        assertThat(authorNameFor("  Ana   Souza  ")).isEqualTo("Ana S.");
+        assertThat(authorNameFor("Matheus Oresteszinho")).isEqualTo("Matheus O.");
+        assertThat(authorNameFor("  Felipe   Augusto  ")).isEqualTo("Felipe A.");
     }
 
     @Test

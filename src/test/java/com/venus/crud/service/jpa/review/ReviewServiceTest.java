@@ -39,12 +39,12 @@ class ReviewServiceTest {
     void createdReviewAlreadyComesWithTheAuthorName() {
         ReviewRequest request = new ReviewRequest(10L, 31L, new BigDecimal("4.5"), "Ótimo", "Gostei muito.", true);
         when(reviewRepository.findByUserIdAndProductVersionId(10L, 31L)).thenReturn(Optional.empty());
-        when(userRepository.getReferenceById(10L)).thenReturn(user(10L, "Akira Kenji Tanaka"));
+        when(userRepository.getReferenceById(10L)).thenReturn(user(10L, "Felipe Augusto"));
         when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ReviewResponse created = service.create(request);
 
-        assertThat(created.authorName()).isEqualTo("Akira T.");
+        assertThat(created.authorName()).isEqualTo("Felipe A.");
         assertThat(created.usefulVotes()).isZero();
     }
 
