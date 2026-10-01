@@ -11,10 +11,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Formula;
 
 @Getter
 @Setter
@@ -44,4 +46,8 @@ public class Review extends AuditableEntity {
 
     @Column(name = "verified_use", nullable = false)
     private Boolean verifiedUse;
+
+    @Setter(AccessLevel.NONE)
+    @Formula("(SELECT COUNT(*) FROM venus.review_votes v WHERE v.fk_review_id = review_id AND v.vote_type = 'useful')")
+    private long usefulVotes;
 }
