@@ -10,6 +10,7 @@ import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.mapper.jpa.review.ReviewMapper;
 import com.venus.crud.repository.jpa.review.ReviewRepository;
+import com.venus.crud.repository.jpa.user.UserRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -29,10 +30,12 @@ public class ReviewService {
     private static final Logger log = LoggerFactory.getLogger(ReviewService.class);
 
     private final ReviewRepository reviewRepository;
+    private final UserRepository userRepository;
     private final ReviewMapper reviewMapper;
 
-    public ReviewService(ReviewRepository reviewRepository, ReviewMapper reviewMapper) {
+    public ReviewService(ReviewRepository reviewRepository, UserRepository userRepository, ReviewMapper reviewMapper) {
         this.reviewRepository = reviewRepository;
+        this.userRepository = userRepository;
         this.reviewMapper = reviewMapper;
     }
 
@@ -82,6 +85,7 @@ public class ReviewService {
         ensureUserHasNotReviewed(request.userId(), request.productVersionId(), null);
 
         Review review = reviewMapper.toEntity(request);
+        attachAuthor(review);
         Review saved = executeOrFail(() -> reviewRepository.save(review), "Falha ao criar avaliacao no banco de dados");
         return reviewMapper.toResponse(saved);
     }
@@ -92,6 +96,7 @@ public class ReviewService {
         ensureUserHasNotReviewed(request.userId(), request.productVersionId(), id);
 
         reviewMapper.updateEntity(request, review);
+        attachAuthor(review);
         Review saved = executeOrFail(() -> reviewRepository.save(review), "Falha ao atualizar avaliacao no banco de dados");
         return reviewMapper.toResponse(saved);
     }
@@ -100,6 +105,7 @@ public class ReviewService {
     public ReviewResponse patch(Long id, ReviewPatchRequest request) {
         Review review = getOrThrow(id);
         reviewMapper.patchEntity(request, review);
+        attachAuthor(review);
 
         Review saved = executeOrFail(() -> reviewRepository.save(review), "Falha ao atualizar avaliacao no banco de dados");
         return reviewMapper.toResponse(saved);
@@ -127,6 +133,10 @@ public class ReviewService {
         if (alreadyReviewed) {
             throw new DuplicateResourceException("O usuario " + userId + " ja avaliou a versao de produto " + productVersionId);
         }
+    }
+
+    private void attachAuthor(Review review) {
+        review.setUser(userRepository.getReferenceById(review.getUser().getId()));
     }
 
     private <T> T executeOrFail(Supplier<T> action, String errorMessage) {

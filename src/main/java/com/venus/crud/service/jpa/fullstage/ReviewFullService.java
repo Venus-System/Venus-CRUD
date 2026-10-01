@@ -37,12 +37,10 @@ public class ReviewFullService {
         Review review = executeOrFail(() -> reviewRepository.findById(id), "Falha ao consultar avaliacao no banco de dados")
                 .orElseThrow(() -> new ResourceNotFoundException("Avaliacao nao encontrada com id " + id));
 
-        long usefulVotes = executeOrFail(() -> reviewVoteRepository.countByReviewIdAndVoteType(id, VoteType.USEFUL),
-                "Falha ao contar votos uteis da avaliacao");
         long notUsefulVotes = executeOrFail(() -> reviewVoteRepository.countByReviewIdAndVoteType(id, VoteType.NOT_USEFUL),
                 "Falha ao contar votos nao uteis da avaliacao");
 
-        return new ReviewFullResponse(reviewMapper.toResponse(review), usefulVotes, notUsefulVotes);
+        return new ReviewFullResponse(reviewMapper.toResponse(review), review.getUsefulVotes(), notUsefulVotes);
     }
 
     private <T> T executeOrFail(Supplier<T> action, String errorMessage) {
