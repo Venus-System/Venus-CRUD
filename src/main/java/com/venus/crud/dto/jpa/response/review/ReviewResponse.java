@@ -9,6 +9,9 @@ public record ReviewResponse(
         Long id,
         @Schema(description = "Identificador do usuário.", example = "42")
         Long userId,
+        @Schema(description = "Primeiro nome e inicial do último sobrenome de quem escreveu a avaliação.",
+                example = "Felipe A.")
+        String authorName,
         @Schema(description = "Identificador da versão do produto.", example = "31")
         Long productVersionId,
         @Schema(description = "Nota dada pelo usuário.", example = "4.5")
@@ -20,6 +23,8 @@ public record ReviewResponse(
         String comment,
         @Schema(description = "Indica se o uso do ingrediente foi verificado.", example = "true")
         Boolean verifiedUse,
+        @Schema(description = "Quantidade de votos de útil.", example = "12")
+        long usefulVotes,
         @Schema(description = "Data e hora de criação do registro. Gerado pelo banco.",
                 example = "2026-09-22T14:30:00-03:00")
         OffsetDateTime createdAt,
