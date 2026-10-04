@@ -22,6 +22,7 @@ public interface MediaAssetMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "productVersion", ignore = true)
+    @Mapping(target = "userList", ignore = true)
     @Mapping(target = "purpose", ignore = true)
     @Mapping(target = "provider", ignore = true)
     @Mapping(target = "resourceType", ignore = true)

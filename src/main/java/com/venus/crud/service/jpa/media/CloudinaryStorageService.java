@@ -64,7 +64,7 @@ public class CloudinaryStorageService {
     }
 
     private Cloudinary clientFor(MediaPurpose purpose) {
-        return purpose == MediaPurpose.AVATAR ? usersCloudinary : productsCloudinary;
+        return purpose.isImageOfUser() ? usersCloudinary : productsCloudinary;
     }
 
     private String deliveryType() {

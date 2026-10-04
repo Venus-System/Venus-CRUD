@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 class PreAuthorizeCoverageTest {
 
     private static final String CONTROLLER_PACKAGE = "com.venus.crud.controller";
-    private static final int USER_DATA_CONTROLLERS = 22;
+    private static final int USER_DATA_CONTROLLERS = 23;
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
     @Test

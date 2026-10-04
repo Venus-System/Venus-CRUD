@@ -1,5 +1,6 @@
 package com.venus.crud.entity.user;
 
+import com.venus.crud.entity.enums.ListCoverKey;
 import com.venus.crud.entity.enums.ListType;
 import com.venus.crud.entity.shared.AuditableEntity;
 import jakarta.persistence.AttributeOverride;
@@ -9,10 +10,12 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Formula;
 
 @Getter
 @Setter
@@ -30,6 +33,17 @@ public class UserList extends AuditableEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "cover_key")
+    private ListCoverKey coverKey;
+
     @Column(name = "list_type", nullable = false)
     private ListType listType;
+
+    @Setter(AccessLevel.NONE)
+    @Formula("(SELECT m.secure_url FROM venus.media_assets m WHERE m.fk_user_list_id = user_list_id "
+            + "AND m.purpose = 'list_cover' AND m.status IN ('pending', 'active'))")
+    private String coverUrl;
 }

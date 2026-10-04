@@ -18,6 +18,6 @@ public record MediaProperties(
     }
 
     public Limits limitsFor(MediaPurpose purpose) {
-        return purpose == MediaPurpose.AVATAR ? avatar : product;
+        return purpose.isImageOfUser() ? avatar : product;
     }
 }

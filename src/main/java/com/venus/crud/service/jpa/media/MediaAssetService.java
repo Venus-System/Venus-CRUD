@@ -11,6 +11,7 @@ import com.venus.crud.mapper.jpa.media.MediaAssetMapper;
 import com.venus.crud.repository.jpa.media.MediaAssetRepository;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,15 @@ public class MediaAssetService {
     }
 
     @Transactional(readOnly = true)
+    public MediaAssetResponse findListCover(Long userListId) {
+        return executeOrFail(() -> mediaAssetRepository.findByUserListIdAndPurposeAndStatusIn(
+                        userListId, MediaPurpose.LIST_COVER, MediaAssetRepository.LIVE_STATUSES),
+                "Falha ao consultar a capa da lista")
+                .map(mediaAssetMapper::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Capa nao encontrada para a lista com id " + userListId));
+    }
+
+    @Transactional(readOnly = true)
     public List<MediaAssetResponse> findProductPhotos(Long productVersionId) {
         return executeOrFail(() -> mediaAssetRepository.findByProductVersionIdAndPurposeAndStatusInOrderBySortOrderAscIdAsc(
                         productVersionId, MediaPurpose.PRODUCT_PHOTO, MediaAssetRepository.LIVE_STATUSES),
@@ -61,26 +71,30 @@ public class MediaAssetService {
 
     public MediaAssetResponse uploadAvatar(Long userId, MultipartFile file) {
         mediaFileValidator.validateFile(file, MediaPurpose.AVATAR);
-        mediaAssetWriter.ensureUserExists(userId);
+        mediaAssetWriter.validateUserExists(userId);
 
         String publicId = "users/" + userId + "/avatar/" + UUID.randomUUID();
-        CloudinaryUpload upload = cloudinaryStorageService.upload(file, MediaPurpose.AVATAR, publicId);
+        return uploadImageAndRegisterInDatabase(file, MediaPurpose.AVATAR, publicId,
+                uploadedImage -> mediaAssetWriter.registerAvatar(userId, uploadedImage, file.getOriginalFilename()));
+    }
 
-        MediaAsset saved = registerOrCompensate(upload, MediaPurpose.AVATAR,
-                () -> mediaAssetWriter.registerAvatar(userId, upload, file.getOriginalFilename()));
-        return mediaAssetMapper.toResponse(saved);
+    public MediaAssetResponse uploadListCover(Long userListId, MultipartFile file) {
+        mediaFileValidator.validateFile(file, MediaPurpose.LIST_COVER);
+        mediaAssetWriter.validateUserListExists(userListId);
+
+        String publicId = "user-lists/" + userListId + "/cover/" + UUID.randomUUID();
+        return uploadImageAndRegisterInDatabase(file, MediaPurpose.LIST_COVER, publicId,
+                uploadedImage -> mediaAssetWriter.registerListCover(userListId, uploadedImage, file.getOriginalFilename()));
     }
 
     public MediaAssetResponse uploadProductPhoto(Long productVersionId, MultipartFile file, String altText, Integer sortOrder) {
         mediaFileValidator.validateFile(file, MediaPurpose.PRODUCT_PHOTO);
-        mediaAssetWriter.ensureProductVersionExists(productVersionId);
+        mediaAssetWriter.validateProductVersionExists(productVersionId);
 
         String publicId = "product-versions/" + productVersionId + "/photos/" + UUID.randomUUID();
-        CloudinaryUpload upload = cloudinaryStorageService.upload(file, MediaPurpose.PRODUCT_PHOTO, publicId);
-
-        MediaAsset saved = registerOrCompensate(upload, MediaPurpose.PRODUCT_PHOTO,
-                () -> mediaAssetWriter.registerProductPhoto(productVersionId, upload, altText, sortOrder, file.getOriginalFilename()));
-        return mediaAssetMapper.toResponse(saved);
+        return uploadImageAndRegisterInDatabase(file, MediaPurpose.PRODUCT_PHOTO, publicId,
+                uploadedImage -> mediaAssetWriter.registerProductPhoto(productVersionId, uploadedImage, altText, sortOrder,
+                        file.getOriginalFilename()));
     }
 
     public MediaAssetResponse patch(Long mediaAssetId, MediaAssetPatchRequest request) {
@@ -88,28 +102,45 @@ public class MediaAssetService {
     }
 
     public void delete(Long mediaAssetId) {
-        removeFromStorage(mediaAssetWriter.markDeleted(mediaAssetId));
+        removeImageFromCloudinary(mediaAssetWriter.markMediaAsDeleted(mediaAssetId));
     }
 
     public void deleteAvatar(Long userId) {
-        removeFromStorage(mediaAssetWriter.markAvatarDeleted(userId));
+        removeImageFromCloudinary(mediaAssetWriter.markAvatarAsDeleted(userId));
     }
 
-    private void removeFromStorage(MediaAsset deleted) {
-        destroyQuietly(deleted.getPublicId(), deleted.getPurpose());
+    public void deleteListCover(Long userListId) {
+        removeImageFromCloudinary(mediaAssetWriter.markListCoverAsDeleted(userListId));
     }
 
-    private MediaAsset registerOrCompensate(CloudinaryUpload upload, MediaPurpose purpose, Supplier<MediaAsset> registration) {
+    public void deleteListCoverIfExists(Long userListId) {
+        mediaAssetWriter.markListCoverAsDeletedIfExists(userListId).ifPresent(this::removeImageFromCloudinary);
+    }
+
+    private MediaAssetResponse uploadImageAndRegisterInDatabase(MultipartFile file, MediaPurpose purpose, String publicId,
+            Function<CloudinaryUpload, MediaAsset> registerInDatabase) {
+        CloudinaryUpload uploadedImage = cloudinaryStorageService.upload(file, purpose, publicId);
+
+        MediaAsset registeredMedia = registerInDatabaseOrRemoveImage(uploadedImage, purpose, registerInDatabase);
+        return mediaAssetMapper.toResponse(registeredMedia);
+    }
+
+    private MediaAsset registerInDatabaseOrRemoveImage(CloudinaryUpload uploadedImage, MediaPurpose purpose,
+            Function<CloudinaryUpload, MediaAsset> registerInDatabase) {
         try {
-            mediaFileValidator.validateDimensions(upload, purpose);
-            return registration.get();
+            mediaFileValidator.validateDimensions(uploadedImage, purpose);
+            return registerInDatabase.apply(uploadedImage);
         } catch (RuntimeException ex) {
-            destroyQuietly(upload.publicId(), purpose);
+            tryRemoveFromCloudinary(uploadedImage.publicId(), purpose);
             throw ex;
         }
     }
 
-    private void destroyQuietly(String publicId, MediaPurpose purpose) {
+    private void removeImageFromCloudinary(MediaAsset deletedImage) {
+        tryRemoveFromCloudinary(deletedImage.getPublicId(), deletedImage.getPurpose());
+    }
+
+    private void tryRemoveFromCloudinary(String publicId, MediaPurpose purpose) {
         try {
             cloudinaryStorageService.destroy(publicId, purpose);
         } catch (RuntimeException ex) {
