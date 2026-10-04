@@ -51,7 +51,7 @@ public class UserController {
             summary = "Busca os usuários com filtros e paginação",
             description = "`firebaseUid` tem precedência sobre os demais filtros e devolve no máximo um registro. `status` "
                     + "e `name` combinam entre si; `name` casa por trecho, sem diferenciar maiúsculas.")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @ownership.isCurrentFirebaseUid(#firebaseUid)")
     @GetMapping("/search")
     public ResponseEntity<Slice<UserResponse>> search(
             @RequestParam(required = false) UserStatus status,
@@ -89,7 +89,7 @@ public class UserController {
     }
 
     @Operation(operationId = "userPatch", summary = "Atualiza parcialmente o usuário")
-    @PreAuthorize("@ownership.canAccessUser(#id)")
+    @PreAuthorize("@ownership.canAccessUser(#id) and (hasRole('ADMIN') or #request.status() == null)")
     @PatchMapping("/{id}")
     public ResponseEntity<UserResponse> patch(@PathVariable Long id, @Valid @RequestBody UserPatchRequest request) {
         return ResponseEntity.ok(userService.patch(id, request));
