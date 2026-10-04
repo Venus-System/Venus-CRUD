@@ -11,6 +11,7 @@ import com.venus.crud.exception.DuplicateResourceException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.mapper.jpa.user.UserListMapper;
 import com.venus.crud.repository.jpa.user.UserListRepository;
+import com.venus.crud.service.jpa.media.MediaAssetService;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -30,10 +31,13 @@ public class UserListService {
 
     private final UserListRepository userListRepository;
     private final UserListMapper userListMapper;
+    private final MediaAssetService mediaAssetService;
 
-    public UserListService(UserListRepository userListRepository, UserListMapper userListMapper) {
+    public UserListService(UserListRepository userListRepository, UserListMapper userListMapper,
+            MediaAssetService mediaAssetService) {
         this.userListRepository = userListRepository;
         this.userListMapper = userListMapper;
+        this.mediaAssetService = mediaAssetService;
     }
 
     @Transactional(readOnly = true)
@@ -89,11 +93,12 @@ public class UserListService {
         return userListMapper.toResponse(saved);
     }
 
-    @Transactional
     public void delete(Long id) {
-        UserList userList = getOrThrow(id);
+        getOrThrow(id);
+        mediaAssetService.deleteListCoverIfExists(id);
+
         executeOrFail(() -> {
-            userListRepository.delete(userList);
+            userListRepository.deleteById(id);
             return null;
         }, "Falha ao remover lista de usuario no banco de dados");
     }
