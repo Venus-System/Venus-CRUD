@@ -67,7 +67,8 @@ public class ReportController {
     }
 
     @Operation(operationId = "reportCreate", summary = "Cadastra uma denúncia")
-    @PreAuthorize("hasRole('MODERATOR') or (@ownership.canAccessUser(#request.userId()) and #request.adminUserId() == null)")
+    @PreAuthorize("hasRole('MODERATOR') or (@ownership.canAccessUser(#request.userId()) and #request.adminUserId() == null"
+            + " and #request.status() == T(com.venus.crud.entity.enums.ReportStatus).OPEN)")
     @PostMapping
     public ResponseEntity<ReportResponse> create(@Valid @RequestBody ReportRequest request) {
         ReportResponse created = reportService.create(request);
