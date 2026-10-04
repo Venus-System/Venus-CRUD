@@ -2,6 +2,8 @@ package com.venus.crud.config;
 
 import com.venus.crud.document.converter.AnalysisStatusReadConverter;
 import com.venus.crud.document.converter.AnalysisStatusWriteConverter;
+import com.venus.crud.document.converter.OffsetDateTimeReadConverter;
+import com.venus.crud.document.converter.OffsetDateTimeWriteConverter;
 import com.venus.crud.document.converter.IngredientDecisionActionReadConverter;
 import com.venus.crud.document.converter.IngredientDecisionActionWriteConverter;
 import com.venus.crud.document.converter.IngredientMatchStatusReadConverter;
@@ -26,6 +28,8 @@ public class MongoConfig {
     @Bean
     public MongoCustomConversions mongoCustomConversions() {
         return new MongoCustomConversions(List.of(
+                new OffsetDateTimeReadConverter(),
+                new OffsetDateTimeWriteConverter(),
                 new AnalysisStatusReadConverter(),
                 new AnalysisStatusWriteConverter(),
                 new ScanStatusReadConverter(),
