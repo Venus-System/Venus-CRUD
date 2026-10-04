@@ -6,6 +6,7 @@ import com.venus.crud.entity.enums.MediaStatus;
 import com.venus.crud.entity.product.ProductVersion;
 import com.venus.crud.entity.shared.AuditableEntity;
 import com.venus.crud.entity.user.User;
+import com.venus.crud.entity.user.UserList;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,6 +35,10 @@ public class MediaAsset extends AuditableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_product_version_id")
     private ProductVersion productVersion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fk_user_list_id")
+    private UserList userList;
 
     @Column(name = "purpose", nullable = false)
     private MediaPurpose purpose;

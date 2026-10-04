@@ -20,6 +20,9 @@ public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
     @EntityGraph(attributePaths = "user")
     Optional<MediaAsset> findByUserIdAndPurposeAndStatusIn(Long userId, MediaPurpose purpose, Collection<MediaStatus> statuses);
 
+    Optional<MediaAsset> findByUserListIdAndPurposeAndStatusIn(Long userListId, MediaPurpose purpose,
+            Collection<MediaStatus> statuses);
+
     @EntityGraph(attributePaths = "productVersion")
     List<MediaAsset> findByProductVersionIdAndPurposeAndStatusInOrderBySortOrderAscIdAsc(
             Long productVersionId, MediaPurpose purpose, Collection<MediaStatus> statuses);
