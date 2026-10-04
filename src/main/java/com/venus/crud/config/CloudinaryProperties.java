@@ -14,6 +14,6 @@ public record CloudinaryProperties(
     }
 
     public Account accountFor(MediaPurpose purpose) {
-        return purpose == MediaPurpose.AVATAR ? users : products;
+        return purpose.isImageOfUser() ? users : products;
     }
 }
