@@ -6,6 +6,7 @@ import com.venus.crud.dto.jpa.request.user.UserListRequest;
 import com.venus.crud.dto.jpa.response.user.UserListResponse;
 import com.venus.crud.entity.user.User;
 import com.venus.crud.entity.user.UserList;
+import org.mapstruct.AfterMapping;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
@@ -32,8 +33,16 @@ public interface UserListMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "user", source = "userId")
+    @Mapping(target = "description", ignore = true)
+    @Mapping(target = "coverKey", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void patchEntity(UserListPatchRequest request, @MappingTarget UserList entity);
+
+    @AfterMapping
+    default void patchDescriptionAndCoverKey(UserListPatchRequest request, @MappingTarget UserList entity) {
+        request.description().ifPresent(entity::setDescription);
+        request.coverKey().ifPresent(entity::setCoverKey);
+    }
 
     default User mapUser(Long userId) {
         if (userId == null) {
