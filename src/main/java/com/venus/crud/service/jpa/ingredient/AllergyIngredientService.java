@@ -51,16 +51,11 @@ public class AllergyIngredientService {
 
     @Transactional(readOnly = true)
     public Slice<AllergyIngredientResponse> search(Long ingredientId, SourceType sourceType, Pageable pageable) {
-        Slice<AllergyIngredient> result;
-        if (ingredientId != null) {
-            result = executeOrFail(() -> allergyIngredientRepository.findByIngredientId(ingredientId, pageable), "Falha ao consultar alergias por ingrediente");
-        } else if (sourceType != null) {
-            result = executeOrFail(() -> allergyIngredientRepository.findBySourceType(sourceType, pageable), "Falha ao consultar ingredientes de alergia por origem");
-        } else {
-            result = executeOrFail(() -> allergyIngredientRepository.findAllBy(pageable), "Falha ao consultar ingredientes de alergia");
-        }
+        Slice<AllergyIngredient> allergyIngredients = executeOrFail(
+                () -> allergyIngredientRepository.search(ingredientId, sourceType, pageable),
+                "Falha ao consultar ingredientes de alergia");
 
-        return result.map(allergyIngredientMapper::toResponse);
+        return allergyIngredients.map(allergyIngredientMapper::toResponse);
     }
 
     @Transactional

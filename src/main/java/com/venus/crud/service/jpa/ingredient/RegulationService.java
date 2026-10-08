@@ -51,21 +51,15 @@ public class RegulationService {
 
     @Transactional(readOnly = true)
     public Slice<RegulationResponse> search(String title, String country, String agency, RegulationStatus status, Pageable pageable) {
-        Slice<Regulation> result;
-        if (StringUtils.hasText(title)) {
-            result = executeOrFail(() -> regulationRepository.findByTitleContainingIgnoreCase(title, pageable),
-                    "Falha ao consultar regulamentacoes por titulo");
-        } else if (StringUtils.hasText(country)) {
-            result = executeOrFail(() -> regulationRepository.findByCountry(country, pageable), "Falha ao consultar regulamentacoes por pais");
-        } else if (StringUtils.hasText(agency)) {
-            result = executeOrFail(() -> regulationRepository.findByAgency(agency, pageable), "Falha ao consultar regulamentacoes por agencia");
-        } else if (status != null) {
-            result = executeOrFail(() -> regulationRepository.findByStatus(status, pageable), "Falha ao consultar regulamentacoes por status");
-        } else {
-            result = executeOrFail(() -> regulationRepository.findAllBy(pageable), "Falha ao consultar regulamentacoes");
-        }
+        String titleOrNull = StringUtils.hasText(title) ? title : null;
+        String countryOrNull = StringUtils.hasText(country) ? country : null;
+        String agencyOrNull = StringUtils.hasText(agency) ? agency : null;
 
-        return result.map(regulationMapper::toResponse);
+        Slice<Regulation> regulations = executeOrFail(
+                () -> regulationRepository.search(titleOrNull, countryOrNull, agencyOrNull, status, pageable),
+                "Falha ao consultar regulamentacoes");
+
+        return regulations.map(regulationMapper::toResponse);
     }
 
     @Transactional

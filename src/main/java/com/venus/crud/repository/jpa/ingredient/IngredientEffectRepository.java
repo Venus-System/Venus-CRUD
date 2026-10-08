@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,9 +19,14 @@ public interface IngredientEffectRepository extends JpaRepository<IngredientEffe
     @EntityGraph(attributePaths = "profileTag")
     List<IngredientEffect> findByIngredientId(Long ingredientId);
     List<IngredientEffect> findByIngredientIdAndProfileTagId(Long ingredientId, Long profileTagId);
-    Slice<IngredientEffect> findByProfileTagId(Long profileTagId, Pageable pageable);
-    Slice<IngredientEffect> findByEffectCategory(EffectCategory effectCategory, Pageable pageable);
-    Slice<IngredientEffect> findByReviewStatus(ReviewStatus reviewStatus, Pageable pageable);
-    Slice<IngredientEffect> findBySourceType(SourceType sourceType, Pageable pageable);
-    Slice<IngredientEffect> findAllBy(Pageable pageable);
+
+    @Query("""
+            select ingredientEffect from IngredientEffect ingredientEffect
+            where (:profileTagId is null or ingredientEffect.profileTag.id = :profileTagId)
+              and (cast(:effectCategory as String) is null or ingredientEffect.effectCategory = :effectCategory)
+              and (cast(:reviewStatus as String) is null or ingredientEffect.reviewStatus = :reviewStatus)
+              and (cast(:sourceType as String) is null or ingredientEffect.sourceType = :sourceType)
+            """)
+    Slice<IngredientEffect> search(Long profileTagId, EffectCategory effectCategory, ReviewStatus reviewStatus,
+            SourceType sourceType, Pageable pageable);
 }

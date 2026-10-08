@@ -19,9 +19,13 @@ public interface IngredientAliasRepository extends JpaRepository<IngredientAlias
     Optional<IngredientAlias> findByAliasNameIgnoreCase(String aliasName);
     List<IngredientAlias> findByIngredientId(Long ingredientId);
     Slice<IngredientAlias> findByIngredientId(Long ingredientId, Pageable pageable);
-    Slice<IngredientAlias> findByAliasLanguage(String aliasLanguage, Pageable pageable);
-    Slice<IngredientAlias> findBySourceType(SourceType sourceType, Pageable pageable);
-    Slice<IngredientAlias> findAllBy(Pageable pageable);
+
+    @Query("""
+            select ingredientAlias from IngredientAlias ingredientAlias
+            where (cast(:aliasLanguage as String) is null or ingredientAlias.aliasLanguage = :aliasLanguage)
+              and (cast(:sourceType as String) is null or ingredientAlias.sourceType = :sourceType)
+            """)
+    Slice<IngredientAlias> search(String aliasLanguage, SourceType sourceType, Pageable pageable);
 
     @Query("select a from IngredientAlias a join fetch a.ingredient where upper(a.aliasName) in :names")
     List<IngredientAlias> findWithIngredientByUpperAliasNameIn(@Param("names") Collection<String> names);

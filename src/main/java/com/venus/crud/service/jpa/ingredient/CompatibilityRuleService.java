@@ -67,18 +67,11 @@ public class CompatibilityRuleService {
 
     @Transactional(readOnly = true)
     public Slice<CompatibilityRuleResponse> search(EffectType effectType, SourceType sourceType, Pageable pageable) {
-        Slice<CompatibilityRule> result;
-        if (effectType != null) {
-            result = executeOrFail(() -> compatibilityRuleRepository.findByEffectType(effectType, pageable),
-                    "Falha ao consultar regras de compatibilidade por tipo de efeito");
-        } else if (sourceType != null) {
-            result = executeOrFail(() -> compatibilityRuleRepository.findBySourceType(sourceType, pageable),
-                    "Falha ao consultar regras de compatibilidade por origem");
-        } else {
-            result = executeOrFail(() -> compatibilityRuleRepository.findAllBy(pageable), "Falha ao consultar regras de compatibilidade");
-        }
+        Slice<CompatibilityRule> compatibilityRules = executeOrFail(
+                () -> compatibilityRuleRepository.search(effectType, sourceType, pageable),
+                "Falha ao consultar regras de compatibilidade");
 
-        return result.map(compatibilityRuleMapper::toResponse);
+        return compatibilityRules.map(compatibilityRuleMapper::toResponse);
     }
 
     @Transactional
