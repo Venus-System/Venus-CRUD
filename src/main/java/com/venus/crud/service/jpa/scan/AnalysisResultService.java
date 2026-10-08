@@ -65,17 +65,11 @@ public class AnalysisResultService {
 
     @Transactional(readOnly = true)
     public Slice<AnalysisResultResponse> search(AnalysisStatus status, Integer minOverallScore, Pageable pageable) {
-        Slice<AnalysisResult> result;
-        if (status != null) {
-            result = executeOrFail(() -> analysisResultRepository.findByStatus(status, pageable), "Falha ao consultar analises por status");
-        } else if (minOverallScore != null) {
-            result = executeOrFail(() -> analysisResultRepository.findByOverallScoreGreaterThanEqual(minOverallScore, pageable),
-                    "Falha ao consultar analises por nota minima");
-        } else {
-            result = executeOrFail(() -> analysisResultRepository.findAllBy(pageable), "Falha ao consultar analises");
-        }
+        Slice<AnalysisResult> analysisResults = executeOrFail(
+                () -> analysisResultRepository.search(status, minOverallScore, pageable),
+                "Falha ao consultar analises");
 
-        return result.map(analysisResultMapper::toResponse);
+        return analysisResults.map(analysisResultMapper::toResponse);
     }
 
     @Transactional

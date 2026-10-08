@@ -59,18 +59,11 @@ public class RuleEvaluationService {
 
     @Transactional(readOnly = true)
     public Slice<RuleEvaluationResponse> search(Long ingredientId, Long compatibilityRuleId, Pageable pageable) {
-        Slice<RuleEvaluation> result;
-        if (ingredientId != null) {
-            result = executeOrFail(() -> ruleEvaluationRepository.findByIngredientId(ingredientId, pageable),
-                    "Falha ao consultar avaliacoes de regra por ingrediente");
-        } else if (compatibilityRuleId != null) {
-            result = executeOrFail(() -> ruleEvaluationRepository.findByCompatibilityRuleId(compatibilityRuleId, pageable),
-                    "Falha ao consultar avaliacoes por regra de compatibilidade");
-        } else {
-            result = executeOrFail(() -> ruleEvaluationRepository.findAllBy(pageable), "Falha ao consultar avaliacoes de regra");
-        }
+        Slice<RuleEvaluation> ruleEvaluations = executeOrFail(
+                () -> ruleEvaluationRepository.search(ingredientId, compatibilityRuleId, pageable),
+                "Falha ao consultar avaliacoes de regra");
 
-        return result.map(ruleEvaluationMapper::toResponse);
+        return ruleEvaluations.map(ruleEvaluationMapper::toResponse);
     }
 
     @Transactional

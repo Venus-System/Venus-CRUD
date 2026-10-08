@@ -56,22 +56,11 @@ public class ReportService {
     @Transactional(readOnly = true)
     public Slice<ReportResponse> search(Long userId, ReportStatus status, ReportTargetType targetType, Long targetId,
             Long adminUserId, Pageable pageable) {
-        Slice<Report> result;
-        if (targetType != null && targetId != null) {
-            result = executeOrFail(() -> reportRepository.findByTargetTypeAndTargetId(targetType, targetId, pageable),
-                    "Falha ao consultar denuncias do alvo");
-        } else if (userId != null) {
-            result = executeOrFail(() -> reportRepository.findByUserId(userId, pageable), "Falha ao consultar denuncias do usuario");
-        } else if (status != null) {
-            result = executeOrFail(() -> reportRepository.findByStatus(status, pageable), "Falha ao consultar denuncias por status");
-        } else if (adminUserId != null) {
-            result = executeOrFail(() -> reportRepository.findByAdminUserId(adminUserId, pageable),
-                    "Falha ao consultar denuncias do administrador");
-        } else {
-            result = executeOrFail(() -> reportRepository.findAllBy(pageable), "Falha ao consultar denuncias");
-        }
+        Slice<Report> reports = executeOrFail(
+                () -> reportRepository.search(userId, status, targetType, targetId, adminUserId, pageable),
+                "Falha ao consultar denuncias");
 
-        return result.map(reportMapper::toResponse);
+        return reports.map(reportMapper::toResponse);
     }
 
     @Transactional
