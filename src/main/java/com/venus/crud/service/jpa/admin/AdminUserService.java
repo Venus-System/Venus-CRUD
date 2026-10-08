@@ -63,19 +63,13 @@ public class AdminUserService {
 
     @Transactional(readOnly = true)
     public Slice<AdminUserResponse> search(String name, AdminRole role, Boolean isActive, Pageable pageable) {
-        Slice<AdminUser> result;
-        if (StringUtils.hasText(name)) {
-            result = executeOrFail(() -> adminUserRepository.findByNameContainingIgnoreCase(name, pageable),
-                    "Falha ao consultar administradores por nome");
-        } else if (role != null) {
-            result = executeOrFail(() -> adminUserRepository.findByRole(role, pageable), "Falha ao consultar administradores por papel");
-        } else if (Boolean.TRUE.equals(isActive)) {
-            result = executeOrFail(() -> adminUserRepository.findByIsActiveTrue(pageable), "Falha ao consultar administradores ativos");
-        } else {
-            result = executeOrFail(() -> adminUserRepository.findAllBy(pageable), "Falha ao consultar administradores");
-        }
+        String nameOrNull = StringUtils.hasText(name) ? name : null;
 
-        return result.map(adminUserMapper::toResponse);
+        Slice<AdminUser> adminUsers = executeOrFail(
+                () -> adminUserRepository.search(nameOrNull, role, isActive, pageable),
+                "Falha ao consultar administradores");
+
+        return adminUsers.map(adminUserMapper::toResponse);
     }
 
     @Transactional
