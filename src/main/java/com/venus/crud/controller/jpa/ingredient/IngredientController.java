@@ -46,10 +46,9 @@ public class IngredientController {
     @Operation(
             operationId = "ingredientSearch",
             summary = "Busca os ingredientes com filtros e paginação",
-            description = "Os filtros **não se combinam**: vale o primeiro preenchido, nesta ordem — `commonName`, "
-                    + "`ingredientCategoryId`, `categoryName`, `minIrritationRiskLevel`. Sem nenhum, lista "
-                    + "todos.\n\n`categoryName` traz também os ingredientes das **subcategorias diretas** da categoria "
-                    + "informada, e devolve 404 se não existir categoria com esse nome.")
+            description = "Os filtros se combinam: o ingrediente precisa atender a todos os informados. Sem nenhum, "
+                    + "lista todos.\n\n`categoryName` traz também os ingredientes das **subcategorias diretas** da "
+                    + "categoria informada, e devolve 404 se não existir categoria com esse nome.")
     @GetMapping("/search")
     public ResponseEntity<Slice<IngredientResponse>> search(
             @RequestParam(required = false) String commonName,

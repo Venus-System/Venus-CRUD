@@ -12,7 +12,6 @@ import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.mapper.jpa.ingredient.IngredientMapper;
 import com.venus.crud.repository.jpa.ingredient.IngredientCategoryRepository;
 import com.venus.crud.repository.jpa.ingredient.IngredientRepository;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -71,25 +70,14 @@ public class IngredientService {
     @Transactional(readOnly = true)
     public Slice<IngredientResponse> search(String commonName, Long ingredientCategoryId, String categoryName,
             Short minIrritationRiskLevel, Pageable pageable) {
-        Slice<Ingredient> result;
-        if (StringUtils.hasText(commonName)) {
-            result = executeOrFail(() -> ingredientRepository.findByCommonNameContainingIgnoreCase(commonName, pageable),
-                    "Falha ao consultar ingredientes por nome comum");
-        } else if (ingredientCategoryId != null) {
-            result = executeOrFail(() -> ingredientRepository.findByIngredientCategoryId(ingredientCategoryId, pageable),
-                    "Falha ao consultar ingredientes por categoria");
-        } else if (StringUtils.hasText(categoryName)) {
-            List<Long> categoryIds = resolveCategoryIdsByName(categoryName);
-            result = executeOrFail(() -> ingredientRepository.findByIngredientCategoryIdIn(categoryIds, pageable),
-                    "Falha ao consultar ingredientes por nome de categoria");
-        } else if (minIrritationRiskLevel != null) {
-            result = executeOrFail(() -> ingredientRepository.findByIrritationRiskLevelGreaterThanEqual(minIrritationRiskLevel, pageable),
-                    "Falha ao consultar ingredientes por nivel de irritacao");
-        } else {
-            result = executeOrFail(() -> ingredientRepository.findAllBy(pageable), "Falha ao consultar ingredientes");
-        }
+        String commonNameOrNull = StringUtils.hasText(commonName) ? commonName : null;
+        Long categoryTreeId = StringUtils.hasText(categoryName) ? findCategoryIdByName(categoryName) : null;
 
-        return result.map(ingredientMapper::toResponse);
+        Slice<Ingredient> ingredients = executeOrFail(
+                () -> ingredientRepository.search(commonNameOrNull, ingredientCategoryId, categoryTreeId, minIrritationRiskLevel, pageable),
+                "Falha ao consultar ingredientes");
+
+        return ingredients.map(ingredientMapper::toResponse);
     }
 
     @Transactional
@@ -132,19 +120,14 @@ public class IngredientService {
         }, "Falha ao remover ingrediente no banco de dados");
     }
 
-    private List<Long> resolveCategoryIdsByName(String categoryName) {
+    private Long findCategoryIdByName(String categoryName) {
         IngredientCategory category = executeOrFail(
                 () -> ingredientCategoryRepository.findByNameIgnoreCase(categoryName),
                 "Falha ao consultar categoria de ingrediente por nome")
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Categoria de ingrediente nao encontrada com o nome " + categoryName));
 
-        List<Long> categoryIds = new ArrayList<>();
-        categoryIds.add(category.getId());
-        executeOrFail(() -> ingredientCategoryRepository.findByParentCategoryId(category.getId()),
-                "Falha ao consultar subcategorias de ingrediente")
-                .forEach(child -> categoryIds.add(child.getId()));
-        return categoryIds;
+        return category.getId();
     }
 
     private Ingredient getOrThrow(Long id) {
