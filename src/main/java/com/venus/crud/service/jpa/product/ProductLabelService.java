@@ -57,16 +57,13 @@ public class ProductLabelService {
 
     @Transactional(readOnly = true)
     public Slice<ProductLabelResponse> search(String language, SourceType sourceType, Pageable pageable) {
-        Slice<ProductLabel> result;
-        if (StringUtils.hasText(language)) {
-            result = executeOrFail(() -> productLabelRepository.findByLanguage(language, pageable), "Falha ao consultar rotulos por idioma");
-        } else if (sourceType != null) {
-            result = executeOrFail(() -> productLabelRepository.findBySourceType(sourceType, pageable), "Falha ao consultar rotulos por origem");
-        } else {
-            result = executeOrFail(() -> productLabelRepository.findAllBy(pageable), "Falha ao consultar rotulos de produto");
-        }
+        String languageOrNull = StringUtils.hasText(language) ? language : null;
 
-        return result.map(productLabelMapper::toResponse);
+        Slice<ProductLabel> productLabels = executeOrFail(
+                () -> productLabelRepository.search(languageOrNull, sourceType, pageable),
+                "Falha ao consultar rotulos de produto");
+
+        return productLabels.map(productLabelMapper::toResponse);
     }
 
     @Transactional

@@ -51,22 +51,14 @@ public class BrandService {
     @Transactional(readOnly = true)
     public Slice<BrandResponse> search(String name, String country, Boolean hasCrueltyFreeClaim,
             Boolean hasVeganClaim, Boolean isBrazilian, Pageable pageable) {
-        Slice<Brand> result;
-        if (StringUtils.hasText(name)) {
-            result = executeOrFail(() -> brandRepository.findByNameContainingIgnoreCase(name, pageable), "Falha ao consultar marcas por nome");
-        } else if (StringUtils.hasText(country)) {
-            result = executeOrFail(() -> brandRepository.findByCountry(country, pageable), "Falha ao consultar marcas por pais");
-        } else if (Boolean.TRUE.equals(hasCrueltyFreeClaim)) {
-            result = executeOrFail(() -> brandRepository.findByHasCrueltyFreeClaimTrue(pageable), "Falha ao consultar marcas cruelty-free");
-        } else if (Boolean.TRUE.equals(hasVeganClaim)) {
-            result = executeOrFail(() -> brandRepository.findByHasVeganClaimTrue(pageable), "Falha ao consultar marcas veganas");
-        } else if (Boolean.TRUE.equals(isBrazilian)) {
-            result = executeOrFail(() -> brandRepository.findByIsBrazilianTrue(pageable), "Falha ao consultar marcas brasileiras");
-        } else {
-            result = executeOrFail(() -> brandRepository.findAllBy(pageable), "Falha ao consultar marcas");
-        }
+        String nameOrNull = StringUtils.hasText(name) ? name : null;
+        String countryOrNull = StringUtils.hasText(country) ? country : null;
 
-        return result.map(brandMapper::toResponse);
+        Slice<Brand> brands = executeOrFail(
+                () -> brandRepository.search(nameOrNull, countryOrNull, hasCrueltyFreeClaim, hasVeganClaim, isBrazilian, pageable),
+                "Falha ao consultar marcas");
+
+        return brands.map(brandMapper::toResponse);
     }
 
     @Transactional

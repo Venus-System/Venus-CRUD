@@ -53,16 +53,11 @@ public class ProductClaimService {
 
     @Transactional(readOnly = true)
     public Slice<ProductClaimResponse> search(Long claimId, SourceType sourceType, Pageable pageable) {
-        Slice<ProductClaim> result;
-        if (claimId != null) {
-            result = executeOrFail(() -> productClaimRepository.findByClaimId(claimId, pageable), "Falha ao consultar claims de produto por claim");
-        } else if (sourceType != null) {
-            result = executeOrFail(() -> productClaimRepository.findBySourceType(sourceType, pageable), "Falha ao consultar claims de produto por origem");
-        } else {
-            result = executeOrFail(() -> productClaimRepository.findAllBy(pageable), "Falha ao consultar claims de produto");
-        }
+        Slice<ProductClaim> productClaims = executeOrFail(
+                () -> productClaimRepository.search(claimId, sourceType, pageable),
+                "Falha ao consultar claims de produto");
 
-        return result.map(productClaimMapper::toResponse);
+        return productClaims.map(productClaimMapper::toResponse);
     }
 
     @Transactional

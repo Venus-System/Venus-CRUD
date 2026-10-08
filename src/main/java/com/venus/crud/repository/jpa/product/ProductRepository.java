@@ -4,6 +4,7 @@ import com.venus.crud.entity.product.Product;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -12,10 +13,13 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findBySlug(String slug);
-    Slice<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
-    Slice<Product> findByBrandId(Long brandId, Pageable pageable);
-    Slice<Product> findByProductCategoryId(Long productCategoryId, Pageable pageable);
-    Slice<Product> findByBrandIdAndProductCategoryId(Long brandId, Long productCategoryId, Pageable pageable);
-    Slice<Product> findByIsActiveTrue(Pageable pageable);
-    Slice<Product> findAllBy(Pageable pageable);
+
+    @Query("""
+            select product from Product product
+            where (cast(:name as String) is null or lower(product.name) like lower(concat('%', cast(:name as String), '%')))
+              and (:brandId is null or product.brand.id = :brandId)
+              and (:productCategoryId is null or product.productCategory.id = :productCategoryId)
+              and (:isActive is null or product.isActive = :isActive)
+            """)
+    Slice<Product> search(String name, Long brandId, Long productCategoryId, Boolean isActive, Pageable pageable);
 }

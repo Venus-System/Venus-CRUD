@@ -50,20 +50,11 @@ public class PackagingService {
     @Transactional(readOnly = true)
     public Slice<PackagingResponse> search(PackagingMaterial material, Boolean isRecyclable, Boolean isRefillable,
             Boolean isBiodegradable, Pageable pageable) {
-        Slice<Packaging> result;
-        if (material != null) {
-            result = executeOrFail(() -> packagingRepository.findByMaterial(material, pageable), "Falha ao consultar embalagens por material");
-        } else if (Boolean.TRUE.equals(isRecyclable)) {
-            result = executeOrFail(() -> packagingRepository.findByIsRecyclableTrue(pageable), "Falha ao consultar embalagens reciclaveis");
-        } else if (Boolean.TRUE.equals(isRefillable)) {
-            result = executeOrFail(() -> packagingRepository.findByIsRefillableTrue(pageable), "Falha ao consultar embalagens reabastecíveis");
-        } else if (Boolean.TRUE.equals(isBiodegradable)) {
-            result = executeOrFail(() -> packagingRepository.findByIsBiodegradableTrue(pageable), "Falha ao consultar embalagens biodegradaveis");
-        } else {
-            result = executeOrFail(() -> packagingRepository.findAllBy(pageable), "Falha ao consultar embalagens");
-        }
+        Slice<Packaging> packagings = executeOrFail(
+                () -> packagingRepository.search(material, isRecyclable, isRefillable, isBiodegradable, pageable),
+                "Falha ao consultar embalagens");
 
-        return result.map(packagingMapper::toResponse);
+        return packagings.map(packagingMapper::toResponse);
     }
 
     @Transactional
