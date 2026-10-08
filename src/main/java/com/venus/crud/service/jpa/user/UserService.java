@@ -21,7 +21,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,30 +58,14 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public Slice<UserResponse> search(UserStatus status, String name, String firebaseUid, Pageable pageable) {
-        boolean hasStatus = status != null;
-        boolean hasName = StringUtils.hasText(name);
-        boolean hasFirebaseUid = StringUtils.hasText(firebaseUid);
+        String nameOrNull = StringUtils.hasText(name) ? name : null;
+        String firebaseUidOrNull = StringUtils.hasText(firebaseUid) ? firebaseUid : null;
 
-        if (hasFirebaseUid) {
-            List<User> found = executeOrFail(() -> userRepository.findByFirebaseUid(firebaseUid), "Falha ao consultar usuario por firebaseUid")
-                    .map(List::of)
-                    .orElseGet(List::of);
-            return new SliceImpl<>(found, pageable, false).map(userMapper::toResponse);
-        }
+        Slice<User> users = executeOrFail(
+                () -> userRepository.search(status, nameOrNull, firebaseUidOrNull, pageable),
+                "Falha ao consultar usuarios");
 
-        Slice<User> result;
-        if (hasStatus && hasName) {
-            result = executeOrFail(() -> userRepository.findByStatusAndNameContainingIgnoreCase(status, name, pageable),
-                    "Falha ao consultar usuarios por status e nome");
-        } else if (hasStatus) {
-            result = executeOrFail(() -> userRepository.findByStatus(status, pageable), "Falha ao consultar usuarios por status");
-        } else if (hasName) {
-            result = executeOrFail(() -> userRepository.findByNameContainingIgnoreCase(name, pageable), "Falha ao consultar usuarios por nome");
-        } else {
-            result = executeOrFail(() -> userRepository.findAllBy(pageable), "Falha ao consultar usuarios");
-        }
-
-        return result.map(userMapper::toResponse);
+        return users.map(userMapper::toResponse);
     }
 
     @Transactional
