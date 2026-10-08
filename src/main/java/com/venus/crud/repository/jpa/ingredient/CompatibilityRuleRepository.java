@@ -6,6 +6,7 @@ import com.venus.crud.entity.ingredient.CompatibilityRule;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,7 +16,11 @@ public interface CompatibilityRuleRepository extends JpaRepository<Compatibility
 
     List<CompatibilityRule> findByScoringModelIdAndIsEnabledTrueOrderByPriority(Long scoringModelId);
     List<CompatibilityRule> findByIngredientEffectId(Long ingredientEffectId);
-    Slice<CompatibilityRule> findByEffectType(EffectType effectType, Pageable pageable);
-    Slice<CompatibilityRule> findBySourceType(SourceType sourceType, Pageable pageable);
-    Slice<CompatibilityRule> findAllBy(Pageable pageable);
+
+    @Query("""
+            select compatibilityRule from CompatibilityRule compatibilityRule
+            where (cast(:effectType as String) is null or compatibilityRule.effectType = :effectType)
+              and (cast(:sourceType as String) is null or compatibilityRule.sourceType = :sourceType)
+            """)
+    Slice<CompatibilityRule> search(EffectType effectType, SourceType sourceType, Pageable pageable);
 }

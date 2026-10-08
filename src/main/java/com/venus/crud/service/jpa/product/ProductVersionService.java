@@ -64,17 +64,13 @@ public class ProductVersionService {
 
     @Transactional(readOnly = true)
     public Slice<ProductVersionResponse> search(VersionStatus status, String formulaSignature, Pageable pageable) {
-        Slice<ProductVersion> result;
-        if (status != null) {
-            result = executeOrFail(() -> productVersionRepository.findByStatus(status, pageable), "Falha ao consultar versoes por status");
-        } else if (StringUtils.hasText(formulaSignature)) {
-            result = executeOrFail(() -> productVersionRepository.findByFormulaSignature(formulaSignature, pageable),
-                    "Falha ao consultar versoes por assinatura de formula");
-        } else {
-            result = executeOrFail(() -> productVersionRepository.findAllBy(pageable), "Falha ao consultar versoes de produto");
-        }
+        String formulaSignatureOrNull = StringUtils.hasText(formulaSignature) ? formulaSignature : null;
 
-        return result.map(productVersionMapper::toResponse);
+        Slice<ProductVersion> productVersions = executeOrFail(
+                () -> productVersionRepository.search(status, formulaSignatureOrNull, pageable),
+                "Falha ao consultar versoes de produto");
+
+        return productVersions.map(productVersionMapper::toResponse);
     }
 
     @Transactional

@@ -5,6 +5,7 @@ import com.venus.crud.entity.scoring.Recommendation;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,7 +15,13 @@ public interface RecommendationRepository extends JpaRepository<Recommendation, 
 
     List<Recommendation> findByUserIdOrderByRankingPosition(Long userId);
     List<Recommendation> findByAnalysisResultId(Long analysisResultId);
-    Slice<Recommendation> findByUserIdAndRecommendationType(Long userId, RecommendationType recommendationType, Pageable pageable);
-    Slice<Recommendation> findByProductVersionId(Long productVersionId, Pageable pageable);
-    Slice<Recommendation> findAllBy(Pageable pageable);
+
+    @Query("""
+            select recommendation from Recommendation recommendation
+            where (:userId is null or recommendation.user.id = :userId)
+              and (cast(:recommendationType as String) is null or recommendation.recommendationType = :recommendationType)
+              and (:productVersionId is null or recommendation.productVersion.id = :productVersionId)
+            """)
+    Slice<Recommendation> search(Long userId, RecommendationType recommendationType, Long productVersionId,
+            Pageable pageable);
 }

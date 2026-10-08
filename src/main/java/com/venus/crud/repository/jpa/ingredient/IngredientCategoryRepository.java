@@ -22,8 +22,6 @@ public interface IngredientCategoryRepository extends JpaRepository<IngredientCa
     @EntityGraph(attributePaths = "parentCategory")
     Slice<IngredientCategory> findAllBy(Pageable pageable);
 
-    List<IngredientCategory> findByParentCategoryId(Long parentCategoryId);
-
     @Override
     @EntityGraph(attributePaths = "parentCategory")
     Optional<IngredientCategory> findById(Long id);

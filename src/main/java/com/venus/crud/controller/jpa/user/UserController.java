@@ -49,14 +49,14 @@ public class UserController {
     @Operation(
             operationId = "userSearch",
             summary = "Busca os usuários com filtros e paginação",
-            description = "`firebaseUid` tem precedência sobre os demais filtros e devolve no máximo um registro. `status` "
-                    + "e `name` combinam entre si; `name` casa por trecho, sem diferenciar maiúsculas.")
+            description = "Os filtros se combinam. `name` casa por trecho, sem diferenciar maiúsculas; `firebaseUid` "
+                    + "é exato e devolve no máximo um registro.")
     @PreAuthorize("hasRole('ADMIN') or @ownership.isCurrentFirebaseUid(#firebaseUid)")
     @GetMapping("/search")
     public ResponseEntity<Slice<UserResponse>> search(
             @RequestParam(required = false) UserStatus status,
             @RequestParam(required = false) String name,
-            @Parameter(description = "UID do Firebase. Tem precedência sobre os outros filtros e devolve no máximo um registro.")
+            @Parameter(description = "UID do Firebase. Exato; devolve no máximo um registro.")
             @RequestParam(required = false) String firebaseUid,
             @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(userService.search(status, name, firebaseUid, pageable));

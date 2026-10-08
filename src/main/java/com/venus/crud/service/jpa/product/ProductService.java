@@ -50,26 +50,13 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public Slice<ProductResponse> search(String name, Long brandId, Long productCategoryId, Boolean isActive, Pageable pageable) {
-        boolean hasBrand = brandId != null;
-        boolean hasCategory = productCategoryId != null;
+        String nameOrNull = StringUtils.hasText(name) ? name : null;
 
-        Slice<Product> result;
-        if (hasBrand && hasCategory) {
-            result = executeOrFail(() -> productRepository.findByBrandIdAndProductCategoryId(brandId, productCategoryId, pageable),
-                    "Falha ao consultar produtos por marca e categoria");
-        } else if (StringUtils.hasText(name)) {
-            result = executeOrFail(() -> productRepository.findByNameContainingIgnoreCase(name, pageable), "Falha ao consultar produtos por nome");
-        } else if (hasBrand) {
-            result = executeOrFail(() -> productRepository.findByBrandId(brandId, pageable), "Falha ao consultar produtos por marca");
-        } else if (hasCategory) {
-            result = executeOrFail(() -> productRepository.findByProductCategoryId(productCategoryId, pageable), "Falha ao consultar produtos por categoria");
-        } else if (Boolean.TRUE.equals(isActive)) {
-            result = executeOrFail(() -> productRepository.findByIsActiveTrue(pageable), "Falha ao consultar produtos ativos");
-        } else {
-            result = executeOrFail(() -> productRepository.findAllBy(pageable), "Falha ao consultar produtos");
-        }
+        Slice<Product> products = executeOrFail(
+                () -> productRepository.search(nameOrNull, brandId, productCategoryId, isActive, pageable),
+                "Falha ao consultar produtos");
 
-        return result.map(productMapper::toResponse);
+        return products.map(productMapper::toResponse);
     }
 
     @Transactional

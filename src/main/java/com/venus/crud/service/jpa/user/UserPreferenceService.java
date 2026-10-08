@@ -50,26 +50,12 @@ public class UserPreferenceService {
     public Slice<UserPreferenceResponse> search(Boolean preferCrueltyFree, Boolean preferVegan, Boolean preferSustainable,
             Boolean preferFragranceFree, Boolean preferParabenFree, Boolean preferSulfateFree, Boolean preferSiliconeFree,
             Pageable pageable) {
-        Slice<UserPreference> result;
-        if (Boolean.TRUE.equals(preferVegan)) {
-            result = executeOrFail(() -> userPreferenceRepository.findByPreferVeganTrue(pageable), "Falha ao consultar preferencias veganas");
-        } else if (Boolean.TRUE.equals(preferCrueltyFree)) {
-            result = executeOrFail(() -> userPreferenceRepository.findByPreferCrueltyFreeTrue(pageable), "Falha ao consultar preferencias cruelty-free");
-        } else if (Boolean.TRUE.equals(preferSustainable)) {
-            result = executeOrFail(() -> userPreferenceRepository.findByPreferSustainableTrue(pageable), "Falha ao consultar preferencias sustentaveis");
-        } else if (Boolean.TRUE.equals(preferFragranceFree)) {
-            result = executeOrFail(() -> userPreferenceRepository.findByPreferFragranceFreeTrue(pageable), "Falha ao consultar preferencias sem fragrancia");
-        } else if (Boolean.TRUE.equals(preferParabenFree)) {
-            result = executeOrFail(() -> userPreferenceRepository.findByPreferParabenFreeTrue(pageable), "Falha ao consultar preferencias sem parabeno");
-        } else if (Boolean.TRUE.equals(preferSulfateFree)) {
-            result = executeOrFail(() -> userPreferenceRepository.findByPreferSulfateFreeTrue(pageable), "Falha ao consultar preferencias sem sulfato");
-        } else if (Boolean.TRUE.equals(preferSiliconeFree)) {
-            result = executeOrFail(() -> userPreferenceRepository.findByPreferSiliconeFreeTrue(pageable), "Falha ao consultar preferencias sem silicone");
-        } else {
-            result = executeOrFail(() -> userPreferenceRepository.findAllBy(pageable), "Falha ao consultar preferencias de usuario");
-        }
+        Slice<UserPreference> userPreferences = executeOrFail(
+                () -> userPreferenceRepository.search(preferCrueltyFree, preferVegan, preferSustainable,
+                        preferFragranceFree, preferParabenFree, preferSulfateFree, preferSiliconeFree, pageable),
+                "Falha ao consultar preferencias de usuario");
 
-        return result.map(userPreferenceMapper::toResponse);
+        return userPreferences.map(userPreferenceMapper::toResponse);
     }
 
     @Transactional

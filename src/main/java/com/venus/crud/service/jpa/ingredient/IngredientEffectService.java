@@ -62,24 +62,11 @@ public class IngredientEffectService {
     @Transactional(readOnly = true)
     public Slice<IngredientEffectResponse> search(Long profileTagId, EffectCategory effectCategory, ReviewStatus reviewStatus,
             SourceType sourceType, Pageable pageable) {
-        Slice<IngredientEffect> result;
-        if (profileTagId != null) {
-            result = executeOrFail(() -> ingredientEffectRepository.findByProfileTagId(profileTagId, pageable),
-                    "Falha ao consultar efeitos por tag de perfil");
-        } else if (effectCategory != null) {
-            result = executeOrFail(() -> ingredientEffectRepository.findByEffectCategory(effectCategory, pageable),
-                    "Falha ao consultar efeitos por categoria");
-        } else if (reviewStatus != null) {
-            result = executeOrFail(() -> ingredientEffectRepository.findByReviewStatus(reviewStatus, pageable),
-                    "Falha ao consultar efeitos por status de revisao");
-        } else if (sourceType != null) {
-            result = executeOrFail(() -> ingredientEffectRepository.findBySourceType(sourceType, pageable),
-                    "Falha ao consultar efeitos por origem");
-        } else {
-            result = executeOrFail(() -> ingredientEffectRepository.findAllBy(pageable), "Falha ao consultar efeitos de ingrediente");
-        }
+        Slice<IngredientEffect> ingredientEffects = executeOrFail(
+                () -> ingredientEffectRepository.search(profileTagId, effectCategory, reviewStatus, sourceType, pageable),
+                "Falha ao consultar efeitos de ingrediente");
 
-        return result.map(ingredientEffectMapper::toResponse);
+        return ingredientEffects.map(ingredientEffectMapper::toResponse);
     }
 
     @Transactional

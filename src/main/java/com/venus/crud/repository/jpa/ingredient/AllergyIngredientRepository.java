@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -18,10 +19,14 @@ public interface AllergyIngredientRepository extends JpaRepository<AllergyIngred
     List<AllergyIngredient> findByAllergyId(Long allergyId);
     @EntityGraph(attributePaths = "ingredient")
     List<AllergyIngredient> findByAllergyIdIn(Collection<Long> allergyIds);
-    Slice<AllergyIngredient> findByIngredientId(Long ingredientId, Pageable pageable);
     Optional<AllergyIngredient> findByAllergyIdAndIngredientId(Long allergyId, Long ingredientId);
     boolean existsByAllergyIdAndIngredientId(Long allergyId, Long ingredientId);
     void deleteByAllergyIdAndIngredientId(Long allergyId, Long ingredientId);
-    Slice<AllergyIngredient> findBySourceType(SourceType sourceType, Pageable pageable);
-    Slice<AllergyIngredient> findAllBy(Pageable pageable);
+
+    @Query("""
+            select allergyIngredient from AllergyIngredient allergyIngredient
+            where (:ingredientId is null or allergyIngredient.ingredient.id = :ingredientId)
+              and (cast(:sourceType as String) is null or allergyIngredient.sourceType = :sourceType)
+            """)
+    Slice<AllergyIngredient> search(Long ingredientId, SourceType sourceType, Pageable pageable);
 }

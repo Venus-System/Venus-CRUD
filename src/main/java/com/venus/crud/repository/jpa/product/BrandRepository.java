@@ -4,6 +4,7 @@ import com.venus.crud.entity.product.Brand;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -12,10 +13,15 @@ import java.util.Optional;
 public interface BrandRepository extends JpaRepository<Brand, Long> {
 
     Optional<Brand> findByNameIgnoreCase(String name);
-    Slice<Brand> findByNameContainingIgnoreCase(String name, Pageable pageable);
-    Slice<Brand> findByCountry(String country, Pageable pageable);
-    Slice<Brand> findByHasCrueltyFreeClaimTrue(Pageable pageable);
-    Slice<Brand> findByHasVeganClaimTrue(Pageable pageable);
-    Slice<Brand> findByIsBrazilianTrue(Pageable pageable);
-    Slice<Brand> findAllBy(Pageable pageable);
+
+    @Query("""
+            select brand from Brand brand
+            where (cast(:name as String) is null or lower(brand.name) like lower(concat('%', cast(:name as String), '%')))
+              and (cast(:country as String) is null or brand.country = :country)
+              and (:hasCrueltyFreeClaim is null or brand.hasCrueltyFreeClaim = :hasCrueltyFreeClaim)
+              and (:hasVeganClaim is null or brand.hasVeganClaim = :hasVeganClaim)
+              and (:isBrazilian is null or brand.isBrazilian = :isBrazilian)
+            """)
+    Slice<Brand> search(String name, String country, Boolean hasCrueltyFreeClaim, Boolean hasVeganClaim,
+            Boolean isBrazilian, Pageable pageable);
 }

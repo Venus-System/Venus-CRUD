@@ -64,19 +64,13 @@ public class RecommendationService {
     }
 
     @Transactional(readOnly = true)
-    public Slice<RecommendationResponse> search(Long userId, RecommendationType recommendationType, Long productVersionId, Pageable pageable) {
-        Slice<Recommendation> result;
-        if (userId != null && recommendationType != null) {
-            result = executeOrFail(() -> recommendationRepository.findByUserIdAndRecommendationType(userId, recommendationType, pageable),
-                    "Falha ao consultar recomendacoes do usuario por tipo");
-        } else if (productVersionId != null) {
-            result = executeOrFail(() -> recommendationRepository.findByProductVersionId(productVersionId, pageable),
-                    "Falha ao consultar recomendacoes da versao de produto");
-        } else {
-            result = executeOrFail(() -> recommendationRepository.findAllBy(pageable), "Falha ao consultar recomendacoes");
-        }
+    public Slice<RecommendationResponse> search(Long userId, RecommendationType recommendationType, Long productVersionId,
+            Pageable pageable) {
+        Slice<Recommendation> recommendations = executeOrFail(
+                () -> recommendationRepository.search(userId, recommendationType, productVersionId, pageable),
+                "Falha ao consultar recomendacoes");
 
-        return result.map(recommendationMapper::toResponse);
+        return recommendations.map(recommendationMapper::toResponse);
     }
 
     @Transactional

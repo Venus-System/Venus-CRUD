@@ -16,10 +16,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByFirebaseUid(String firebaseUid);
     Optional<User> findByEmailIgnoreCase(String email);
-    Slice<User> findByStatus(UserStatus status, Pageable pageable);
-    Slice<User> findByNameContainingIgnoreCase(String name, Pageable pageable);
-    Slice<User> findByStatusAndNameContainingIgnoreCase(UserStatus status, String name, Pageable pageable);
-    Slice<User> findAllBy(Pageable pageable);
+
+    @Query("""
+            select user from User user
+            where (cast(:status as String) is null or user.status = :status)
+              and (cast(:name as String) is null or lower(user.name) like lower(concat('%', cast(:name as String), '%')))
+              and (cast(:firebaseUid as String) is null or user.firebaseUid = :firebaseUid)
+            """)
+    Slice<User> search(UserStatus status, String name, String firebaseUid, Pageable pageable);
 
     @Query(value = "SELECT venus.fn_register_user_access(:userId, :accessType, CAST(:metadata AS jsonb))",
             nativeQuery = true)

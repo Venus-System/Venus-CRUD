@@ -65,18 +65,13 @@ public class IngredientAliasService {
 
     @Transactional(readOnly = true)
     public Slice<IngredientAliasResponse> search(String aliasLanguage, SourceType sourceType, Pageable pageable) {
-        Slice<IngredientAlias> result;
-        if (StringUtils.hasText(aliasLanguage)) {
-            result = executeOrFail(() -> ingredientAliasRepository.findByAliasLanguage(aliasLanguage, pageable),
-                    "Falha ao consultar apelidos de ingrediente por idioma");
-        } else if (sourceType != null) {
-            result = executeOrFail(() -> ingredientAliasRepository.findBySourceType(sourceType, pageable),
-                    "Falha ao consultar apelidos de ingrediente por origem");
-        } else {
-            result = executeOrFail(() -> ingredientAliasRepository.findAllBy(pageable), "Falha ao consultar apelidos de ingrediente");
-        }
+        String aliasLanguageOrNull = StringUtils.hasText(aliasLanguage) ? aliasLanguage : null;
 
-        return result.map(ingredientAliasMapper::toResponse);
+        Slice<IngredientAlias> ingredientAliases = executeOrFail(
+                () -> ingredientAliasRepository.search(aliasLanguageOrNull, sourceType, pageable),
+                "Falha ao consultar apelidos de ingrediente");
+
+        return ingredientAliases.map(ingredientAliasMapper::toResponse);
     }
 
     @Transactional
