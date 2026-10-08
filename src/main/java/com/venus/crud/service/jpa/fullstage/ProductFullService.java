@@ -2,6 +2,7 @@ package com.venus.crud.service.jpa.fullstage;
 
 import com.venus.crud.dto.jpa.response.fullstage.ProductClaimDetailResponse;
 import com.venus.crud.dto.jpa.response.fullstage.ProductFullResponse;
+import com.venus.crud.dto.jpa.response.fullstage.ProductIngredientDetailResponse;
 import com.venus.crud.dto.jpa.response.media.MediaAssetResponse;
 import com.venus.crud.dto.jpa.response.product.BrandResponse;
 import com.venus.crud.dto.jpa.response.product.PackagingResponse;
@@ -14,6 +15,7 @@ import com.venus.crud.entity.product.Product;
 import com.venus.crud.exception.DataAccessFailureTranslator;
 import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.ResourceNotFoundException;
+import com.venus.crud.mapper.jpa.ingredient.IngredientMapper;
 import com.venus.crud.mapper.jpa.media.MediaAssetMapper;
 import com.venus.crud.mapper.jpa.product.BrandMapper;
 import com.venus.crud.mapper.jpa.product.ClaimMapper;
@@ -23,6 +25,7 @@ import com.venus.crud.mapper.jpa.product.ProductLabelMapper;
 import com.venus.crud.mapper.jpa.product.ProductMapper;
 import com.venus.crud.mapper.jpa.product.ProductVersionMapper;
 import com.venus.crud.mapper.jpa.scoring.ProductScoreMapper;
+import com.venus.crud.repository.jpa.ingredient.ProductIngredientRepository;
 import com.venus.crud.repository.jpa.media.MediaAssetRepository;
 import com.venus.crud.repository.jpa.product.BrandRepository;
 import com.venus.crud.repository.jpa.product.PackagingRepository;
@@ -54,6 +57,7 @@ public class ProductFullService {
     private final ProductVersionRepository productVersionRepository;
     private final PackagingRepository packagingRepository;
     private final ProductLabelRepository productLabelRepository;
+    private final ProductIngredientRepository productIngredientRepository;
     private final ProductClaimRepository productClaimRepository;
     private final ProductScoreRepository productScoreRepository;
     private final ScoringModelRepository scoringModelRepository;
@@ -65,17 +69,19 @@ public class ProductFullService {
     private final ProductVersionMapper productVersionMapper;
     private final PackagingMapper packagingMapper;
     private final ProductLabelMapper productLabelMapper;
+    private final IngredientMapper ingredientMapper;
     private final ClaimMapper claimMapper;
 
     public ProductFullService(ProductRepository productRepository, MediaAssetRepository mediaAssetRepository,
             BrandRepository brandRepository, ProductCategoryRepository productCategoryRepository,
             ProductVersionRepository productVersionRepository, PackagingRepository packagingRepository,
-            ProductLabelRepository productLabelRepository, ProductClaimRepository productClaimRepository,
+            ProductLabelRepository productLabelRepository, ProductIngredientRepository productIngredientRepository,
+            ProductClaimRepository productClaimRepository,
             ProductScoreRepository productScoreRepository, ScoringModelRepository scoringModelRepository,
             ProductScoreMapper productScoreMapper, MediaAssetMapper mediaAssetMapper, ProductMapper productMapper,
             BrandMapper brandMapper, ProductCategoryMapper productCategoryMapper,
             ProductVersionMapper productVersionMapper, PackagingMapper packagingMapper,
-            ProductLabelMapper productLabelMapper, ClaimMapper claimMapper) {
+            ProductLabelMapper productLabelMapper, IngredientMapper ingredientMapper, ClaimMapper claimMapper) {
         this.productRepository = productRepository;
         this.mediaAssetRepository = mediaAssetRepository;
         this.brandRepository = brandRepository;
@@ -83,6 +89,7 @@ public class ProductFullService {
         this.productVersionRepository = productVersionRepository;
         this.packagingRepository = packagingRepository;
         this.productLabelRepository = productLabelRepository;
+        this.productIngredientRepository = productIngredientRepository;
         this.productClaimRepository = productClaimRepository;
         this.productScoreRepository = productScoreRepository;
         this.scoringModelRepository = scoringModelRepository;
@@ -94,6 +101,7 @@ public class ProductFullService {
         this.productVersionMapper = productVersionMapper;
         this.packagingMapper = packagingMapper;
         this.productLabelMapper = productLabelMapper;
+        this.ingredientMapper = ingredientMapper;
         this.claimMapper = claimMapper;
     }
 
@@ -119,6 +127,7 @@ public class ProductFullService {
         List<MediaAssetResponse> photos = List.of();
         PackagingResponse packaging = null;
         ProductLabelResponse label = null;
+        List<ProductIngredientDetailResponse> ingredients = List.of();
         List<ProductClaimDetailResponse> claims = List.of();
         ProductScoreResponse score = null;
 
@@ -139,6 +148,8 @@ public class ProductFullService {
                     .map(productLabelMapper::toResponse)
                     .orElse(null);
 
+            ingredients = findIngredients(versionId);
+
             claims = executeOrFail(() -> productClaimRepository.findByProductVersionId(versionId), "Falha ao consultar claims da versao atual")
                     .stream()
                     .map(productClaim -> new ProductClaimDetailResponse(
@@ -153,7 +164,17 @@ public class ProductFullService {
             score = findCurrentScore(versionId);
         }
 
-        return new ProductFullResponse(productMapper.toResponse(product), brand, category, currentVersion, photos, packaging, label, claims, score);
+        return new ProductFullResponse(productMapper.toResponse(product), brand, category, currentVersion, photos, packaging, label,
+                ingredients, claims, score);
+    }
+
+    private List<ProductIngredientDetailResponse> findIngredients(Long productVersionId) {
+        return executeOrFail(() -> productIngredientRepository.findByProductVersionIdOrderByPosition(productVersionId),
+                "Falha ao consultar ingredientes da versao atual").stream()
+                .map(productIngredient -> new ProductIngredientDetailResponse(
+                        ingredientMapper.toResponse(productIngredient.getIngredient()),
+                        productIngredient.getPosition()))
+                .toList();
     }
 
     private ProductScoreResponse findCurrentScore(Long productVersionId) {

@@ -26,6 +26,8 @@ public record ProductFullResponse(
         PackagingResponse packaging,
         @Schema(description = "Rótulo capturado do produto.")
         ProductLabelResponse label,
+        @Schema(description = "Ingredientes desta versão do produto, na ordem do rótulo.")
+        List<ProductIngredientDetailResponse> ingredients,
         @Schema(description = "Alegações declaradas por esta versão do produto.")
         List<ProductClaimDetailResponse> claims,
         @Schema(description = "Score do produto.")
