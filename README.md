@@ -26,6 +26,7 @@ O Venus-CRUD é o dono dos dados. Ele guarda o catálogo (produtos, marcas, ingr
  Venus-Mobile (Android)  ─┐
  Venus-Web (React)       ─┼──HTTP──>  Venus-CRUD  ──JPA──────>  PostgreSQL (schema venus)
  Painel admin            ─┘               │       ──Mongo────>  MongoDB (sessões de scan)
+                                          │       ──Redis────>  Redis (cache dos favoritos)
                                           │       ──SDK──────>  Cloudinary (fotos)
                                           │
               token do Firebase (app) ────┤
@@ -52,12 +53,13 @@ Todos ficam na organização [Venus-System](https://github.com/Venus-System).
 | Spring Security + OAuth2 Resource Server | do Boot | Validação dos tokens do Firebase e do admin |
 | PostgreSQL | 16 | Banco relacional (schema `venus`) |
 | MongoDB | 7 | Sessões de scan |
+| Spring Data Redis (Lettuce) | do Boot | Cache dos favoritos no Redis |
 | MapStruct | 1.5.5.Final | Conversão entity ↔ DTO |
 | Lombok | do Boot | Getters, setters e construtores das entities |
 | springdoc-openapi | 2.6.0 | Swagger UI |
 | jackson-databind-nullable | 0.2.6 | PATCH que diferencia "não enviado" de "enviado como null" |
 | Cloudinary (`cloudinary-http5`) | 2.4.0 | Upload e entrega de imagens |
-| Testcontainers | do Boot | Teste de integração com Postgres real |
+| Testcontainers | do Boot | Teste de integração com Postgres e Redis reais |
 | Maven Wrapper | — | Build (`./mvnw`) |
 
 ## O que a API faz
@@ -79,6 +81,18 @@ Upload de avatar e de fotos de produto no Cloudinary, com tipo, tamanho e dimens
 
 **Scan (MongoDB)**
 O app envia uma sessão de scan com as fotos e o texto lido da frente e do verso do produto. Um moderador aprova ou recusa. Ao aprovar, o scan é sincronizado com o catálogo: cria ou atualiza o produto, a versão, os ingredientes e as fotos no Postgres. Se a sincronização falhar, dá para tentar de novo em `POST /api/scan-sessions/{id}/sync`.
+
+**Cache (Redis)**
+A lista de favoritos do usuário e a contagem ficam guardadas no Redis por 6 horas, para não ir ao banco toda vez:
+
+| Rota | Chave no Redis |
+|---|---|
+| `GET /api/favorites/user/{userId}` | `favoritos-do-usuario::{userId}:{página}:{tamanho}:{ordem}` |
+| `GET /api/favorites/user/{userId}/count` | `contagem-de-favoritos-do-usuario::{userId}` |
+
+- Favoritar ou desfavoritar apaga a contagem do usuário e as páginas guardadas, logo depois que o banco grava. A próxima leitura já sai do banco com o dado novo.
+- Se o Redis cair ou demorar mais de 1 segundo, a API segue pelo banco e só registra um aviso no log. Quem chama a rota não percebe.
+- A configuração fica no `CacheConfig`. O nome de cada cache é uma constante lá.
 
 **Rotas "full"**
 Algumas rotas devolvem o objeto completo numa chamada só, para a tela não precisar fazer várias requisições:
@@ -103,7 +117,7 @@ Venus-CRUD/
 ├── src/
 │   ├── main/
 │   │   ├── java/com/venus/crud/
-│   │   │   ├── config/            # Segurança, Swagger, Cloudinary, Jackson, Mongo, propriedades do .env
+│   │   │   ├── config/            # Segurança, Swagger, Cloudinary, Jackson, Mongo, cache (Redis), propriedades do .env
 │   │   │   ├── controller/
 │   │   │   │   ├── jpa/           # Rotas dos dados do Postgres, um pacote por domínio
 │   │   │   │   │   └── fullstage/ # Rotas que devolvem o objeto completo
@@ -202,6 +216,7 @@ A API identifica o token pelo emissor (`iss`). O do Firebase é validado com as 
 - JDK 21
 - Acesso a um PostgreSQL com o schema `venus` criado pelo repositório **Venus-Banco**
 - Acesso a um MongoDB
+- Acesso a um Redis (o do time fica no Redis Cloud). Sem Redis a API sobe e segue pelo banco, mas as variáveis `REDIS_*` precisam existir
 - Conta no Cloudinary (para as rotas de mídia)
 - Docker, opcional: para o `docker-compose` e para os testes de integração
 
@@ -227,6 +242,8 @@ Preencha o `.env`. O Spring **não lê o `.env` sozinho**: carregue as variávei
 | `DB_HOST`, `DB_PORT`, `DB_NAME` | Endereço do PostgreSQL |
 | `DB_USERNAME`, `DB_PASSWORD` | Usuário e senha do PostgreSQL |
 | `MONGO_URI` | URI completa do MongoDB, com o nome do banco |
+| `REDIS_HOST`, `REDIS_PORT` | Endereço do Redis (cache dos favoritos) |
+| `REDIS_USERNAME`, `REDIS_PASSWORD` | Usuário e senha do Redis |
 | `CLOUDINARY_CLOUD_NAME` | Nome da conta no Cloudinary |
 | `CLOUDINARY_USERS_*` | Chave, segredo e upload preset das fotos de usuário |
 | `CLOUDINARY_PRODUCTS_*` | Chave, segredo e upload preset das fotos de produto |
@@ -238,7 +255,7 @@ Preencha o `.env`. O Spring **não lê o `.env` sozinho**: carregue as variávei
 | `ADMIN_JWT_EXPIRATION` | Validade do token do admin, em ISO-8601 (`PT8H` = 8 horas) |
 | `FIREBASE_PROJECT_ID` | Projeto do Firebase que emite o token do app |
 
-Para as credenciais do banco e do Cloudinary, fale com o time.
+Para as credenciais do banco, do Redis e do Cloudinary, fale com o time.
 
 ### 3. Banco de dados
 
@@ -327,6 +344,7 @@ Todas começam com `/api`. A maioria tem `GET` (lista e por id), `POST`, `PUT`, 
 - **Unidade:** services, mappers, validadores e segurança (tokens, papéis, checagem de dono). Rodam sem banco.
 - **Segurança das rotas:** `PreAuthorizeCoverageTest` falha se alguma rota de dados ficar sem `@PreAuthorize`. Os testes `*ControllerSecurityTest` chamam as rotas e conferem o 401 e o 403.
 - **Integração:** `ScanCatalogSyncIntegrationTest` sobe um Postgres 16 com Testcontainers, usando a cópia do schema em `src/test/resources/venus-banco/`. Ele precisa de Docker. Sem Docker, é pulado e o resto roda normalmente.
+- **Cache dos favoritos:** `FavoriteServiceCacheTest` e `FavoriteServiceCommitTest` sobem um Redis 7 com Testcontainers e conferem que a leitura repetida não vai ao banco, que favoritar e desfavoritar limpam o cache e que a limpeza só acontece depois que o banco grava. Eles também precisam de Docker. `FavoriteServiceRedisDownTest` roda sem Docker e confere que, com o Redis fora do ar, tudo segue pelo banco.
 
 Quando o schema mudar no Venus-Banco, a cópia em `src/test/resources/venus-banco/` precisa ser atualizada.
 
