@@ -1,6 +1,7 @@
 package com.venus.crud.dto.jpa.response.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.io.Serializable;
 import java.time.OffsetDateTime;
 
 public record FavoriteResponse(
@@ -13,5 +14,5 @@ public record FavoriteResponse(
         @Schema(description = "Data e hora de criação do registro. Gerado pelo banco.",
                 example = "2026-09-22T14:30:00-03:00")
         OffsetDateTime createdAt
-) {
+) implements Serializable {
 }
