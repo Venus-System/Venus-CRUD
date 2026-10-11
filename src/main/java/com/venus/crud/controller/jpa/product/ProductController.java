@@ -5,6 +5,7 @@ import com.venus.crud.dto.jpa.request.product.ProductRequest;
 import com.venus.crud.dto.jpa.response.product.ProductResponse;
 import com.venus.crud.service.jpa.product.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -42,15 +43,27 @@ public class ProductController {
         return ResponseEntity.ok(productService.findAll());
     }
 
-    @Operation(operationId = "productSearch", summary = "Busca os produtos com filtros e paginação")
+    @Operation(
+            operationId = "productSearch",
+            summary = "Busca os produtos com filtros e paginação",
+            description = "Os filtros se combinam: o produto precisa atender a todos os informados. Sem nenhum, "
+                    + "lista todos.\n\n`ingredient` olha só a **versão atual** do produto. `hasCrueltyFreeClaim`, "
+                    + "`hasVeganClaim` e `isBrazilian` são os selos da **marca**; `false` traz as marcas sem o selo.")
     @GetMapping("/search")
     public ResponseEntity<Slice<ProductResponse>> search(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Long brandId,
             @RequestParam(required = false) Long productCategoryId,
             @RequestParam(required = false) Boolean isActive,
+            @Parameter(description = "Trecho do nome INCI ou do nome comum de algum ingrediente da versão atual, "
+                    + "sem diferenciar maiúsculas. Ex.: lavand.")
+            @RequestParam(required = false) String ingredient,
+            @RequestParam(required = false) Boolean hasCrueltyFreeClaim,
+            @RequestParam(required = false) Boolean hasVeganClaim,
+            @RequestParam(required = false) Boolean isBrazilian,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(productService.search(name, brandId, productCategoryId, isActive, pageable));
+        return ResponseEntity.ok(productService.search(name, brandId, productCategoryId, isActive, ingredient,
+                hasCrueltyFreeClaim, hasVeganClaim, isBrazilian, pageable));
     }
 
     @Operation(operationId = "productFindById", summary = "Busca o produto por id")
