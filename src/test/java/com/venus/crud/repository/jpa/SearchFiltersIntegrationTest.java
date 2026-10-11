@@ -24,6 +24,7 @@ import com.venus.crud.entity.enums.UserStatus;
 import com.venus.crud.entity.enums.VersionStatus;
 import com.venus.crud.entity.ingredient.Ingredient;
 import com.venus.crud.entity.product.Brand;
+import com.venus.crud.entity.product.Product;
 import com.venus.crud.entity.review.Report;
 import com.venus.crud.entity.user.User;
 import com.venus.crud.repository.jpa.admin.AdminUserRepository;
@@ -354,14 +355,94 @@ class SearchFiltersIntegrationTest {
 
     @Test
     void productSearchAcceptsAllFiltersEmpty() {
-        assertThatCode(() -> productRepository.search(null, null, null, null, FIRST_PAGE))
+        assertThatCode(() -> productRepository.search(null, null, null, null, null, null, null, null, FIRST_PAGE))
                 .doesNotThrowAnyException();
     }
 
     @Test
     void productSearchAcceptsAllFiltersFilled() {
-        assertThatCode(() -> productRepository.search("hidratante", 1L, 1L, true, FIRST_PAGE))
+        assertThatCode(() -> productRepository.search("hidratante", 1L, 1L, true, "lavand", true, true, true, FIRST_PAGE))
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    void productSearchByIngredientLooksOnlyAtTheCurrentVersion() {
+        Long brandId = insertBrandWithClaims("Marca Produto Teste", false, false, false);
+        Long productCategoryId = insertProductCategory("Corpo Teste");
+        Long ingredientCategoryId = insertIngredientCategory("Agente Perfumante Teste");
+        Long lavenderId = insertIngredient("LAVANDULA TEST OIL", "Oleo de lavanda", ingredientCategoryId);
+        Long waterId = insertIngredient("AQUA TEST", "Agua", ingredientCategoryId);
+        Long lavenderProductId = insertProduct("Hidratante Lavanda Teste", brandId, productCategoryId);
+        insertProductVersion(lavenderProductId, "v1", true, lavenderId);
+        Long reformulatedProductId = insertProduct("Hidratante Reformulado Teste", brandId, productCategoryId);
+        insertProductVersion(reformulatedProductId, "v1", false, lavenderId);
+        insertProductVersion(reformulatedProductId, "v2", true, waterId);
+
+        Slice<Product> products = productRepository.search(null, null, null, null, "lavand", null, null, null, FIRST_PAGE);
+
+        assertThat(products.getContent()).extracting(Product::getName).containsExactly("Hidratante Lavanda Teste");
+    }
+
+    @Test
+    void productSearchByIngredientFindsTheCommonName() {
+        Long brandId = insertBrandWithClaims("Marca Produto Teste", false, false, false);
+        Long productCategoryId = insertProductCategory("Corpo Teste");
+        Long ingredientCategoryId = insertIngredientCategory("Agente Perfumante Teste");
+        Long fennelId = insertIngredient("FOENICULUM VULGARE TEST OIL", "Oleo de erva-doce", ingredientCategoryId);
+        Long fennelProductId = insertProduct("Sabonete Erva-Doce Teste", brandId, productCategoryId);
+        insertProductVersion(fennelProductId, "v1", true, fennelId);
+
+        Slice<Product> products = productRepository.search(null, null, null, null, "erva-doce", null, null, null, FIRST_PAGE);
+
+        assertThat(products.getContent()).extracting(Product::getName).containsExactly("Sabonete Erva-Doce Teste");
+    }
+
+    @Test
+    void productSearchByIngredientBringsTheProductOnce() {
+        Long brandId = insertBrandWithClaims("Marca Produto Teste", false, false, false);
+        Long productCategoryId = insertProductCategory("Corpo Teste");
+        Long ingredientCategoryId = insertIngredientCategory("Agente Perfumante Teste");
+        Long lavenderOilId = insertIngredient("LAVANDULA TEST OIL", "Oleo de lavanda", ingredientCategoryId);
+        Long lavenderWaterId = insertIngredient("LAVANDULA TEST WATER", "Agua de lavanda", ingredientCategoryId);
+        Long lavenderProductId = insertProduct("Hidratante Lavanda Teste", brandId, productCategoryId);
+        insertProductVersion(lavenderProductId, "v1", true, lavenderOilId, lavenderWaterId);
+
+        Slice<Product> products = productRepository.search(null, null, null, null, "lavand", null, null, null, FIRST_PAGE);
+
+        assertThat(products.getContent()).extracting(Product::getName).containsExactly("Hidratante Lavanda Teste");
+    }
+
+    @Test
+    void productSearchCombinesIngredientAndBrandClaim() {
+        Long veganBrandId = insertBrandWithClaims("Marca Vegana Teste", false, true, false);
+        Long commonBrandId = insertBrandWithClaims("Marca Comum Teste", false, false, false);
+        Long productCategoryId = insertProductCategory("Corpo Teste");
+        Long ingredientCategoryId = insertIngredientCategory("Agente Perfumante Teste");
+        Long lavenderId = insertIngredient("LAVANDULA TEST OIL", "Oleo de lavanda", ingredientCategoryId);
+        Long veganProductId = insertProduct("Hidratante Vegano Teste", veganBrandId, productCategoryId);
+        insertProductVersion(veganProductId, "v1", true, lavenderId);
+        Long commonProductId = insertProduct("Hidratante Comum Teste", commonBrandId, productCategoryId);
+        insertProductVersion(commonProductId, "v1", true, lavenderId);
+
+        Slice<Product> products = productRepository.search(null, null, null, null, "lavand", null, true, null, FIRST_PAGE);
+
+        assertThat(products.getContent()).extracting(Product::getName).containsExactly("Hidratante Vegano Teste");
+    }
+
+    @Test
+    void productSearchCombinesTheThreeBrandClaims() {
+        Long productCategoryId = insertProductCategory("Corpo Teste");
+        insertProduct("Produto Certo Teste", insertBrandWithClaims("Marca Certa Teste", true, true, false), productCategoryId);
+        insertProduct("Produto Sem Cruelty Free Teste",
+                insertBrandWithClaims("Marca Sem Cruelty Free Teste", false, true, false), productCategoryId);
+        insertProduct("Produto Sem Vegano Teste",
+                insertBrandWithClaims("Marca Sem Vegano Teste", true, false, false), productCategoryId);
+        insertProduct("Produto Brasileiro Teste",
+                insertBrandWithClaims("Marca Brasileira Teste", true, true, true), productCategoryId);
+
+        Slice<Product> products = productRepository.search(null, null, null, null, null, true, true, false, FIRST_PAGE);
+
+        assertThat(products.getContent()).extracting(Product::getName).containsExactly("Produto Certo Teste");
     }
 
     @Test
@@ -524,9 +605,36 @@ class SearchFiltersIntegrationTest {
                 + "VALUES (?, ?) RETURNING ingredient_category_id", Long.class, name, parentCategoryId);
     }
 
-    private void insertIngredient(String inciName, String commonName, Long categoryId) {
-        jdbcTemplate.update("INSERT INTO venus.ingredients (fk_ingredient_category_id, inci_name, common_name) "
-                + "VALUES (?, ?, ?)", categoryId, inciName, commonName);
+    private Long insertIngredient(String inciName, String commonName, Long categoryId) {
+        return jdbcTemplate.queryForObject("INSERT INTO venus.ingredients (fk_ingredient_category_id, inci_name, common_name) "
+                + "VALUES (?, ?, ?) RETURNING ingredient_id", Long.class, categoryId, inciName, commonName);
+    }
+
+    private Long insertBrandWithClaims(String name, boolean hasCrueltyFreeClaim, boolean hasVeganClaim,
+            boolean isBrazilian) {
+        return jdbcTemplate.queryForObject("INSERT INTO venus.brands (name, has_cruelty_free_claim, has_vegan_claim, "
+                + "is_brazilian) VALUES (?, ?, ?, ?) RETURNING brand_id", Long.class,
+                name, hasCrueltyFreeClaim, hasVeganClaim, isBrazilian);
+    }
+
+    private Long insertProductCategory(String name) {
+        return jdbcTemplate.queryForObject("INSERT INTO venus.product_categories (name) VALUES (?) "
+                + "RETURNING product_category_id", Long.class, name);
+    }
+
+    private Long insertProduct(String name, Long brandId, Long productCategoryId) {
+        return jdbcTemplate.queryForObject("INSERT INTO venus.products (fk_brand_id, fk_product_category_id, name, slug) "
+                + "VALUES (?, ?, ?, ?) RETURNING product_id", Long.class, brandId, productCategoryId, name, name);
+    }
+
+    private void insertProductVersion(Long productId, String versionName, boolean isCurrent, Long... ingredientIds) {
+        Long productVersionId = jdbcTemplate.queryForObject("INSERT INTO venus.product_versions (fk_product_id, "
+                + "version_name, display_name, is_current, formula_signature) VALUES (?, ?, ?, ?, ?) "
+                + "RETURNING product_version_id", Long.class, productId, versionName, versionName, isCurrent, versionName);
+        for (int position = 1; position <= ingredientIds.length; position++) {
+            jdbcTemplate.update("INSERT INTO venus.product_ingredients (fk_product_version_id, fk_ingredient_id, position) "
+                    + "VALUES (?, ?, ?)", productVersionId, ingredientIds[position - 1], position);
+        }
     }
 
     private Long insertUser(String firebaseUid, String name, String status) {

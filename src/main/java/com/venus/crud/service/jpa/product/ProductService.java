@@ -49,11 +49,14 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public Slice<ProductResponse> search(String name, Long brandId, Long productCategoryId, Boolean isActive, Pageable pageable) {
+    public Slice<ProductResponse> search(String name, Long brandId, Long productCategoryId, Boolean isActive,
+            String ingredient, Boolean hasCrueltyFreeClaim, Boolean hasVeganClaim, Boolean isBrazilian, Pageable pageable) {
         String nameOrNull = StringUtils.hasText(name) ? name : null;
+        String ingredientOrNull = StringUtils.hasText(ingredient) ? ingredient : null;
 
         Slice<Product> products = executeOrFail(
-                () -> productRepository.search(nameOrNull, brandId, productCategoryId, isActive, pageable),
+                () -> productRepository.search(nameOrNull, brandId, productCategoryId, isActive, ingredientOrNull,
+                        hasCrueltyFreeClaim, hasVeganClaim, isBrazilian, pageable),
                 "Falha ao consultar produtos");
 
         return products.map(productMapper::toResponse);
