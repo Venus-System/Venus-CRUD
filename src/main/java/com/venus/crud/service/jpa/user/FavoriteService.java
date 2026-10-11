@@ -1,5 +1,8 @@
 package com.venus.crud.service.jpa.user;
 
+import static com.venus.crud.config.CacheConfig.USER_FAVORITES_CACHE;
+import static com.venus.crud.config.CacheConfig.USER_FAVORITES_COUNT_CACHE;
+
 import com.venus.crud.dto.jpa.request.user.FavoriteRequest;
 import com.venus.crud.dto.jpa.response.user.FavoriteResponse;
 import com.venus.crud.entity.user.Favorite;
@@ -13,6 +16,9 @@ import java.util.List;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class FavoriteService {
 
     private static final Logger log = LoggerFactory.getLogger(FavoriteService.class);
+
+    private static final String PAGE_KEY =
+            "#userId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort";
 
     private final FavoriteRepository favoriteRepository;
     private final FavoriteMapper favoriteMapper;
@@ -40,6 +49,7 @@ public class FavoriteService {
                 .toList();
     }
 
+    @Cacheable(cacheNames = USER_FAVORITES_CACHE, key = PAGE_KEY)
     @Transactional(readOnly = true)
     public Slice<FavoriteResponse> findByUserId(Long userId, Pageable pageable) {
         return executeOrFail(() -> favoriteRepository.findByUserId(userId, pageable), "Falha ao consultar favoritos do usuario")
@@ -57,11 +67,16 @@ public class FavoriteService {
         return executeOrFail(() -> favoriteRepository.countByProductId(productId), "Falha ao contar favoritos do produto");
     }
 
+    @Cacheable(cacheNames = USER_FAVORITES_COUNT_CACHE, key = "#userId")
     @Transactional(readOnly = true)
     public long countByUserId(Long userId) {
         return executeOrFail(() -> favoriteRepository.countByUserId(userId), "Falha ao contar favoritos do usuario");
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = USER_FAVORITES_CACHE, allEntries = true),
+            @CacheEvict(cacheNames = USER_FAVORITES_COUNT_CACHE, key = "#request.userId()")
+    })
     @Transactional
     public FavoriteResponse create(FavoriteRequest request) {
         ensureProductNotFavorited(request.userId(), request.productId());
@@ -71,6 +86,10 @@ public class FavoriteService {
         return favoriteMapper.toResponse(saved);
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = USER_FAVORITES_CACHE, allEntries = true),
+            @CacheEvict(cacheNames = USER_FAVORITES_COUNT_CACHE, key = "#userId")
+    })
     @Transactional
     public void delete(Long userId, Long productId) {
         ensureProductFavorited(userId, productId);
