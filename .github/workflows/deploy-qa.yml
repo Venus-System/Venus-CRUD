@@ -15,6 +15,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      actions: read
     outputs:
       image: ${{ steps.image.outputs.value }}
     steps:
@@ -64,7 +65,9 @@ jobs:
     needs: build-and-push
     runs-on: [self-hosted, linux, x64, venus-ec2]
     permissions:
+      contents: read
       packages: read
+      actions: read
     env:
       VENUS_CRUD_IMAGE: ${{ needs.build-and-push.outputs.image }}
     steps:
