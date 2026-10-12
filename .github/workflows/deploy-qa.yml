@@ -63,15 +63,10 @@ jobs:
     name: Deploy da imagem na EC2
     needs: build-and-push
     runs-on: [self-hosted, linux, x64, venus-ec2]
-    environment: qa
     permissions:
-      contents: read
       packages: read
     env:
       VENUS_CRUD_IMAGE: ${{ needs.build-and-push.outputs.image }}
-      VENUS_CRUD_SERVICE: ${{ vars.VENUS_CRUD_SERVICE || 'venus-crud.service' }}
-      VENUS_CRUD_LOCAL_IMAGE: ${{ vars.VENUS_CRUD_LOCAL_IMAGE || 'auto' }}
-      VENUS_CRUD_HEALTH_URL: ${{ vars.VENUS_CRUD_HEALTH_URL || 'http://127.0.0.1:8080/v3/api-docs' }}
     steps:
       - name: Atualizar container pela imagem do GHCR
         shell: bash
@@ -82,7 +77,4 @@ jobs:
           set -Eeuo pipefail
           printf '%s' "$GHCR_TOKEN" | sudo /usr/local/sbin/venus-crud-deploy \
             "$VENUS_CRUD_IMAGE" \
-            "$VENUS_CRUD_SERVICE" \
-            "$VENUS_CRUD_LOCAL_IMAGE" \
-            "$VENUS_CRUD_HEALTH_URL" \
             "$GHCR_USER"
