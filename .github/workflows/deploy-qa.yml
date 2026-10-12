@@ -5,11 +5,6 @@ on:
     branches: [develop]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  packages: write
-  actions: read
-
 env:
   REGISTRY: ghcr.io
 
@@ -17,8 +12,11 @@ jobs:
   build-and-push:
     name: Build, test e publicar imagem
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     outputs:
-      image: ${{ steps.meta.outputs.tags }}
+      image: ${{ steps.image.outputs.value }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,23 +30,6 @@ jobs:
 
       - name: Build e testes
         run: ./mvnw verify -B
-
-      - name: Preparar JAR para a EC2
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          mapfile -t jars < <(find target -maxdepth 1 -type f -name '*.jar' ! -name '*-plain.jar' | sort)
-          test "${#jars[@]}" -eq 1
-          mkdir -p dist
-          cp "${jars[0]}" dist/venus-crud.jar
-
-      - name: Guardar JAR do deploy
-        uses: actions/upload-artifact@v4
-        with:
-          name: venus-crud-jar
-          path: dist/venus-crud.jar
-          if-no-files-found: error
-          retention-days: 5
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -74,27 +55,34 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Informar imagem de deploy
+        id: image
+        run: echo "value=ghcr.io/venus-system/venus-crud:staging" >> "$GITHUB_OUTPUT"
+
   deploy:
-    name: Deploy para a EC2 da Venus-CRUD
+    name: Deploy da imagem na EC2
     needs: build-and-push
     runs-on: [self-hosted, linux, x64, venus-ec2]
     environment: qa
+    permissions:
+      contents: read
+      packages: read
     env:
-      VENUS_CRUD_SERVICE: ${{ vars.VENUS_CRUD_SERVICE || 'auto' }}
-      VENUS_CRUD_JAR_PATH: ${{ vars.VENUS_CRUD_JAR_PATH || 'auto' }}
+      VENUS_CRUD_IMAGE: ${{ needs.build-and-push.outputs.image }}
+      VENUS_CRUD_SERVICE: ${{ vars.VENUS_CRUD_SERVICE || 'venus-crud.service' }}
+      VENUS_CRUD_LOCAL_IMAGE: ${{ vars.VENUS_CRUD_LOCAL_IMAGE || 'auto' }}
       VENUS_CRUD_HEALTH_URL: ${{ vars.VENUS_CRUD_HEALTH_URL || 'http://127.0.0.1:8080/v3/api-docs' }}
     steps:
-      - name: Baixar JAR aprovado pelos testes
-        uses: actions/download-artifact@v4
-        with:
-          name: venus-crud-jar
-          path: deploy-artifact
-
-      - name: Atualizar serviço e validar health check
+      - name: Atualizar container pela imagem do GHCR
         shell: bash
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
         run: |
           set -Eeuo pipefail
-          artifact="$(find deploy-artifact -maxdepth 2 -type f -name 'venus-crud.jar' -print -quit)"
-          test -n "$artifact"
-          test -x /usr/local/sbin/venus-crud-deploy
-          sudo /usr/local/sbin/venus-crud-deploy "$artifact" "$VENUS_CRUD_SERVICE" "$VENUS_CRUD_JAR_PATH" "$VENUS_CRUD_HEALTH_URL"
+          printf '%s' "$GHCR_TOKEN" | sudo /usr/local/sbin/venus-crud-deploy \
+            "$VENUS_CRUD_IMAGE" \
+            "$VENUS_CRUD_SERVICE" \
+            "$VENUS_CRUD_LOCAL_IMAGE" \
+            "$VENUS_CRUD_HEALTH_URL" \
+            "$GHCR_USER"
