@@ -3,10 +3,12 @@ name: Deploy Staging
 on:
   push:
     branches: [develop]
+  workflow_dispatch:
 
 permissions:
   contents: read
   packages: write
+  actions: read
 
 env:
   REGISTRY: ghcr.io
@@ -30,6 +32,23 @@ jobs:
 
       - name: Build e testes
         run: ./mvnw verify -B
+
+      - name: Preparar JAR para a EC2
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mapfile -t jars < <(find target -maxdepth 1 -type f -name '*.jar' ! -name '*-plain.jar' | sort)
+          test "${#jars[@]}" -eq 1
+          mkdir -p dist
+          cp "${jars[0]}" dist/venus-crud.jar
+
+      - name: Guardar JAR do deploy
+        uses: actions/upload-artifact@v4
+        with:
+          name: venus-crud-jar
+          path: dist/venus-crud.jar
+          if-no-files-found: error
+          retention-days: 5
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -56,12 +75,26 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   deploy:
-    name: Deploy para QA
+    name: Deploy para a EC2 da Venus-CRUD
     needs: build-and-push
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, venus-ec2]
     environment: qa
+    env:
+      VENUS_CRUD_SERVICE: ${{ vars.VENUS_CRUD_SERVICE || 'auto' }}
+      VENUS_CRUD_JAR_PATH: ${{ vars.VENUS_CRUD_JAR_PATH || 'auto' }}
+      VENUS_CRUD_HEALTH_URL: ${{ vars.VENUS_CRUD_HEALTH_URL || 'http://127.0.0.1:8080/v3/api-docs' }}
     steps:
-      - name: Deploy pendente de host
+      - name: Baixar JAR aprovado pelos testes
+        uses: actions/download-artifact@v4
+        with:
+          name: venus-crud-jar
+          path: deploy-artifact
+
+      - name: Atualizar serviço e validar health check
+        shell: bash
         run: |
-          echo "Imagem publicada: ${{ needs.build-and-push.outputs.image }}"
-          echo "Host de QA ainda nao definido - nenhum deploy executado."
+          set -Eeuo pipefail
+          artifact="$(find deploy-artifact -maxdepth 2 -type f -name 'venus-crud.jar' -print -quit)"
+          test -n "$artifact"
+          test -x /usr/local/sbin/venus-crud-deploy
+          sudo /usr/local/sbin/venus-crud-deploy "$artifact" "$VENUS_CRUD_SERVICE" "$VENUS_CRUD_JAR_PATH" "$VENUS_CRUD_HEALTH_URL"
