@@ -5,17 +5,21 @@ on:
     branches: [develop]
   workflow_dispatch:
 
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
 env:
   REGISTRY: ghcr.io
 
 jobs:
   build-and-push:
+    if: github.ref == 'refs/heads/develop'
     name: Build, test e publicar imagem
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-      actions: read
     outputs:
       image: ${{ steps.image.outputs.value }}
     steps:
@@ -49,6 +53,7 @@ jobs:
             type=sha,prefix=develop-,format=short
 
       - name: Build e push da imagem
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -58,16 +63,17 @@ jobs:
 
       - name: Informar imagem de deploy
         id: image
-        run: echo "value=ghcr.io/venus-system/venus-crud:staging" >> "$GITHUB_OUTPUT"
+        run: echo "value=${REGISTRY}/${GITHUB_REPOSITORY,,}@${{ steps.build.outputs.digest }}" >> "$GITHUB_OUTPUT"
 
   deploy:
+    if: github.ref == 'refs/heads/develop'
     name: Deploy da imagem na EC2
     needs: build-and-push
     runs-on: [self-hosted, linux, x64, venus-ec2]
+    timeout-minutes: 10
+    environment: qa
     permissions:
-      contents: read
       packages: read
-      actions: read
     env:
       VENUS_CRUD_IMAGE: ${{ needs.build-and-push.outputs.image }}
     steps:
