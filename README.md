@@ -338,7 +338,7 @@ Quando o schema mudar no Venus-Banco, a cópia em `src/test/resources/venus-banc
 | `deploy-qa.yml` | push em `develop` | Build, testes e publicação da imagem `staging` no GHCR |
 | `deploy-prod.yml` | push em `main` | Build, testes e imagem no GHCR com as tags `latest` e `main-<sha>` |
 
-No QA, o build e os testes rodam no `ubuntu-latest` do GitHub e publicam a imagem `staging` no GHCR. A EC2 não tem runner do GitHub: um timer do `systemd` verifica a imagem pública a cada minuto, chama o helper root-owned, troca o container pela imagem nova, faz o health check usando `SERVER_PORT` e volta para a imagem anterior se der erro. Nenhum PR consegue executar comandos na EC2; o `.env` nunca sai da máquina. As alterações de workflow e deploy têm `CODEOWNERS` para exigir revisão do responsável. O deploy de produção ainda não tem host definido e hoje só publica a imagem.
+No QA, o build e os testes rodam no `ubuntu-latest` do GitHub e publicam a imagem `staging` no GHCR. A EC2 não tem runner do GitHub: um timer do `systemd` verifica a imagem do GHCR a cada minuto, chama o helper root-owned, troca o container pela imagem nova, faz o health check usando `SERVER_PORT` e volta para a imagem anterior se der erro. Nenhum PR consegue executar comandos na EC2; o `.env` nunca sai da máquina. As alterações de workflow e deploy têm `CODEOWNERS` para exigir revisão do responsável. O deploy de produção ainda não tem host definido e hoje só publica a imagem.
 
 ## Como contribuir
 
