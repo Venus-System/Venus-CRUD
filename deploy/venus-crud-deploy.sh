@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-remote_image="\${1:?Uso: venus-crud-deploy <remote-image> [registry-user]}"
-registry_user="\${2:-github-actions}"
+remote_image="${1:?Uso: venus-crud-deploy <remote-image> [registry-user]}"
+registry_user="${2:-github-actions}"
 
 # Estes valores precisam corresponder à unit instalada na EC2.
 service="venus-crud.service"
@@ -37,8 +37,8 @@ fi
 
 docker login ghcr.io --username "$registry_user" --password-stdin
 
-previous_id="\$(docker image inspect "$local_image" --format '{{.Id}}' 2>/dev/null || true)"
-previous_image="\${local_image}-previous"
+previous_id="$(docker image inspect "$local_image" --format '{{.Id}}' 2>/dev/null || true)"
+previous_image="${local_image}-previous"
 deployed_new_image=false
 
 if [[ -n "$previous_id" ]]; then
@@ -54,11 +54,11 @@ wait_for_image() {
   local found
 
   for ((attempt = 1; attempt <= health_attempts; attempt++)); do
-    if health_error="\$(curl --fail --location --silent --show-error --max-time 3 -o /dev/null "$health_url" 2>&1)"; then
+    if health_error="$(curl --fail --location --silent --show-error --max-time 3 -o /dev/null "$health_url" 2>&1)"; then
       found=false
       while IFS= read -r container_id; do
         [[ -z "$container_id" ]] && continue
-        image_id="\$(docker inspect --format '{{.Image}}' "$container_id" 2>/dev/null || true)"
+        image_id="$(docker inspect --format '{{.Image}}' "$container_id" 2>/dev/null || true)"
         if [[ "$image_id" == "$expected_image_id" ]]; then
           found=true
           break
@@ -70,7 +70,7 @@ wait_for_image() {
       fi
       last_error="o health check respondeu, mas nenhum container ativo usa a imagem esperada"
     else
-      last_error="\${health_error:-nenhuma resposta do health check}"
+      last_error="${health_error:-nenhuma resposta do health check}"
     fi
     sleep "$health_interval"
   done
@@ -118,7 +118,7 @@ docker pull "$remote_image"
 docker tag "$remote_image" "$local_image"
 deployed_new_image=true
 
-new_image_id="\$(docker image inspect "$local_image" --format '{{.Id}}')"
+new_image_id="$(docker image inspect "$local_image" --format '{{.Id}}')"
 if [[ -z "$new_image_id" ]]; then
   echo "Não foi possível identificar a imagem nova após o pull." >&2
   rollback || true
