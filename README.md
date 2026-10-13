@@ -340,7 +340,7 @@ Quando o schema mudar no Venus-Banco, a cópia em `src/test/resources/venus-banc
 
 O deploy de staging publica as tags de rastreio e implanta a imagem imutável pelo digest do build. A concorrência é serializada para que dois pushes não sobrescrevam o deploy um do outro. O job de deploy usa apenas `packages: read` e o `GITHUB_TOKEN` efêmero para ler o GHCR.
 
-O runner self-hosted da EC2 não participa de workflows de pull request. A configuração única do runner, do helper root-owned, do sudoers e do environment `qa` está em [deploy/SETUP_GITHUB_RUNNER.md](deploy/SETUP_GITHUB_RUNNER.md).
+O runner self-hosted da EC2 não participa de workflows de pull request. A configuração única do runner, do helper root-owned, do sudoers e do environment `qa` está em [deploy/SETUP_GITHUB_RUNNER.md](deploy/SETUP_GITHUB_RUNNER.md) e deve ser concluída antes do primeiro push em `develop`.
 
 ## Como contribuir
 
