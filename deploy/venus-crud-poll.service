@@ -1,0 +1,9 @@
+[Unit]
+Description=Verifica uma nova imagem do Venus-CRUD no GHCR
+After=docker.service venus-crud.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+Environment=VENUS_CRUD_REMOTE_IMAGE=ghcr.io/venus-system/venus-crud:staging
+ExecStart=/usr/local/sbin/venus-crud-poll
