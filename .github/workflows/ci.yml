@@ -23,3 +23,6 @@ jobs:
 
       - name: Build and test
         run: ./mvnw verify -B
+
+      - name: ShellCheck do helper de deploy
+        run: shellcheck deploy/venus-crud-deploy.sh
