@@ -24,7 +24,7 @@ if [[ ! "$local_image" =~ $local_allowed ]]; then
   exit 4
 fi
 
-systemctl show "$service" >/dev/null
+systemctl cat "$service" >/dev/null
 
 cleanup() {
   docker logout ghcr.io >/dev/null 2>&1 || true
@@ -106,11 +106,21 @@ rollback() {
 
 handle_signal() {
   local signal="$1"
-  echo "Recebido SIG$signal durante o deploy." >&2
-  if [[ "$deployed_new_image" == true ]]; then
-    rollback || true
+  local exit_code=130
+  trap '' INT TERM
+  if [[ "$signal" == TERM ]]; then
+    exit_code=143
   fi
-  exit 143
+
+  echo "Recebido SIG$signal durante o deploy; revertendo sem aguardar health check." >&2
+  if [[ "$deployed_new_image" == true && -n "$previous_id" ]]; then
+    if docker tag "$previous_id" "$local_image" && systemctl restart "$service"; then
+      echo "Rollback rápido concluído." >&2
+    else
+      echo "Rollback rápido falhou; o serviço pode estar indisponível." >&2
+    fi
+  fi
+  exit "$exit_code"
 }
 trap 'handle_signal INT' INT
 trap 'handle_signal TERM' TERM
