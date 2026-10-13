@@ -70,7 +70,7 @@ jobs:
     name: Deploy da imagem na EC2
     needs: build-and-push
     runs-on: [self-hosted, linux, x64, venus-ec2]
-    timeout-minutes: 10
+    timeout-minutes: 15
     environment: qa
     permissions:
       packages: read
