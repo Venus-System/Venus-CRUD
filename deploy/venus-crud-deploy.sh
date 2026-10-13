@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2317
 set -euo pipefail
 
 remote_image="${1:?Uso: venus-crud-deploy <remote-image> [registry-user]}"
