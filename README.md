@@ -334,11 +334,13 @@ Quando o schema mudar no Venus-Banco, a cópia em `src/test/resources/venus-banc
 
 | Workflow | Quando roda | O que faz |
 |---|---|---|
-| `ci.yml` | PR para `develop` ou `main` | `./mvnw verify` |
-| `deploy-qa.yml` | push em `develop` | Build, testes e imagem no GHCR com as tags `staging` e `develop-<sha>` |
-| `deploy-prod.yml` | push em `main` | Build, testes e imagem no GHCR com as tags `latest` e `main-<sha>` |
+| `ci.yml` | PR para `develop` ou `main` | `./mvnw verify` e ShellCheck do helper de deploy em runner hospedado pelo GitHub |
+| `deploy-qa.yml` | push em `develop` ou execução manual selecionando `develop` | Build, testes, imagem no GHCR por digest e deploy na EC2 via runner self-hosted |
+| `deploy-prod.yml` | push em `main` | Build, testes e imagem no GHCR com as tags `latest` e `main-<sha>`; o host de produção ainda não foi definido |
 
-A etapa de deploy dos dois ambientes ainda não tem host definido: hoje ela só publica a imagem.
+O deploy de staging publica as tags de rastreio e implanta a imagem imutável pelo digest do build. A concorrência é serializada para que dois pushes não sobrescrevam o deploy um do outro. O job de deploy usa apenas `packages: read` e o `GITHUB_TOKEN` efêmero para ler o GHCR.
+
+O runner self-hosted da EC2 não participa de workflows de pull request. A configuração única do runner, do helper root-owned, do sudoers e do environment `qa` está em [deploy/SETUP_GITHUB_RUNNER.md](deploy/SETUP_GITHUB_RUNNER.md).
 
 ## Como contribuir
 
