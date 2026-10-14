@@ -76,7 +76,7 @@ wait_for_image() {
 
 mark_failed_image() {
   local image_id="$1"
-  printf '%s\\n' "$image_id" > "$failed_image_file"
+  printf '%s\n' "$image_id" > "$failed_image_file"
   chmod 0644 "$failed_image_file"
 }
 
@@ -84,6 +84,7 @@ rollback() {
   if [[ -z "$previous_id" ]]; then
     echo "Não existe imagem anterior local para rollback." >&2
     return 1
+    
   fi
 
   echo "Tentando rollback para a imagem anterior..." >&2
