@@ -1,0 +1,27 @@
+name: Fix poll script mode
+
+on:
+  push:
+    branches: [ci/automatic-deploy-ec2]
+
+permissions:
+  contents: write
+
+jobs:
+  fix-mode:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: ci/automatic-deploy-ec2
+          fetch-depth: 0
+
+      - name: Mark poll script executable
+        run: |
+          git config user.name "matheus-orestes"
+          git config user.email "100971661+matheus-orestes@users.noreply.github.com"
+          git update-index --chmod=+x deploy/venus-crud-poll.sh
+          git rm .github/workflows/fix-poll-mode.yml
+          git commit -m "fix: marcando polling como executável"
+          git push origin HEAD:ci/automatic-deploy-ec2
