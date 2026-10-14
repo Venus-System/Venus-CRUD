@@ -47,7 +47,8 @@ public class ProductController {
             operationId = "productSearch",
             summary = "Busca os produtos com filtros e paginação",
             description = "Os filtros se combinam: o produto precisa atender a todos os informados. Sem nenhum, "
-                    + "lista todos.\n\n`ingredient` olha só a **versão atual** do produto. `hasCrueltyFreeClaim`, "
+                    + "lista todos.\n\n`name` e `ingredient` não diferenciam maiúsculas nem acento: `locao` acha "
+                    + "\"Loção\".\n\n`ingredient` olha só a **versão atual** do produto. `hasCrueltyFreeClaim`, "
                     + "`hasVeganClaim` e `isBrazilian` são os selos da **marca**; `false` traz as marcas sem o selo.")
     @GetMapping("/search")
     public ResponseEntity<Slice<ProductResponse>> search(
@@ -56,7 +57,7 @@ public class ProductController {
             @RequestParam(required = false) Long productCategoryId,
             @RequestParam(required = false) Boolean isActive,
             @Parameter(description = "Trecho do nome INCI ou do nome comum de algum ingrediente da versão atual, "
-                    + "sem diferenciar maiúsculas. Ex.: lavand.")
+                    + "sem diferenciar maiúsculas nem acento. Ex.: lavand.")
             @RequestParam(required = false) String ingredient,
             @RequestParam(required = false) Boolean hasCrueltyFreeClaim,
             @RequestParam(required = false) Boolean hasVeganClaim,

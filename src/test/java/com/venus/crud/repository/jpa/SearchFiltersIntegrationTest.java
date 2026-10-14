@@ -78,6 +78,8 @@ class SearchFiltersIntegrationTest {
                     "/docker-entrypoint-initdb.d/00_schema.sql")
             .withCopyFileToContainer(MountableFile.forClasspathResource("venus-banco/01_users_email_password_hash.sql"),
                     "/docker-entrypoint-initdb.d/01_users_email_password_hash.sql")
+            .withCopyFileToContainer(MountableFile.forClasspathResource("venus-banco/02_unaccent.sql"),
+                    "/docker-entrypoint-initdb.d/02_unaccent.sql")
             .withCopyFileToContainer(MountableFile.forClasspathResource("venus-banco/05_cloudinary_images.sql"),
                     "/docker-entrypoint-initdb.d/05_cloudinary_images.sql");
 
@@ -443,6 +445,41 @@ class SearchFiltersIntegrationTest {
         Slice<Product> products = productRepository.search(null, null, null, null, null, true, true, false, FIRST_PAGE);
 
         assertThat(products.getContent()).extracting(Product::getName).containsExactly("Produto Certo Teste");
+    }
+
+    @Test
+    void productNameIgnoresAccent() {
+        Long brandId = insertBrandWithClaims("Marca Produto Teste", false, false, false);
+        Long productCategoryId = insertProductCategory("Corpo Teste");
+        insertProduct("Loção Hidratante Teste", brandId, productCategoryId);
+        insertProduct("Locao Corporal Teste", brandId, productCategoryId);
+        insertProduct("Sabonete Teste", brandId, productCategoryId);
+
+        Slice<Product> products = productRepository.search("LOÇÃO", null, null, null, null, null, null, null, FIRST_PAGE);
+
+        assertThat(products.getContent()).extracting(Product::getName)
+                .containsExactlyInAnyOrder("Loção Hidratante Teste", "Locao Corporal Teste");
+    }
+
+    @Test
+    void productIngredientIgnoresAccent() {
+        Long brandId = insertBrandWithClaims("Marca Produto Teste", false, false, false);
+        Long productCategoryId = insertProductCategory("Corpo Teste");
+        Long ingredientCategoryId = insertIngredientCategory("Solvente Teste");
+        Long roseWaterId = insertIngredient("ROSA TEST WATER", "Água de rosas", ingredientCategoryId);
+        Long thermalWaterId = insertIngredient("AQUA TEST THERMAL", "Agua termal", ingredientCategoryId);
+        Long lavenderId = insertIngredient("LAVANDULA TEST OIL", "Oleo de lavanda", ingredientCategoryId);
+        Long roseProductId = insertProduct("Tonico Rosas Teste", brandId, productCategoryId);
+        insertProductVersion(roseProductId, "v1", true, roseWaterId);
+        Long thermalProductId = insertProduct("Bruma Termal Teste", brandId, productCategoryId);
+        insertProductVersion(thermalProductId, "v1", true, thermalWaterId);
+        Long lavenderProductId = insertProduct("Hidratante Lavanda Teste", brandId, productCategoryId);
+        insertProductVersion(lavenderProductId, "v1", true, lavenderId);
+
+        Slice<Product> products = productRepository.search(null, null, null, null, "água", null, null, null, FIRST_PAGE);
+
+        assertThat(products.getContent()).extracting(Product::getName)
+                .containsExactlyInAnyOrder("Tonico Rosas Teste", "Bruma Termal Teste");
     }
 
     @Test

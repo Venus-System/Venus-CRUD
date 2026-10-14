@@ -263,6 +263,8 @@ O Hibernate roda com `ddl-auto: validate`: ele **confere** se as tabelas batem c
 
 O schema vem do repositório **Venus-Banco**. Toda mudança de tabela, coluna, trigger ou permissão é feita lá, pelo time de banco, e só depois a API muda.
 
+A busca de produtos (`GET /api/products/search`, filtros `name` e `ingredient`) não diferencia acento: `locao` acha "Loção". Para isso, o banco precisa da extensão `unaccent` no schema `venus` (migração `20261012_005_unaccent_search.sql` do Venus-Banco). Sem ela, essa busca dá erro mesmo sem filtro.
+
 > **Limitação conhecida:** a URL do datasource no `application.yml` usa `sslmode=require`. O Postgres do `docker-compose.yml` sobe sem SSL, então a API não conecta nele sem ajuste. Hoje o jeito que funciona é apontar para o banco compartilhado do time.
 
 Para subir só o MongoDB local:
@@ -346,7 +348,7 @@ Todas começam com `/api`. A maioria tem `GET` (lista e por id), `POST`, `PUT`, 
 - **Integração:** `ScanCatalogSyncIntegrationTest` sobe um Postgres 16 com Testcontainers, usando a cópia do schema em `src/test/resources/venus-banco/`. Ele precisa de Docker. Sem Docker, é pulado e o resto roda normalmente.
 - **Cache dos favoritos:** `FavoriteServiceCacheTest` e `FavoriteServiceCommitTest` sobem um Redis 7 com Testcontainers e conferem que a leitura repetida não vai ao banco, que favoritar e desfavoritar limpam o cache e que a limpeza só acontece depois que o banco grava. Eles também precisam de Docker. `FavoriteServiceRedisDownTest` roda sem Docker e confere que, com o Redis fora do ar, tudo segue pelo banco.
 
-Quando o schema mudar no Venus-Banco, a cópia em `src/test/resources/venus-banco/` precisa ser atualizada.
+Quando o schema mudar no Venus-Banco, a cópia em `src/test/resources/venus-banco/` precisa ser atualizada. O `02_unaccent.sql` dessa pasta cria a extensão `unaccent` que a busca de produtos usa.
 
 ## CI/CD
 
