@@ -352,11 +352,50 @@ Quando o schema mudar no Venus-Banco, a cópia em `src/test/resources/venus-banc
 
 | Workflow | Quando roda | O que faz |
 |---|---|---|
-| `ci.yml` | PR para `develop` ou `main` | `./mvnw verify` |
-| `deploy-qa.yml` | push em `develop` | Build, testes e imagem no GHCR com as tags `staging` e `develop-<sha>` |
+| `ci.yml` | PR para `develop` ou `main` | `./mvnw verify` e ShellCheck dos scripts de deploy |
+| `deploy-qa.yml` | push em `develop` | Build, testes e publicação das imagens `staging` e `develop-<sha>` no GHCR |
 | `deploy-prod.yml` | push em `main` | Build, testes e imagem no GHCR com as tags `latest` e `main-<sha>` |
 
-A etapa de deploy dos dois ambientes ainda não tem host definido: hoje ela só publica a imagem.
+No QA, o build e os testes rodam no `ubuntu-latest` do GitHub e publicam a imagem privada `staging` no GHCR. A EC2 não tem runner do GitHub: um timer do `systemd` verifica o digest do GHCR a cada minuto, chama o helper root-owned, troca o container pela imagem nova, faz o health check em `http://127.0.0.1:8080/swagger-ui.html` e volta para a imagem anterior se der erro. Uma imagem que falhou fica registrada em `/var/lib/venus-crud/failed-image` e não entra novamente até aparecer outro digest. Nenhum PR consegue executar comandos na EC2; o `.env` e o token do GHCR ficam somente na máquina.
+
+### Instalação do deploy na EC2
+
+A instalação precisa ser feita como `root` na máquina que já possui Docker e a unit `venus-crud.service`. A unit deve manter o contrato abaixo: container `venus-crud`, `--env-file /etc/venus-crud.env`, mapeamento `-p 8080:8080` e a imagem como último argumento do `docker run`.
+
+```ini
+[Service]
+ExecStart=/usr/bin/docker run --name venus-crud --env-file /etc/venus-crud.env -p 8080:8080 venus-crud:current
+```
+
+Instale os scripts e as units:
+
+```bash
+sudo install -o root -g root -m 0755 deploy/venus-crud-deploy.sh /usr/local/sbin/venus-crud-deploy
+sudo install -o root -g root -m 0755 deploy/venus-crud-poll.sh /usr/local/sbin/venus-crud-poll
+sudo install -o root -g root -m 0644 deploy/venus-crud-poll.service /etc/systemd/system/venus-crud-poll.service
+sudo install -o root -g root -m 0644 deploy/venus-crud-poll.timer /etc/systemd/system/venus-crud-poll.timer
+sudo install -d -o root -g root -m 0755 /var/lib/venus-crud
+```
+
+Crie o token clássico do GitHub com apenas `read:packages`, coloque-o no arquivo local e não o envie para o repositório:
+
+```bash
+sudo install -o root -g root -m 0600 /dev/null /etc/venus-crud-ghcr.token
+sudoedit /etc/venus-crud-ghcr.token
+sudo chmod 600 /etc/venus-crud-ghcr.token
+```
+
+Depois habilite o polling:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now venus-crud-poll.timer
+sudo systemctl status venus-crud-poll.timer
+```
+
+O helper puxa a imagem remota fixa `ghcr.io/venus-system/venus-crud:staging`, mas a unit roda somente a tag local `venus-crud:current`. Durante a troca ele guarda `venus-crud:previous`, faz rollback sem esperar o health check quando recebe cancelamento e remove imagens antigas sem tag após um deploy bem-sucedido.
+
+
 
 ## Como contribuir
 
