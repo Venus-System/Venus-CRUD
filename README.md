@@ -346,7 +346,7 @@ A instalação precisa ser feita como `root` na máquina que já possui Docker e
 
 ```ini
 [Service]
-ExecStart=/usr/bin/docker run --name venus-crud --env-file /etc/venus-crud.env -p 8080:8080 ghcr.io/venus-system/venus-crud:staging
+ExecStart=/usr/bin/docker run --name venus-crud --env-file /etc/venus-crud.env -p 8080:8080 venus-crud:current
 ```
 
 Instale os scripts e as units:
@@ -375,9 +375,9 @@ sudo systemctl enable --now venus-crud-poll.timer
 sudo systemctl status venus-crud-poll.timer
 ```
 
-O helper usa a imagem fixa `ghcr.io/venus-system/venus-crud:staging`, o container fixo `venus-crud` e a porta externa `8080`. Ele guarda a tag `staging-previous` durante a troca, faz rollback sem esperar o health check quando recebe cancelamento e remove imagens antigas sem tag após um deploy bem-sucedido.
+O helper puxa a imagem remota fixa `ghcr.io/venus-system/venus-crud:staging`, mas a unit roda somente a tag local `venus-crud:current`. Durante a troca ele guarda `venus-crud:previous`, faz rollback sem esperar o health check quando recebe cancelamento e remove imagens antigas sem tag após um deploy bem-sucedido.
 
-O `CODEOWNERS` designa `@FelipeAugustoSan` para workflow e deploy. A regra de proteção de `develop` está com **Require review from Code Owners** habilitado. O deploy de produção ainda não tem host definido e hoje só publica a imagem.
+
 
 ## Como contribuir
 
