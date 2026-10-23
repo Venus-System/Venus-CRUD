@@ -18,6 +18,9 @@ public record ProductResponse(
         String slug,
         @Schema(description = "Indica se o registro está ativo.", example = "true")
         Boolean isActive,
+        @Schema(description = "Endereço da primeira foto da versão atual. Nulo quando o produto não tem foto.",
+                example = "https://res.cloudinary.com/venus/image/upload/v1/products/15/frente.jpg")
+        String imageUrl,
         @Schema(description = "Data e hora de criação do registro. Gerado pelo banco.",
                 example = "2026-09-22T14:30:00-03:00")
         OffsetDateTime createdAt,

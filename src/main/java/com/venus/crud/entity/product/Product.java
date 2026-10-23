@@ -8,10 +8,12 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Formula;
 
 @Getter
 @Setter
@@ -41,4 +43,11 @@ public class Product extends AuditableEntity {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
+
+    @Setter(AccessLevel.NONE)
+    @Formula("(SELECT m.secure_url FROM venus.media_assets m WHERE m.fk_product_version_id = "
+            + "(SELECT v.product_version_id FROM venus.product_versions v WHERE v.fk_product_id = product_id AND v.is_current) "
+            + "AND m.purpose = 'product_photo' AND m.status IN ('pending', 'active') "
+            + "ORDER BY m.sort_order, m.media_asset_id LIMIT 1)")
+    private String imageUrl;
 }
