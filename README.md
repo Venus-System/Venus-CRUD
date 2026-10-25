@@ -67,6 +67,8 @@ Todos ficam na organização [Venus-System](https://github.com/Venus-System).
 **Catálogo de produtos**
 Produtos, versões de produto (fórmula e embalagem mudam com o tempo), marcas, categorias, claims ("vegano", "sem parabenos"), selos, embalagens e a lista de ingredientes de cada versão.
 
+Toda resposta de produto traz o `imageUrl`, a primeira foto da versão atual (nulo quando não tem foto). Assim a listagem, a busca, as listas e os favoritos já mostram a foto, sem chamar o `/full` de cada produto.
+
 **Ingredientes**
 Ingredientes com sinônimos (INCI e nomes populares), categorias em hierarquia (filtrar por uma categoria traz as filhas), propriedades, regulamentações e efeitos.
 
