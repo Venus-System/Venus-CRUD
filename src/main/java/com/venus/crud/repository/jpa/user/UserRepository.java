@@ -5,6 +5,7 @@ import com.venus.crud.entity.user.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -29,4 +30,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
             nativeQuery = true)
     Long registerAccess(@Param("userId") Long userId, @Param("accessType") String accessType,
             @Param("metadata") String metadata);
+
+    @Modifying(clearAutomatically = true)
+    @Query(value = "CALL venus.sp_set_user_active(:userId, :active)", nativeQuery = true)
+    void setActive(@Param("userId") Long userId, @Param("active") boolean active);
 }
