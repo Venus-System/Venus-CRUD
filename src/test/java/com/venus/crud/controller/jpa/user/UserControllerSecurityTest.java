@@ -127,6 +127,39 @@ class UserControllerSecurityTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void adminSetsUserActive() throws Exception {
+        when(userService.setActive(BIA_ID, false)).thenReturn(anaResponse(UserStatus.INACTIVE));
+        mockMvc.perform(patch("/api/users/{id}/active", BIA_ID).with(admin(AdminRole.ADMIN))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"active\": false}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void ownerCannotSetActive() throws Exception {
+        registeredAna();
+        mockMvc.perform(patch("/api/users/{id}/active", ANA_ID).with(appUser())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"active\": false}"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void moderatorCannotSetActive() throws Exception {
+        mockMvc.perform(patch("/api/users/{id}/active", BIA_ID).with(admin(AdminRole.MODERATOR))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"active\": false}"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void missingActiveGives400() throws Exception {
+        mockMvc.perform(patch("/api/users/{id}/active", BIA_ID).with(admin(AdminRole.ADMIN))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(userService);
+    }
+
     private void registeredAna() {
         User user = new User();
         user.setId(ANA_ID);

@@ -8,6 +8,8 @@ import com.venus.crud.entity.user.User;
 import com.venus.crud.exception.DataAccessFailureTranslator;
 import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.DuplicateResourceException;
+import com.venus.crud.exception.InvalidStateTransitionDetector;
+import com.venus.crud.exception.InvalidStateTransitionException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.mapper.jpa.user.UserMapper;
 import com.venus.crud.repository.jpa.user.UserRepository;
@@ -30,6 +32,9 @@ import org.springframework.util.StringUtils;
 public class UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
+    private static final String INVALID_TRANSITION_MESSAGE =
+            "Usuario bloqueado ou pendente nao pode ser ativado nem desativado por esta rota.";
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
@@ -121,6 +126,19 @@ public class UserService {
     }
 
     @Transactional
+    public UserResponse setActive(Long id, boolean active) {
+        getOrThrow(id);
+
+        executeOrFail(() -> {
+            userRepository.setActive(id, active);
+            return null;
+        }, "Falha ao ativar ou desativar usuario no banco de dados");
+
+        User updated = getOrThrow(id);
+        return userMapper.toResponse(updated);
+    }
+
+    @Transactional
     public void registerAccess() {
         Long userId = currentUserProvider.activeUser()
                 .map(User::getId)
@@ -165,6 +183,9 @@ public class UserService {
         } catch (DataIntegrityViolationException ex) {
             throw DataIntegrityViolationTranslator.translate(ex);
         } catch (DataAccessException ex) {
+            if (InvalidStateTransitionDetector.matches(ex)) {
+                throw new InvalidStateTransitionException(INVALID_TRANSITION_MESSAGE);
+            }
             log.error(errorMessage, ex);
             throw DataAccessFailureTranslator.translate(ex, errorMessage);
         }

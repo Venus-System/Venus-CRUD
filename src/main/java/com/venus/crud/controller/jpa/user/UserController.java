@@ -1,6 +1,7 @@
 package com.venus.crud.controller.jpa.user;
 
 import com.venus.crud.dto.jpa.patch.user.UserPatchRequest;
+import com.venus.crud.dto.jpa.request.user.UserActiveRequest;
 import com.venus.crud.dto.jpa.request.user.UserRequest;
 import com.venus.crud.dto.jpa.response.user.UserResponse;
 import com.venus.crud.entity.enums.UserStatus;
@@ -101,6 +102,15 @@ public class UserController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(operationId = "userSetActive", summary = "Ativa ou desativa o usuário",
+            description = "Aciona a procedure venus.sp_set_user_active no banco. Usuário bloqueado ou pendente "
+                    + "devolve 409.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{id}/active")
+    public ResponseEntity<UserResponse> setActive(@PathVariable Long id, @Valid @RequestBody UserActiveRequest request) {
+        return ResponseEntity.ok(userService.setActive(id, request.active()));
     }
 
     @Operation(operationId = "userRegisterAccess", summary = "Registra o acesso do usuário logado",

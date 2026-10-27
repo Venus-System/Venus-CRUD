@@ -1,20 +1,27 @@
 package com.venus.crud.service.jpa.user;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.venus.crud.entity.user.User;
+import com.venus.crud.exception.InvalidStateTransitionException;
 import com.venus.crud.exception.ResourceNotFoundException;
 import com.venus.crud.mapper.jpa.user.UserMapper;
 import com.venus.crud.repository.jpa.user.UserRepository;
 import com.venus.crud.security.CurrentUserProvider;
+import java.sql.SQLException;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,5 +63,41 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> service.registerAccess())
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void setActiveCallsProcedure() {
+        when(userRepository.findById(7L)).thenReturn(Optional.of(userWithId(7L)));
+
+        service.setActive(7L, false);
+
+        verify(userRepository).setActive(7L, false);
+    }
+
+    @Test
+    void unknownUserSkipsProcedure() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.setActive(99L, false))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(userRepository, never()).setActive(anyLong(), anyBoolean());
+    }
+
+    @Test
+    void blockedUserGivesConflict() {
+        when(userRepository.findById(8L)).thenReturn(Optional.of(userWithId(8L)));
+        SQLException blockedError = new SQLException("usuario bloqueado", "VE001");
+        doThrow(new UncategorizedSQLException("setActive", "CALL", blockedError))
+                .when(userRepository).setActive(8L, true);
+
+        assertThatThrownBy(() -> service.setActive(8L, true))
+                .isInstanceOf(InvalidStateTransitionException.class);
+    }
+
+    private static User userWithId(Long id) {
+        User user = new User();
+        user.setId(id);
+        return user;
     }
 }
