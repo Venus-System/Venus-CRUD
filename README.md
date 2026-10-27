@@ -327,6 +327,12 @@ Todas começam com `/api`. A maioria tem `GET` (lista e por id), `POST`, `PUT`, 
 | Mídia | `/media` |
 | Scan (MongoDB) | `/scan-sessions` |
 
+**Ativar e desativar usuário**
+
+| Rota | Quem | O que faz |
+|---|---|---|
+| `PATCH /users/{id}/active` | `ADMIN` | Chama a procedure `venus.sp_set_user_active` do banco. Usuário `blocked` ou `pending` devolve 409 |
+
 **Fluxo do scan**
 
 | Rota | Quem | O que faz |
