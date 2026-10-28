@@ -267,6 +267,8 @@ O schema vem do repositório **Venus-Banco**. Toda mudança de tabela, coluna, t
 
 A busca de produtos (`GET /api/products/search`, filtros `name` e `ingredient`) não diferencia acento: `locao` acha "Loção". Para isso, o banco precisa da extensão `unaccent` no schema `venus` (migração `20261012_005_unaccent_search.sql` do Venus-Banco). Sem ela, essa busca dá erro mesmo sem filtro.
 
+A localização aproximada do usuário (`latitude`, `longitude`, `city` e `state`) fica em `venus.users`. As quatro colunas vêm da migração `20261028_001_user_location_columns.sql` do Venus-Banco. Sem elas, a API não sobe.
+
 > **Limitação conhecida:** a URL do datasource no `application.yml` usa `sslmode=require`. O Postgres do `docker-compose.yml` sobe sem SSL, então a API não conecta nele sem ajuste. Hoje o jeito que funciona é apontar para o banco compartilhado do time.
 
 Para subir só o MongoDB local:
@@ -332,6 +334,14 @@ Todas começam com `/api`. A maioria tem `GET` (lista e por id), `POST`, `PUT`, 
 | Rota | Quem | O que faz |
 |---|---|---|
 | `PATCH /users/{id}/active` | `ADMIN` | Chama a procedure `venus.sp_set_user_active` do banco. Usuário `blocked` ou `pending` devolve 409 |
+
+**Localização aproximada do usuário**
+
+| Rota | Quem | O que faz |
+|---|---|---|
+| `PATCH /users/{id}` | dono ou `ADMIN` | Aceita `latitude` (-90 a 90), `longitude` (-180 a 180), `city` e `state` (até 100 caracteres). Coordenadas com mais de 2 casas são arredondadas. Guarda só a última posição: campo omitido ou `null` mantém o valor que já existe |
+
+Toda resposta do usuário traz `latitude`, `longitude`, `city` e `state` (nulos quando ele não enviou). `POST /users` e `PUT /users/{id}` não mexem na localização.
 
 **Fluxo do scan**
 
