@@ -19,6 +19,10 @@ public interface UserMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
+    @Mapping(target = "latitude", ignore = true)
+    @Mapping(target = "longitude", ignore = true)
+    @Mapping(target = "city", ignore = true)
+    @Mapping(target = "state", ignore = true)
     User toEntity(UserRequest request);
 
     UserResponse toResponse(User entity);
