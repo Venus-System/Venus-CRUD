@@ -3,7 +3,11 @@ package com.venus.crud.repository.jpa.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.venus.crud.entity.enums.UserStatus;
+import com.venus.crud.entity.user.User;
 import com.venus.crud.exception.InvalidStateTransitionDetector;
+import java.math.BigDecimal;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -26,7 +30,9 @@ class UserRepositoryIntegrationTest {
             .withUrlParam("currentSchema", "venus")
             .withUrlParam("stringtype", "unspecified")
             .withCopyFileToContainer(MountableFile.forClasspathResource("venus-banco/00_schema.sql"),
-                    "/docker-entrypoint-initdb.d/00_schema.sql");
+                    "/docker-entrypoint-initdb.d/00_schema.sql")
+            .withCopyFileToContainer(MountableFile.forClasspathResource("venus-banco/01_users_email_password_hash.sql"),
+                    "/docker-entrypoint-initdb.d/01_users_email_password_hash.sql");
 
     @Autowired
     private UserRepository userRepository;
@@ -58,6 +64,41 @@ class UserRepositoryIntegrationTest {
 
         assertThatThrownBy(() -> userRepository.setActive(userId, true))
                 .satisfies(error -> assertThat(InvalidStateTransitionDetector.matches(error)).isTrue());
+    }
+
+    @Test
+    void saveStoresLocation() {
+        User user = new User();
+        user.setFirebaseUid("grava-local");
+        user.setName("Usuario Teste");
+        user.setStatus(UserStatus.ACTIVE);
+        user.setLatitude(new BigDecimal("-23.55"));
+        user.setLongitude(new BigDecimal("-46.63"));
+        user.setCity("Sao Paulo");
+        user.setState("Sao Paulo");
+
+        userRepository.saveAndFlush(user);
+
+        Map<String, Object> row = jdbcTemplate.queryForMap(
+                "SELECT latitude, longitude, city, state FROM venus.users WHERE firebase_uid = 'grava-local'");
+        assertThat(row.get("latitude")).isEqualTo(new BigDecimal("-23.55"));
+        assertThat(row.get("longitude")).isEqualTo(new BigDecimal("-46.63"));
+        assertThat(row.get("city")).isEqualTo("Sao Paulo");
+        assertThat(row.get("state")).isEqualTo("Sao Paulo");
+    }
+
+    @Test
+    void findReadsLocation() {
+        Long userId = insertUser("le-local", "active");
+        jdbcTemplate.update("UPDATE venus.users SET latitude = -22.90, longitude = -43.17, "
+                + "city = 'Rio de Janeiro', state = 'Rio de Janeiro' WHERE user_id = ?", userId);
+
+        User user = userRepository.findById(userId).orElseThrow();
+
+        assertThat(user.getLatitude()).isEqualByComparingTo("-22.90");
+        assertThat(user.getLongitude()).isEqualByComparingTo("-43.17");
+        assertThat(user.getCity()).isEqualTo("Rio de Janeiro");
+        assertThat(user.getState()).isEqualTo("Rio de Janeiro");
     }
 
     private Long insertUser(String firebaseUid, String status) {

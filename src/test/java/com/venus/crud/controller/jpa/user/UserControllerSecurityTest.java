@@ -169,7 +169,7 @@ class UserControllerSecurityTest {
     }
 
     private static UserResponse anaResponse(UserStatus status) {
-        return new UserResponse(ANA_ID, ANA_UID, "Ana Souza", "ana@venus.com", status, null, null, null);
+        return new UserResponse(ANA_ID, ANA_UID, "Ana Souza", "ana@venus.com", status, null, null, null, null, null, null, null);
     }
 
     private static RequestPostProcessor appUser() {
