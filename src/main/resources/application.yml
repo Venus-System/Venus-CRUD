@@ -1,0 +1,91 @@
+server:
+  port: ${SERVER_PORT}
+
+spring:
+  application:
+    name: venus-crud
+
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=venus&sslmode=require&stringtype=unspecified
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 3
+      minimum-idle: 1
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: venus
+    show-sql: false
+    open-in-view: false
+
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      username: ${REDIS_USERNAME}
+      password: ${REDIS_PASSWORD}
+      timeout: 1s
+      connect-timeout: 1s
+      repositories:
+        enabled: false
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 6h
+
+  servlet:
+    multipart:
+      max-file-size: 12MB
+      max-request-size: 12MB
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    doc-expansion: none
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  users:
+    api-key: ${CLOUDINARY_USERS_API_KEY}
+    api-secret: ${CLOUDINARY_USERS_API_SECRET}
+    upload-preset: ${CLOUDINARY_USERS_UPLOAD_PRESET}
+  products:
+    api-key: ${CLOUDINARY_PRODUCTS_API_KEY}
+    api-secret: ${CLOUDINARY_PRODUCTS_API_SECRET}
+    upload-preset: ${CLOUDINARY_PRODUCTS_UPLOAD_PRESET}
+
+venus:
+  media:
+    allowed-image-types: ${MEDIA_ALLOWED_IMAGE_TYPES}
+    default-delivery-type: ${MEDIA_DEFAULT_DELIVERY_TYPE}
+    default-resource-type: ${MEDIA_DEFAULT_RESOURCE_TYPE}
+    avatar:
+      max-bytes: ${MEDIA_AVATAR_MAX_BYTES}
+      max-width: ${MEDIA_AVATAR_MAX_WIDTH}
+      max-height: ${MEDIA_AVATAR_MAX_HEIGHT}
+    product:
+      max-bytes: ${MEDIA_PRODUCT_MAX_BYTES}
+      max-width: ${MEDIA_PRODUCT_MAX_WIDTH}
+      max-height: ${MEDIA_PRODUCT_MAX_HEIGHT}
+  security:
+    admin-token:
+      secret: ${ADMIN_JWT_SECRET}
+      expiration: ${ADMIN_JWT_EXPIRATION}
+    firebase:
+      project-id: ${FIREBASE_PROJECT_ID}

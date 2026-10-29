@@ -1,0 +1,8 @@
+package com.venus.crud.entity.enums;
+
+public enum RiskLevel {
+    LOW,
+    MEDIUM,
+    HIGH,
+    CRITICAL
+}
