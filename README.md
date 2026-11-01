@@ -334,6 +334,7 @@ Todas começam com `/api`. A maioria tem `GET` (lista e por id), `POST`, `PUT`, 
 | Rota | Quem | O que faz |
 |---|---|---|
 | `PATCH /users/{id}/active` | `ADMIN` | Chama a procedure `venus.sp_set_user_active` do banco. Usuário `blocked` ou `pending` devolve 409 |
+| `PUT /users/{id}` e `PATCH /users/{id}` | dono ou `ADMIN` | Só o `ADMIN` muda o `status`. No `PUT`, o usuário manda o status que já tem; no `PATCH`, não manda o campo. Se tentar mudar, devolve 403 |
 
 **Localização aproximada do usuário**
 
