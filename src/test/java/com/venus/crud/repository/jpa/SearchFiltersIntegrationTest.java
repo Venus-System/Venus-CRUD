@@ -2,6 +2,7 @@ package com.venus.crud.repository.jpa;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.venus.crud.entity.admin.AdminUser;
 import com.venus.crud.entity.enums.AdminRole;
@@ -27,6 +28,8 @@ import com.venus.crud.entity.product.Brand;
 import com.venus.crud.entity.product.Product;
 import com.venus.crud.entity.review.Report;
 import com.venus.crud.entity.user.User;
+import com.venus.crud.exception.DataAccessFailureTranslator;
+import com.venus.crud.exception.InvalidRequestException;
 import com.venus.crud.repository.jpa.admin.AdminUserRepository;
 import com.venus.crud.repository.jpa.ingredient.AllergyIngredientRepository;
 import com.venus.crud.repository.jpa.ingredient.CompatibilityRuleRepository;
@@ -52,6 +55,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -156,6 +160,16 @@ class SearchFiltersIntegrationTest {
     void brandSearchAcceptsAllFiltersFilled() {
         assertThatCode(() -> brandRepository.search("natura", "Brasil", true, true, true, FIRST_PAGE))
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    void searchWithUnknownSortGives400() {
+        PageRequest unknownSort = PageRequest.of(0, 5, Sort.by("naoExiste"));
+
+        assertThatThrownBy(() -> brandRepository.search(null, null, null, null, null, unknownSort))
+                .isInstanceOfSatisfying(DataAccessException.class, error ->
+                        assertThat(DataAccessFailureTranslator.translate(error, "Falha ao consultar marcas"))
+                                .isInstanceOf(InvalidRequestException.class));
     }
 
     @Test

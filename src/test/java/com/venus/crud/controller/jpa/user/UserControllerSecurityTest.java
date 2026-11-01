@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.venus.crud.config.JacksonConfig;
@@ -128,6 +129,32 @@ class UserControllerSecurityTest {
     }
 
     @Test
+    void ownerPutKeepsOwnStatus() throws Exception {
+        registeredAna();
+        when(userService.update(eq(ANA_ID), any())).thenReturn(anaResponse(UserStatus.ACTIVE));
+        mockMvc.perform(put("/api/users/{id}", ANA_ID).with(appUser())
+                        .contentType(MediaType.APPLICATION_JSON).content(putBody(UserStatus.ACTIVE)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void ownerCannotPutNewStatus() throws Exception {
+        registeredAna();
+        mockMvc.perform(put("/api/users/{id}", ANA_ID).with(appUser())
+                        .contentType(MediaType.APPLICATION_JSON).content(putBody(UserStatus.PENDING)))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void adminPutsAnyStatus() throws Exception {
+        when(userService.update(eq(ANA_ID), any())).thenReturn(anaResponse(UserStatus.BLOCKED));
+        mockMvc.perform(put("/api/users/{id}", ANA_ID).with(admin(AdminRole.ADMIN))
+                        .contentType(MediaType.APPLICATION_JSON).content(putBody(UserStatus.BLOCKED)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void adminSetsUserActive() throws Exception {
         when(userService.setActive(BIA_ID, false)).thenReturn(anaResponse(UserStatus.INACTIVE));
         mockMvc.perform(patch("/api/users/{id}/active", BIA_ID).with(admin(AdminRole.ADMIN))
@@ -166,6 +193,10 @@ class UserControllerSecurityTest {
         user.setFirebaseUid(ANA_UID);
         user.setStatus(UserStatus.ACTIVE);
         when(userRepository.findByFirebaseUid(ANA_UID)).thenReturn(Optional.of(user));
+    }
+
+    private static String putBody(UserStatus status) {
+        return "{\"firebaseUid\": \"" + ANA_UID + "\", \"name\": \"Ana Souza\", \"status\": \"" + status + "\"}";
     }
 
     private static UserResponse anaResponse(UserStatus status) {
