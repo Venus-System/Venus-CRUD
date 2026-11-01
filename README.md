@@ -243,6 +243,7 @@ Preencha o `.env`. O Spring **não lê o `.env` sozinho**: carregue as variávei
 | `SERVER_PORT` | Porta HTTP da API (padrão `8080`) |
 | `DB_HOST`, `DB_PORT`, `DB_NAME` | Endereço do PostgreSQL |
 | `DB_USERNAME`, `DB_PASSWORD` | Usuário e senha do PostgreSQL |
+| `DB_SSLMODE` | SSL da conexão com o PostgreSQL (padrão `require`; o `docker-compose.yml` usa `disable` no Postgres local) |
 | `MONGO_URI` | URI completa do MongoDB, com o nome do banco |
 | `REDIS_HOST`, `REDIS_PORT` | Endereço do Redis (cache dos favoritos) |
 | `REDIS_USERNAME`, `REDIS_PASSWORD` | Usuário e senha do Redis |
@@ -256,6 +257,7 @@ Preencha o `.env`. O Spring **não lê o `.env` sozinho**: carregue as variávei
 | `ADMIN_JWT_SECRET` | Segredo do token do admin. **No mínimo 32 bytes**, senão a API não sobe |
 | `ADMIN_JWT_EXPIRATION` | Validade do token do admin, em ISO-8601 (`PT8H` = 8 horas) |
 | `FIREBASE_PROJECT_ID` | Projeto do Firebase que emite o token do app |
+| `CORS_ALLOWED_ORIGINS` | Origens da web que podem chamar a API pelo navegador, separadas por vírgula (ex.: `https://venus-web-application.vercel.app`). Vazio libera qualquer origem. O app mobile não passa por CORS |
 
 Para as credenciais do banco, do Redis e do Cloudinary, fale com o time.
 
@@ -268,16 +270,6 @@ O schema vem do repositório **Venus-Banco**. Toda mudança de tabela, coluna, t
 A busca de produtos (`GET /api/products/search`, filtros `name` e `ingredient`) não diferencia acento: `locao` acha "Loção". Para isso, o banco precisa da extensão `unaccent` no schema `venus` (migração `20261012_005_unaccent_search.sql` do Venus-Banco). Sem ela, essa busca dá erro mesmo sem filtro.
 
 A localização aproximada do usuário (`latitude`, `longitude`, `city` e `state`) fica em `venus.users`. As quatro colunas vêm da migração `20261028_001_user_location_columns.sql` do Venus-Banco. Sem elas, a API não sobe.
-
-> **Limitação conhecida:** a URL do datasource no `application.yml` usa `sslmode=require`. O Postgres do `docker-compose.yml` sobe sem SSL, então a API não conecta nele sem ajuste. Hoje o jeito que funciona é apontar para o banco compartilhado do time.
-
-Para subir só o MongoDB local:
-
-```bash
-docker compose up -d mongo
-```
-
-Nesse caso, use `MONGO_URI=mongodb://localhost:27017/venus`.
 
 ### 4. Subir a API
 
@@ -297,6 +289,25 @@ docker run --env-file .env -p 8080:8080 venus-crud
 ```
 
 A imagem é feita em duas etapas: compila com JDK 21 e roda com JRE 21 Alpine, com um usuário sem privilégios.
+
+### Tudo com Docker Compose
+
+O `docker-compose.yml` sobe a API junto com um PostgreSQL 16, um MongoDB 7 e um Redis 7 locais, sem precisar dos bancos do time:
+
+```bash
+docker compose up -d --build
+```
+
+- **PostgreSQL:** na primeira vez, cria o schema `venus` com a cópia do Venus-Banco que fica em `src/test/resources/venus-banco/` (a mesma dos testes). O banco começa vazio.
+- **API:** só sobe depois que os três bancos respondem ao health check. Ela usa o `.env` para o resto (Cloudinary, Firebase, token do admin), mas o compose troca o endereço do banco, do Mongo e do Redis pelos containers e usa `DB_SSLMODE=disable`.
+- **Portas:** a API fica em `SERVER_PORT`, o Postgres em `DB_PORT`, o Mongo em `27017` e o Redis em `6379`.
+
+O schema só é criado quando o volume do Postgres está vazio. Depois que a cópia do schema mudar, recrie os volumes:
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```
 
 ## Documentação da API (Swagger)
 
@@ -361,6 +372,13 @@ Toda resposta do usuário traz `latitude`, `longitude`, `city` e `state` (nulos 
 ```bash
 ./mvnw verify
 ```
+
+**Como escrevemos os testes**
+
+- **Um comportamento por teste, em três passos:** monta o cenário, chama o código e confere o resultado (o padrão *Arrange, Act, Assert*). O nome diz o resultado esperado em inglês simples, como `ownerCannotPutNewStatus`.
+- **Teste antes da correção:** quando corrigimos um defeito, o teste que reproduz o defeito vem primeiro e tem que falhar no código antigo. Exemplo: o `ownerCannotPutNewStatus` devolvia 200 antes da trava do `status` no PUT e passou a devolver 403 depois dela.
+- **Cada camada com a ferramenta dela:** service, mapper e `OwnershipGuard` com JUnit 5 e Mockito, sem banco; rotas com `@WebMvcTest` e token falso, para conferir 401 e 403; repository e integração com Testcontainers, num Postgres ou Redis de verdade.
+- **Teste que vigia o projeto:** o `PreAuthorizeCoverageTest` quebra o build se alguém criar uma rota de dados sem `@PreAuthorize`.
 
 - **Unidade:** services, mappers, validadores e segurança (tokens, papéis, checagem de dono). Rodam sem banco.
 - **Segurança das rotas:** `PreAuthorizeCoverageTest` falha se alguma rota de dados ficar sem `@PreAuthorize`. Os testes `*ControllerSecurityTest` chamam as rotas e conferem o 401 e o 403.
