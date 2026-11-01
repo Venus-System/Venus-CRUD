@@ -11,6 +11,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -107,7 +108,13 @@ public class GlobalExceptionHandler {
         List<String> details = ex.getBindingResult().getFieldErrors().stream()
                 .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                 .toList();
-        return build(HttpStatus.BAD_REQUEST, "Validation failed", request, details);
+        return build(HttpStatus.BAD_REQUEST, "Falha na validacao dos campos", request, details);
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidSort(PropertyReferenceException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, DataAccessFailureTranslator.INVALID_SORT_MESSAGE, request,
+                List.of("sort: o campo '" + ex.getPropertyName() + "' nao existe"));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
