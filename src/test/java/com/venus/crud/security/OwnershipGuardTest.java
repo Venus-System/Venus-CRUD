@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.venus.crud.document.ScanSession;
 import com.venus.crud.document.ScanSource;
+import com.venus.crud.entity.enums.UserStatus;
 import com.venus.crud.entity.review.Review;
 import com.venus.crud.entity.scan.AnalysisResult;
 import com.venus.crud.entity.scan.RuleEvaluation;
@@ -157,6 +158,23 @@ class OwnershipGuardTest {
     void adminKeepsAnyFirebaseUid() {
         when(currentUserProvider.isAdmin()).thenReturn(true);
         assertThat(guard.keepsOwnFirebaseUid("uid-bia")).isTrue();
+    }
+
+    @Test
+    void ownerKeepsOwnStatus() {
+        User ana = user(ANA_ID);
+        ana.setStatus(UserStatus.PENDING);
+        when(currentUserProvider.isAdmin()).thenReturn(false);
+        when(currentUserProvider.activeUser()).thenReturn(Optional.of(ana));
+
+        assertThat(guard.keepsOwnStatus(UserStatus.PENDING)).isTrue();
+        assertThat(guard.keepsOwnStatus(UserStatus.ACTIVE)).isFalse();
+    }
+
+    @Test
+    void adminKeepsAnyStatus() {
+        when(currentUserProvider.isAdmin()).thenReturn(true);
+        assertThat(guard.keepsOwnStatus(UserStatus.BLOCKED)).isTrue();
     }
 
     @Test
