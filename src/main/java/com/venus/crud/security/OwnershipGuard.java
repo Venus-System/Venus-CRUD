@@ -1,6 +1,7 @@
 package com.venus.crud.security;
 
 import com.venus.crud.document.ScanSource;
+import com.venus.crud.entity.enums.UserStatus;
 import com.venus.crud.entity.user.User;
 import com.venus.crud.exception.DataAccessFailureTranslator;
 import com.venus.crud.repository.jpa.review.ReviewRepository;
@@ -103,6 +104,16 @@ public class OwnershipGuard {
 
     public boolean keepsOwnFirebaseUid(String firebaseUid) {
         return currentUserProvider.isAdmin() || isCurrentFirebaseUid(firebaseUid);
+    }
+
+    public boolean keepsOwnStatus(UserStatus status) {
+        if (currentUserProvider.isAdmin()) {
+            return true;
+        }
+        return currentUserProvider.activeUser()
+                .map(User::getStatus)
+                .filter(currentStatus -> currentStatus == status)
+                .isPresent();
     }
 
     public boolean hasActiveAccount() {

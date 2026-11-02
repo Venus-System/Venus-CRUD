@@ -62,7 +62,7 @@ public class OpenApiErrorResponsesCustomizer implements OperationCustomizer {
         if (hasRequestBody || hasUpload || hasTypedParameter) {
             addResponse(responses, HttpStatus.BAD_REQUEST,
                     "Dados inválidos. O campo details traz uma linha por campo ou parâmetro recusado.",
-                    example(HttpStatus.BAD_REQUEST, "Validation failed", "/api/users",
+                    example(HttpStatus.BAD_REQUEST, "Falha na validacao dos campos", "/api/users",
                             List.of("email: nao pode estar em branco")));
         }
         if (hasRequestBody || hasUpload) {

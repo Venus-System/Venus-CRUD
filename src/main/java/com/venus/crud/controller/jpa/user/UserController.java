@@ -83,7 +83,8 @@ public class UserController {
     }
 
     @Operation(operationId = "userUpdate", summary = "Substitui os dados do usuário")
-    @PreAuthorize("@ownership.canAccessUser(#id) and @ownership.keepsOwnFirebaseUid(#request.firebaseUid())")
+    @PreAuthorize("@ownership.canAccessUser(#id) and @ownership.keepsOwnFirebaseUid(#request.firebaseUid())"
+            + " and @ownership.keepsOwnStatus(#request.status())")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(@PathVariable Long id, @Valid @RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.update(id, request));

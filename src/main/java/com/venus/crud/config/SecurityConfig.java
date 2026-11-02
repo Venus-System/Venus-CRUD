@@ -9,6 +9,7 @@ import com.venus.crud.security.SecurityRoutes;
 import jakarta.servlet.DispatcherType;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +42,7 @@ public class SecurityConfig {
 
     private static final String ADMIN = "ADMIN";
     private static final String MODERATOR = "MODERATOR";
+    private static final List<String> ANY_ORIGIN = List.of("*");
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -85,10 +87,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${venus.security.cors.allowed-origins}") List<String> allowedOrigins) {
+        List<String> originPatterns = allowedOrigins.isEmpty() ? ANY_ORIGIN : allowedOrigins;
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOriginPatterns(originPatterns);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
