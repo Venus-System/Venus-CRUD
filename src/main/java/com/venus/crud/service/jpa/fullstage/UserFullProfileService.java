@@ -5,6 +5,8 @@ import com.venus.crud.dto.jpa.response.fullstage.UserFullProfileResponse;
 import com.venus.crud.dto.jpa.response.fullstage.UserListItemDetailResponse;
 import com.venus.crud.dto.jpa.response.fullstage.UserListWithItemsResponse;
 import com.venus.crud.dto.jpa.response.media.MediaAssetResponse;
+import com.venus.crud.dto.jpa.response.product.ProductResponse;
+import com.venus.crud.dto.jpa.response.shared.ProfileTagResponse;
 import com.venus.crud.dto.jpa.response.user.UserPreferenceResponse;
 import com.venus.crud.dto.jpa.response.user.UserProfileResponse;
 import com.venus.crud.entity.enums.MediaPurpose;
@@ -94,41 +96,62 @@ public class UserFullProfileService {
 
     @Transactional(readOnly = true)
     public UserFullProfileResponse findByUserId(Long userId) {
-        User user = executeOrFail(() -> userRepository.findById(userId), "Falha ao consultar usuario no banco de dados")
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario nao encontrado com id " + userId));
+        User user = getOrThrow(userId);
+        MediaAssetResponse avatar = findAvatar(userId);
+        UserProfileResponse profile = findProfile(userId);
+        List<ProfileTagResponse> tags = findTags(userId);
+        UserPreferenceResponse preferences = findPreferences(userId);
+        List<UserAllergyDetailResponse> allergies = findAllergies(userId);
+        List<ProductResponse> favorites = findFavorites(userId);
+        List<UserListWithItemsResponse> lists = buildLists(userId);
 
-        MediaAssetResponse avatar = executeOrFail(() -> mediaAssetRepository.findByUserIdAndPurposeAndStatusIn(
+        return new UserFullProfileResponse(userMapper.toResponse(user), avatar, profile, tags, preferences, allergies, favorites, lists);
+    }
+
+    private User getOrThrow(Long userId) {
+        return executeOrFail(() -> userRepository.findById(userId), "Falha ao consultar usuario no banco de dados")
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario nao encontrado com id " + userId));
+    }
+
+    private MediaAssetResponse findAvatar(Long userId) {
+        return executeOrFail(() -> mediaAssetRepository.findByUserIdAndPurposeAndStatusIn(
                         userId, MediaPurpose.AVATAR, MediaAssetRepository.LIVE_STATUSES),
                 "Falha ao consultar o avatar do usuario")
                 .map(mediaAssetMapper::toResponse)
                 .orElse(null);
+    }
 
-        UserProfileResponse profile = executeOrFail(() -> userProfileRepository.findByUserId(userId), "Falha ao consultar perfil de usuario no banco de dados")
+    private UserProfileResponse findProfile(Long userId) {
+        return executeOrFail(() -> userProfileRepository.findByUserId(userId), "Falha ao consultar perfil de usuario no banco de dados")
                 .map(userProfileMapper::toResponse)
                 .orElse(null);
+    }
 
-        var tags = executeOrFail(() -> userProfileTagRepository.findByUserId(userId), "Falha ao consultar tags do usuario")
+    private List<ProfileTagResponse> findTags(Long userId) {
+        return executeOrFail(() -> userProfileTagRepository.findByUserId(userId), "Falha ao consultar tags do usuario")
                 .stream()
                 .map(userProfileTag -> profileTagMapper.toResponse(userProfileTag.getProfileTag()))
                 .toList();
+    }
 
-        UserPreferenceResponse preferences = executeOrFail(() -> userPreferenceRepository.findByUserId(userId), "Falha ao consultar preferencias de usuario")
+    private UserPreferenceResponse findPreferences(Long userId) {
+        return executeOrFail(() -> userPreferenceRepository.findByUserId(userId), "Falha ao consultar preferencias de usuario")
                 .map(userPreferenceMapper::toResponse)
                 .orElse(null);
+    }
 
-        var allergies = executeOrFail(() -> userAllergyRepository.findByUserId(userId), "Falha ao consultar alergias do usuario")
+    private List<UserAllergyDetailResponse> findAllergies(Long userId) {
+        return executeOrFail(() -> userAllergyRepository.findByUserId(userId), "Falha ao consultar alergias do usuario")
                 .stream()
                 .map(userAllergy -> new UserAllergyDetailResponse(allergyMapper.toResponse(userAllergy.getAllergy()), userAllergy.getSeverity()))
                 .toList();
+    }
 
-        var favorites = executeOrFail(() -> favoriteRepository.findByUserId(userId), "Falha ao consultar favoritos do usuario")
+    private List<ProductResponse> findFavorites(Long userId) {
+        return executeOrFail(() -> favoriteRepository.findByUserId(userId), "Falha ao consultar favoritos do usuario")
                 .stream()
                 .map(favorite -> productMapper.toResponse(favorite.getProduct()))
                 .toList();
-
-        var lists = buildLists(userId);
-
-        return new UserFullProfileResponse(userMapper.toResponse(user), avatar, profile, tags, preferences, allergies, favorites, lists);
     }
 
     private List<UserListWithItemsResponse> buildLists(Long userId) {
