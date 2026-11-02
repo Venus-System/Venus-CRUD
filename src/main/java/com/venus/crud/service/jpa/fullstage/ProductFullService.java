@@ -12,6 +12,7 @@ import com.venus.crud.dto.jpa.response.product.ProductVersionResponse;
 import com.venus.crud.dto.jpa.response.scoring.ProductScoreResponse;
 import com.venus.crud.entity.enums.MediaPurpose;
 import com.venus.crud.entity.product.Product;
+import com.venus.crud.entity.product.ProductClaim;
 import com.venus.crud.exception.DataAccessFailureTranslator;
 import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.ResourceNotFoundException;
@@ -107,65 +108,88 @@ public class ProductFullService {
 
     @Transactional(readOnly = true)
     public ProductFullResponse findById(Long id) {
-        Product product = executeOrFail(() -> productRepository.findById(id), "Falha ao consultar produto no banco de dados")
-                .orElseThrow(() -> new ResourceNotFoundException("Produto nao encontrado com id " + id));
+        Product product = getOrThrow(id);
+        BrandResponse brand = findBrand(product);
+        ProductCategoryResponse category = findCategory(product);
+        ProductVersionResponse currentVersion = findCurrentVersion(id);
 
-        BrandResponse brand = executeOrFail(() -> brandRepository.findById(product.getBrand().getId()), "Falha ao consultar marca do produto")
+        if (currentVersion == null) {
+            return new ProductFullResponse(productMapper.toResponse(product), brand, category, null,
+                    List.of(), null, null, List.of(), List.of(), null);
+        }
+
+        Long versionId = currentVersion.id();
+        List<MediaAssetResponse> photos = findPhotos(versionId);
+        PackagingResponse packaging = findPackaging(versionId);
+        ProductLabelResponse label = findLabel(versionId);
+        List<ProductIngredientDetailResponse> ingredients = findIngredients(versionId);
+        List<ProductClaimDetailResponse> claims = findClaims(versionId);
+        ProductScoreResponse score = findCurrentScore(versionId);
+
+        return new ProductFullResponse(productMapper.toResponse(product), brand, category, currentVersion,
+                photos, packaging, label, ingredients, claims, score);
+    }
+
+    private Product getOrThrow(Long id) {
+        return executeOrFail(() -> productRepository.findById(id), "Falha ao consultar produto no banco de dados")
+                .orElseThrow(() -> new ResourceNotFoundException("Produto nao encontrado com id " + id));
+    }
+
+    private BrandResponse findBrand(Product product) {
+        return executeOrFail(() -> brandRepository.findById(product.getBrand().getId()), "Falha ao consultar marca do produto")
                 .map(brandMapper::toResponse)
                 .orElse(null);
+    }
 
-        ProductCategoryResponse category = executeOrFail(() -> productCategoryRepository.findById(product.getProductCategory().getId()),
+    private ProductCategoryResponse findCategory(Product product) {
+        return executeOrFail(() -> productCategoryRepository.findById(product.getProductCategory().getId()),
                 "Falha ao consultar categoria do produto")
                 .map(productCategoryMapper::toResponse)
                 .orElse(null);
+    }
 
-        ProductVersionResponse currentVersion = executeOrFail(() -> productVersionRepository.findByProductIdAndIsCurrentTrue(id),
+    private ProductVersionResponse findCurrentVersion(Long productId) {
+        return executeOrFail(() -> productVersionRepository.findByProductIdAndIsCurrentTrue(productId),
                 "Falha ao consultar versao atual do produto")
                 .map(productVersionMapper::toResponse)
                 .orElse(null);
+    }
 
-        List<MediaAssetResponse> photos = List.of();
-        PackagingResponse packaging = null;
-        ProductLabelResponse label = null;
-        List<ProductIngredientDetailResponse> ingredients = List.of();
-        List<ProductClaimDetailResponse> claims = List.of();
-        ProductScoreResponse score = null;
+    private List<MediaAssetResponse> findPhotos(Long productVersionId) {
+        return executeOrFail(() -> mediaAssetRepository.findByProductVersionIdAndPurposeAndStatusInOrderBySortOrderAscIdAsc(
+                        productVersionId, MediaPurpose.PRODUCT_PHOTO, MediaAssetRepository.LIVE_STATUSES),
+                "Falha ao consultar as fotos da versao atual").stream()
+                .map(mediaAssetMapper::toResponse)
+                .toList();
+    }
 
-        if (currentVersion != null) {
-            Long versionId = currentVersion.id();
+    private PackagingResponse findPackaging(Long productVersionId) {
+        return executeOrFail(() -> packagingRepository.findByProductVersionId(productVersionId), "Falha ao consultar embalagem da versao atual")
+                .map(packagingMapper::toResponse)
+                .orElse(null);
+    }
 
-            photos = executeOrFail(() -> mediaAssetRepository.findByProductVersionIdAndPurposeAndStatusInOrderBySortOrderAscIdAsc(
-                            versionId, MediaPurpose.PRODUCT_PHOTO, MediaAssetRepository.LIVE_STATUSES),
-                    "Falha ao consultar as fotos da versao atual").stream()
-                    .map(mediaAssetMapper::toResponse)
-                    .toList();
+    private ProductLabelResponse findLabel(Long productVersionId) {
+        return executeOrFail(() -> productLabelRepository.findByProductVersionId(productVersionId), "Falha ao consultar rotulo da versao atual")
+                .map(productLabelMapper::toResponse)
+                .orElse(null);
+    }
 
-            packaging = executeOrFail(() -> packagingRepository.findByProductVersionId(versionId), "Falha ao consultar embalagem da versao atual")
-                    .map(packagingMapper::toResponse)
-                    .orElse(null);
+    private List<ProductClaimDetailResponse> findClaims(Long productVersionId) {
+        return executeOrFail(() -> productClaimRepository.findByProductVersionId(productVersionId), "Falha ao consultar claims da versao atual")
+                .stream()
+                .map(this::toClaimDetail)
+                .toList();
+    }
 
-            label = executeOrFail(() -> productLabelRepository.findByProductVersionId(versionId), "Falha ao consultar rotulo da versao atual")
-                    .map(productLabelMapper::toResponse)
-                    .orElse(null);
-
-            ingredients = findIngredients(versionId);
-
-            claims = executeOrFail(() -> productClaimRepository.findByProductVersionId(versionId), "Falha ao consultar claims da versao atual")
-                    .stream()
-                    .map(productClaim -> new ProductClaimDetailResponse(
-                            claimMapper.toResponse(productClaim.getClaim()),
-                            productClaim.getWasVerified(),
-                            productClaim.getVerifiedBy(),
-                            productClaim.getVerifiedAt(),
-                            productClaim.getSourceType(),
-                            productClaim.getSourceReference()))
-                    .toList();
-
-            score = findCurrentScore(versionId);
-        }
-
-        return new ProductFullResponse(productMapper.toResponse(product), brand, category, currentVersion, photos, packaging, label,
-                ingredients, claims, score);
+    private ProductClaimDetailResponse toClaimDetail(ProductClaim productClaim) {
+        return new ProductClaimDetailResponse(
+                claimMapper.toResponse(productClaim.getClaim()),
+                productClaim.getWasVerified(),
+                productClaim.getVerifiedBy(),
+                productClaim.getVerifiedAt(),
+                productClaim.getSourceType(),
+                productClaim.getSourceReference());
     }
 
     private List<ProductIngredientDetailResponse> findIngredients(Long productVersionId) {

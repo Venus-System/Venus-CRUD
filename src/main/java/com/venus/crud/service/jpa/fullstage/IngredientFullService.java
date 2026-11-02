@@ -2,8 +2,11 @@ package com.venus.crud.service.jpa.fullstage;
 
 import com.venus.crud.dto.jpa.response.fullstage.IngredientEffectDetailResponse;
 import com.venus.crud.dto.jpa.response.fullstage.IngredientFullResponse;
+import com.venus.crud.dto.jpa.response.ingredient.IngredientAliasResponse;
 import com.venus.crud.dto.jpa.response.ingredient.IngredientCategoryResponse;
+import com.venus.crud.dto.jpa.response.ingredient.IngredientPropertyResponse;
 import com.venus.crud.entity.ingredient.Ingredient;
+import com.venus.crud.entity.ingredient.IngredientEffect;
 import com.venus.crud.exception.DataAccessFailureTranslator;
 import com.venus.crud.exception.DataIntegrityViolationTranslator;
 import com.venus.crud.exception.ResourceNotFoundException;
@@ -17,6 +20,7 @@ import com.venus.crud.repository.jpa.ingredient.IngredientCategoryRepository;
 import com.venus.crud.repository.jpa.ingredient.IngredientEffectRepository;
 import com.venus.crud.repository.jpa.ingredient.IngredientPropertyRepository;
 import com.venus.crud.repository.jpa.ingredient.IngredientRepository;
+import java.util.List;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,41 +64,61 @@ public class IngredientFullService {
 
     @Transactional(readOnly = true)
     public IngredientFullResponse findById(Long id) {
-        Ingredient ingredient = executeOrFail(() -> ingredientRepository.findById(id), "Falha ao consultar ingrediente no banco de dados")
-                .orElseThrow(() -> new ResourceNotFoundException("Ingrediente nao encontrado com id " + id));
+        Ingredient ingredient = getOrThrow(id);
+        IngredientCategoryResponse category = findCategory(ingredient);
+        List<IngredientAliasResponse> aliases = findAliases(id);
+        List<IngredientPropertyResponse> properties = findProperties(id);
+        List<IngredientEffectDetailResponse> effects = findEffects(id);
 
-        IngredientCategoryResponse category = executeOrFail(
+        return new IngredientFullResponse(ingredientMapper.toResponse(ingredient), category, aliases, properties, effects);
+    }
+
+    private Ingredient getOrThrow(Long id) {
+        return executeOrFail(() -> ingredientRepository.findById(id), "Falha ao consultar ingrediente no banco de dados")
+                .orElseThrow(() -> new ResourceNotFoundException("Ingrediente nao encontrado com id " + id));
+    }
+
+    private IngredientCategoryResponse findCategory(Ingredient ingredient) {
+        return executeOrFail(
                 () -> ingredientCategoryRepository.findById(ingredient.getIngredientCategory().getId()),
                 "Falha ao consultar categoria do ingrediente")
                 .map(ingredientCategoryMapper::toResponse)
                 .orElse(null);
+    }
 
-        var aliases = executeOrFail(() -> ingredientAliasRepository.findByIngredientId(id), "Falha ao consultar apelidos do ingrediente")
+    private List<IngredientAliasResponse> findAliases(Long ingredientId) {
+        return executeOrFail(() -> ingredientAliasRepository.findByIngredientId(ingredientId), "Falha ao consultar apelidos do ingrediente")
                 .stream()
                 .map(ingredientAliasMapper::toResponse)
                 .toList();
+    }
 
-        var properties = executeOrFail(() -> ingredientPropertyRepository.findByIngredientId(id), "Falha ao consultar propriedades do ingrediente")
+    private List<IngredientPropertyResponse> findProperties(Long ingredientId) {
+        return executeOrFail(() -> ingredientPropertyRepository.findByIngredientId(ingredientId), "Falha ao consultar propriedades do ingrediente")
                 .stream()
                 .map(ingredientPropertyMapper::toResponse)
                 .toList();
+    }
 
-        var effects = executeOrFail(() -> ingredientEffectRepository.findByIngredientId(id), "Falha ao consultar efeitos do ingrediente")
+    private List<IngredientEffectDetailResponse> findEffects(Long ingredientId) {
+        return executeOrFail(() -> ingredientEffectRepository.findByIngredientId(ingredientId), "Falha ao consultar efeitos do ingrediente")
                 .stream()
-                .map(effect -> new IngredientEffectDetailResponse(
-                        effect.getId(),
-                        profileTagMapper.toResponse(effect.getProfileTag()),
-                        effect.getEffectCategory(),
-                        effect.getEffectName(),
-                        effect.getEffectDescription(),
-                        effect.getEffectStrength(),
-                        effect.getEvidenceLevel(),
-                        effect.getReviewStatus(),
-                        effect.getSourceType(),
-                        effect.getSourceReference()))
+                .map(this::toEffectDetail)
                 .toList();
+    }
 
-        return new IngredientFullResponse(ingredientMapper.toResponse(ingredient), category, aliases, properties, effects);
+    private IngredientEffectDetailResponse toEffectDetail(IngredientEffect effect) {
+        return new IngredientEffectDetailResponse(
+                effect.getId(),
+                profileTagMapper.toResponse(effect.getProfileTag()),
+                effect.getEffectCategory(),
+                effect.getEffectName(),
+                effect.getEffectDescription(),
+                effect.getEffectStrength(),
+                effect.getEvidenceLevel(),
+                effect.getReviewStatus(),
+                effect.getSourceType(),
+                effect.getSourceReference());
     }
 
     private <T> T executeOrFail(Supplier<T> action, String errorMessage) {
